@@ -11,12 +11,23 @@ It is versioned using the [git](http://www.git-scm.com/) software, the central r
 
 # Installation
 
-TODO
+Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it), or by cloning the git repository:
 
+```
+git clone git@github.com:timflutre/PlantSelBreedGame.git
+```
 
-# Usage
+Enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set) and unzip it.
 
-TODO
+Then, open an R session, and execute the following commands:
+
+```
+library(shiny)
+setwd("path/to/PlantSelBreedGame")
+runApp()
+```
+
+Once all requested packages are installed, a web page should automatically open in your default web browser, and you should be able to start playing!
 
 
 # Citation
