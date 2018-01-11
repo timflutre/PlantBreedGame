@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -22,7 +22,7 @@
 # UI of "identification" part
 
 db <- dbConnect(SQLite(), dbname=setup$dbname)
-tbl <- "breeder_info"
+tbl <- "breeders"
 query <- paste0("SELECT name FROM ", tbl)
 breederNames <- dbGetQuery(conn=db, query)[,1]
 dbDisconnect(db)
@@ -48,24 +48,24 @@ tabItem(tabName="id",
                                     ),
                                     actionButton("submitPSW", "Log in")
                                 )
-                                
+
             )
           ),
           uiOutput("UIchangePsw"),
-          
+
           shinydashboard::box(width=12, title = "Debug",
                               verbatimTextOutput("IdDebug")
           )
-          
-          
-          
-          
-          
+
+
+
+
+
         )
 )
 
-          
-          
-          
-          
+
+
+
+
 

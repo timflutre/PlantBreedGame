@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -28,7 +28,7 @@
 
 goodPsw <- eventReactive(input$submitPSW, {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- "breeder_info"
+  tbl <- "breeders"
   query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
   hashPsw <- dbGetQuery(conn=db, query)[,1]
   dbDisconnect(db)
@@ -36,21 +36,21 @@ goodPsw <- eventReactive(input$submitPSW, {
     removeUI("#logInDiv")
     return (TRUE)
   }else return(FALSE)
-  
-  
+
+
 })
 
 breeder <- eventReactive(input$submitPSW,{
   if (goodPsw()){
     input$breederName
   }else {"No Identification"}
-  
+
 })
 
 
 output$UIchangePsw <- renderUI({
   if(goodPsw()){
-    shinydashboard::box(width=12, title =paste0("Change my password"), 
+    shinydashboard::box(width=12, title =paste0("Change my password"),
                         div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
                             passwordInput("prevPsw", "Previous Password")
                         ),
@@ -76,23 +76,23 @@ output$UIchangePsw <- renderUI({
 
 pswChanged <- eventReactive(input$"changePsw", {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- "breeder_info"
+  tbl <- "breeders"
   query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
   hashPsw <- dbGetQuery(conn=db, query)[,1]
   dbDisconnect(db)
   if (digest(input$prevPsw, "md5", serialize = FALSE)==hashPsw){
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
-    
+
     db <- dbConnect(SQLite(), dbname=setup$dbname)
-    tbl <- "breeder_info"
+    tbl <- "breeders"
     query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed,"' WHERE name = '", breeder(), "'" )
     dbExecute(conn=db, query)
     dbDisconnect(db)
-    
+
     return(TRUE)
- 
+
   }else {return(FALSE)}
-  
+
 })
 
 output$UIpswChanged <- renderUI({
@@ -101,7 +101,7 @@ output$UIpswChanged <- renderUI({
   } else if (!pswChanged()){
     p("Wrong password, try again")
   }
-  
+
 })
 
 
