@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -45,7 +45,7 @@ output$GenoUploaded <- renderPrint({
   } else if (is.null(readQryGeno())){
     print("No file uploaded")
   } else print("Not good")
-  
+
 })
 
 
@@ -93,8 +93,8 @@ output$dwnlGenold <- downloadHandler(
 
 output$dwnlUIGenold <- renderUI({
   if (is.data.frame(geno_data()$df.ld)){
-    downloadButton("dwnlGenold", "Télécharger les résultats")
-  } else p("Pas de traitement ld détécté")
+    downloadButton("dwnlGenold", "Download the output file")
+  } else p("No request for low-density genotyping.")
 
 })
 
@@ -110,9 +110,9 @@ output$dwnlGenohd <- downloadHandler(
 
 output$dwnlUIGenohd <- renderUI({
   if (is.data.frame(geno_data()$df.hd)){
-    downloadButton("dwnlGenohd", "Télécharger les résultats")
-  } else p("Pas de traitement hd détécté")
-  
+    downloadButton("dwnlGenohd", "Download the output file")
+  } else p("No request for high-density genotyping.")
+
 })
 
 
@@ -128,9 +128,9 @@ output$dwnlGenosnp <- downloadHandler(
 
 output$dwnlUIGenosnp <- renderUI({
   if (is.data.frame(geno_data()$df.snp)){
-    downloadButton("dwnlGenosnp", "Télécharger les résultats")
-  } else p("Pas de traitement snp détécté")
-  
+    downloadButton("dwnlGenosnp", "Download the output file")
+  } else p("No request for single-SNP genotyping.")
+
 })
 
 
@@ -141,7 +141,7 @@ output$dwnlUIGenosnp <- renderUI({
 output$GenoDebug <- renderPrint({
   print(readCheckBreedDataFileJD(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
 
-  
+
 
 })
 
