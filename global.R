@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -63,56 +63,56 @@ subset.snps[["ld"]] <- rownames(read.table(f))
 
 readCheckBreedDataFileJD <- function (f = NULL, df = NULL, max.nb.plots = 300, subset.snps,
                                       max.nb.inds = 1000, breeder){
-  
+
   stopifnot(!is.null(f) || !is.null(df),
             is.numeric(max.nb.plots),
             length(max.nb.plots) == 1,
             max.nb.plots > 0,
-            is.list(subset.snps), 
+            is.list(subset.snps),
             all(names(subset.snps) %in% c("ld", "hd")))
-  
+
   if (is.null(df)) {
     stopifnot(file.exists(f))
     df <- utils::read.table(f,header = TRUE,
-                            sep = "\t", 
+                            sep = "\t",
                             stringsAsFactors = FALSE)
   }
-  
-  
+
+
   stopifnot(is.data.frame(df),
             ncol(df) >= 3,
             all(c("ind","task", "details") %in% colnames(df)),
-            all(!is.na(df$ind)), 
+            all(!is.na(df$ind)),
             length(unique(df$ind)) <= max.nb.inds,
             all(!grepl("[^[:alnum:]._-]",df$ind)),
             all(!is.na(df$task)),
             all(df$task %in% c("pheno", "geno")))
-  
-  
+
+
   if ("pheno" %in% df$task) {
     tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno"]))
     stopifnot(all(!is.na(tmp)),
               !anyDuplicated(df$ind[df$task == "pheno"]),
               sum(as.numeric(df$details[df$task == "pheno"])) <= max.nb.plots)
   }
-  
+
   if ("geno" %in% df$task) {
     stopifnot(all(grepl("hd|ld|snp", df$details[df$task == "geno"])))
     idx.notsnp <- df$task == "geno" & !grepl("snp", df$details)
     stopifnot(!anyDuplicated(df$ind[idx.notsnp]),
               all(df$details[df$task == "geno" & !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]]))
   }
-  
+
   ## 2. check that the requested individuals already exist
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
   res <- dbGetQuery(conn=db, query)
-  stopifnot(all(df $ind %in% res$child))
+  stopifnot(all(df$ind %in% res$child))
   # disconnect db
   dbDisconnect(db)
-  
+
   invisible(df)
 }
 
