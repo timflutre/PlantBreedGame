@@ -1,6 +1,6 @@
 # PlantSelBreedGame
 
-This directory contains the `PlantSelBreedGame` software implementing a **serious game** to teach **selective breeding** via the example of a fictitious **plant species** to students at the master level.
+This directory contains the `PlantSelBreedGame` software implementing a **serious game** to teach **selective breeding** via the example of a fictitious annual **plant species** to students at the master level.
 It takes the form of a [Shiny](http://shiny.rstudio.com/) application, benefiting from the [R](https://www.r-project.org/) programming language and software environment for statistical computing.
 
 This software is available under a **free software** license, the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl.html) (version 3 and later); see the COPYING file.
@@ -10,6 +10,11 @@ It is versioned using the [git](http://www.git-scm.com/) software, the central r
 
 
 # Installation
+
+TODO
+
+
+# Usage
 
 TODO
 
