@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -25,11 +25,11 @@
 tabItem(tabName="pheno",
         fluidRow(
     uiOutput("UIbreederInfo4"),
-          
 
-          
-          
-    shinydashboard::box(width=12, title = "Choose an instruction file for phénotyping:",
+
+
+
+    shinydashboard::box(width=12, title = "Choose an instruction file for phenotyping:",
                         div( id="pheno_file",
                              fileInput(inputId="file.pheno",
                                        label = NULL,
@@ -37,9 +37,9 @@ tabItem(tabName="pheno",
                                        accept=c(".txt", ".tsv"))
                         )
     ),
-    
-    
-    
+
+
+
     shinydashboard::tabBox(width=12, title = "Info", id = "pheno_tabset", side="right", selected = "Check",
                            tabPanel("Output",
                                     uiOutput("dwnlUIPheno")),
@@ -48,23 +48,23 @@ tabItem(tabName="pheno",
                            tabPanel("Summary",
                                     verbatimTextOutput("PhenoSmy"),
                                     verbatimTextOutput("PhenoStr")),
-                                     
+
                            tabPanel("Check",
                                     verbatimTextOutput("PhenoUploaded"))
-                           
+
     ),
-    
+
     shinydashboard::box(width=12, title = "Debug",
                         verbatimTextOutput("PhenoDebug")
     )
-    
-    
-    
-          
-          
-          
-          
-          
+
+
+
+
+
+
+
+
 ))
 
 

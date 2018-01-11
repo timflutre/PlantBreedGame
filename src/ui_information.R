@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -24,10 +24,10 @@
 
 tabItem(tabName="info",
   fluidRow(
-    uiOutput("UIbreederInfo1"),
-    
-    
-    
+    ## uiOutput("UIbreederInfo1"),
+
+
+
 
   # first box
   shinydashboard::box(width=12, title = NULL,
@@ -38,15 +38,15 @@ tabItem(tabName="info",
           h2("Biology of ", em("Apimeta simulans")),
           p("...")
       )
-      
-  )
-      
 
-  
-  
-  
-  
-  
+  )
+
+
+
+
+
+
+
 
 ))
 

@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -23,7 +23,7 @@
 
 tabItem(tabName="about",
         fluidRow(
-    uiOutput("UIbreederInfo6"),
+    ## uiOutput("UIbreederInfo6"),
 
     shinydashboard::box(width=12, title = NULL,
         div(id="about_1",
@@ -32,10 +32,10 @@ tabItem(tabName="about",
             h3("Sources"), a("GitHub", href="https://github.com/timflutre/PlantSelBreedGame", target="_blank")
         )
     )
-          
-          
-          
-          
-          
-          
+
+
+
+
+
+
 ))

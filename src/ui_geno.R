@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -24,7 +24,7 @@
 tabItem(tabName="geno",
         fluidRow(
           uiOutput("UIbreederInfo5"),
-          
+
           shinydashboard::box(width=12, title = "Choose an instruction file for genotyping:",
                               div( id="geno_file",
                                    fileInput(inputId="file.geno",
@@ -33,19 +33,19 @@ tabItem(tabName="geno",
                                              accept=c(".txt", ".tsv"))
                               )
           ),
-          
-          
-          
+
+
+
           shinydashboard::tabBox(width=12, title = "Info", id = "geno_tabset", side="right", selected = "Check",
                                  tabPanel("Output",
                                           div(
-                                            h3("hd"),
+                                            h3("High-density genotyping"),
                                             uiOutput("dwnlUIGenohd")),
                                           div(
-                                            h3("ld"),
+                                            h3("Low-density genotyping"),
                                             uiOutput("dwnlUIGenold")),
                                           div(
-                                            h3("Single SNP"),
+                                            h3("Single-SNP genotyping"),
                                             uiOutput("dwnlUIGenosnp"))
                                           ),
                                  tabPanel("Data",
@@ -53,23 +53,23 @@ tabItem(tabName="geno",
                                  tabPanel("Summary",
                                           verbatimTextOutput("GenoSmy"),
                                           verbatimTextOutput("GenoStr")),
-                                 
+
                                  tabPanel("Check",
                                           verbatimTextOutput("GenoUploaded"))
-                                 
+
           ),
-          
+
           shinydashboard::box(width=12, title = "Debug",
                               verbatimTextOutput("GenoDebug")
           )
-          
-          
-          
-          
-          
-          
-          
-          
+
+
+
+
+
+
+
+
         ))
 
 
