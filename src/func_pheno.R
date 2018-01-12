@@ -84,7 +84,7 @@ phenotype <- function (breeder, inds.todo, year){
     } else
       X <- rbind(X, ind$genos)
   }
-  
+
   
   
   ## 4. handle the 'pheno' tasks for the requested individuals
@@ -97,14 +97,16 @@ phenotype <- function (breeder, inds.todo, year){
                               year=year,
                               pathogen=ifelse((year - 2005) %% 3 == 0,
                                               TRUE, FALSE))
+    
+
     phenos <- simulTraits12(dat=phenos.df,
                             mu=p0$mu,
                             sigma.alpha2=p0$sigma.alpha2,
-                            X=X[levels(phenos.df$ind),],
+                            X=X[levels(phenos.df$ind),,drop=F], ## pb is.matrix
                             Beta=p0$Beta,
                             h2=p0$h2)
     phenos$trait3 <- simulTrait3(dat=phenos.df,
-                                 X=X[levels(phenos.df$ind),],
+                                 X=X[levels(phenos.df$ind),,drop=F],
                                  qtn.id=p0$trait3$qtn.id,
                                  resist.genos=p0$trait3$resist.genos,
                                  prob.resist.no.qtl=p0$trait3$prob.resist.no.qtl)
