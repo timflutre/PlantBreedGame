@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -25,16 +25,16 @@ library(RSQLite)
 library(MASS)
 library(digest)
 
-library(rutilstimflutre)
+library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
+stopifnot(compareVersion("0.156.4",
+                         as.character(packageVersion("rutilstimflutre")))
+          != 1)
 
 
 #### Shiny ####
-
 shinyServer(function(input, output, session) {
-  source("src/server_plant_material.R", local=TRUE, encoding = "UTF-8")$value
-  source("src/server_pheno.R", local=TRUE, encoding = "UTF-8")$value
-  source("src/server_geno.R", local=TRUE, encoding = "UTF-8")$value
-  source("src/server_id.R", local=TRUE, encoding = "UTF-8")$value
-
-  
+  source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_geno.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
 })
