@@ -37,7 +37,13 @@ tabItem(tabName="plant_mat",
   
   
   shinydashboard::tabBox(width=12, title = "Info", id = "cross_tabset", side="right", selected = "Check",
-                 tabPanel("Output",
+                 tabPanel("Request",
+                          div(
+                            tags$head(
+                              tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
+                            ),
+                            actionButton("requestPlmat", "Request Phenotyping !")
+                          ),
                           verbatimTextOutput("outPlmat")),
                  tabPanel("Data",
                           tableOutput(outputId="qryPlmat")),

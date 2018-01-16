@@ -25,22 +25,37 @@ library(RSQLite)
 library(MASS)
 library(digest)
 
-library(rutilstimflutre)
+library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
+stopifnot(compareVersion("0.156.4",
+                         as.character(packageVersion("rutilstimflutre")))
+          != 1)
 
 
 
 
 # Function
 source("src/functions.R", local=TRUE, encoding = "UTF-8")$value
+source("src/func_time.R", local=TRUE, encoding = "UTF-8")$value
+
+
+
+
 
 ## VARIABLES
 root.dir <- "data"
 init.funds <- 100000
-init.year <- 2018
+
 
 
 # breeder <- "test"
 year <- 2015
+
+# dynamic variable:
+currentGTime <- reactive({
+  # this reactive variable is reevaluated evry seconds
+  invalidateLater(10000)
+  getGameTime(setup)
+})
 
 
 

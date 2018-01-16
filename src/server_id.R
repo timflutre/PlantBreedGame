@@ -21,11 +21,12 @@
 
 ## server for "identification"
 
+## Function
+source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 
-
-
+## log in
 goodPsw <- eventReactive(input$submitPSW, {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- "breeders"
@@ -37,7 +38,6 @@ goodPsw <- eventReactive(input$submitPSW, {
     return (TRUE)
   }else return(FALSE)
 
-
 })
 
 breeder <- eventReactive(input$submitPSW,{
@@ -48,32 +48,102 @@ breeder <- eventReactive(input$submitPSW,{
 })
 
 
-output$UIchangePsw <- renderUI({
+
+
+
+## breeder menu
+
+
+output$userAction <- renderUI({
   if(goodPsw()){
-    shinydashboard::box(width=12, title =paste0("Change my password"),
-                        div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
-                            passwordInput("prevPsw", "Previous Password")
-                        ),
-                        div(style="display: inline-block; vertical-align:top;   min-width: 5%; min-height:: 100%;",
-                            p()
-                        ),
-                        div(style="display: inline-block; vertical-align:top;  width: 30%; min-height:: 100%;",
-                            passwordInput("newPsw", "New Password")
-                        ),
-                        div(style="display: inline-block; vertical-align: top;   min-width: 100%;",
-                            tags$head(
-                              tags$style(HTML('#changePsw{background-color:gray; color: white}'))
-                            ),
-                            actionButton("changePsw", "Change my password ! ")
-                        ),
-                        div(style="vertical-align: top;   min-width: 20%;", id="id_4",
-                            uiOutput("UIpswChanged")
-                        )
-    )
+    shinydashboard::tabBox(width=12, title =paste0("My account"),
+                           tabPanel("My files",
+                                    div(
+                                      h3("Phenotyping Data:"),
+                                      selectInput("phenoFile", "", choices=phenoFiles()),
+                                      downloadButton("dwnlPheno", "Download your file")
+                                    ),
+                                    div(
+                                      h3("Genotyping Data:"),
+                                      selectInput("genoFile", "", choices=genoFiles()),
+                                      downloadButton("dwnlGeno", "Download your file")
+                                    )
+                                    
+                                    
+                                    
+                                    
+                           ),
+                           
+                           
+                           
+                           
+                           
+                           
+                           tabPanel("Change my password",
+                                    div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
+                                      passwordInput("prevPsw", "Previous Password")
+                                    ),
+                                    div(style="display: inline-block; vertical-align:top;   min-width: 5%; min-height:: 100%;",
+                                        p()
+                                    ),
+                                    div(style="display: inline-block; vertical-align:top;  width: 30%; min-height:: 100%;",
+                                        passwordInput("newPsw", "New Password")
+                                    ),
+                                    div(style="display: inline-block; vertical-align: top;   min-width: 100%;",
+                                        tags$head(
+                                          tags$style(HTML('#changePsw{background-color:gray; color: white}'))
+                                        ),
+                                        actionButton("changePsw", "Change my password ! ")
+                                    ),
+                                    div(style="vertical-align: top;   min-width: 20%;", id="id_4",
+                                        uiOutput("UIpswChanged")
+                                    )
+                           )
+                           
+          )
   }
 })
 
 
+
+
+## download files
+# list of avaiable files
+phenoFiles <- reactive({
+  input$leftMenu
+  getDataFileList(type="pheno", breeder=breeder())
+})
+genoFiles <- reactive({
+  input$leftMenu
+  choices=getDataFileList(type="geno", breeder=breeder())
+})
+
+
+# dwnl buttons
+output$dwnlPheno <- downloadHandler(
+  filename=function () input$phenoFile, # lambda function
+  content=function(file){
+    filePath <- paste0("data/shared/",breeder(), "/",input$phenoFile)
+    write.table(read.table(filePath, header = T),
+                file=gzfile(file), quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
+  }
+)
+
+output$dwnlGeno <- downloadHandler(
+  filename=function () input$genoFile, # lambda function 
+  content=function(file){
+    filePath <- paste0("data/shared/",breeder(), "/",input$genoFile)
+    write.table(read.table(filePath, header = T),
+                file=gzfile(file), quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
+  }
+)
+
+
+
+
+## Change Password
 pswChanged <- eventReactive(input$"changePsw", {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- "breeders"
@@ -108,15 +178,16 @@ output$UIpswChanged <- renderUI({
 
 
 
-# Breeder information :
+
+## Breeder information :
 UIbreederInfo <- reactive({
   if(goodPsw()){
     shinydashboard::box(width=12, title =paste0("You are connected as \"", breeder(),"\""), status = "warning", solidHeader = TRUE,
-                        p("Some information about the breeder...")
+                        h3("Date :"),p(strftime(currentGTime(), format= "%Y-%m-%d"))
     )
   }
 })
-
+# for each menu
 output$UIbreederInfo1 <- renderUI({UIbreederInfo()})
 output$UIbreederInfo2 <- renderUI({UIbreederInfo()})
 output$UIbreederInfo3 <- renderUI({UIbreederInfo()})
@@ -135,7 +206,6 @@ output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(goodPsw())
-  print(breeder())
+  print(input$leftMenu)
 
 })

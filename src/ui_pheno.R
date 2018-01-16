@@ -41,8 +41,18 @@ tabItem(tabName="pheno",
 
 
     shinydashboard::tabBox(width=12, title = "Info", id = "pheno_tabset", side="right", selected = "Check",
-                           tabPanel("Output",
-                                    uiOutput("dwnlUIPheno")),
+                           tabPanel("Request",
+                                      div(
+                                        tags$head(
+                                          tags$style(HTML('#requestPheno{background-color:#00A65A; color: white}'))
+                                        ),
+                                        actionButton("requestPheno", "Request Phenotyping !")
+                                      ),
+                                      div(
+                                        uiOutput("dwnlUIPheno")
+                                      )
+                                    ),
+                           
                            tabPanel("Data",
                                     tableOutput(outputId="qryPheno")),
                            tabPanel("Summary",

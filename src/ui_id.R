@@ -51,7 +51,7 @@ tabItem(tabName="id",
 
             )
           ),
-          uiOutput("UIchangePsw"),
+          uiOutput("userAction"),
 
           shinydashboard::box(width=12, title = "Debug",
                               verbatimTextOutput("IdDebug")

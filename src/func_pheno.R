@@ -21,13 +21,13 @@
 
 ## Contain functions used in "phenotyping" section.
 
-phenotype <- function (breeder, inds.todo, year){
+phenotype <- function (breeder, inds.todo, gameTime){
   # function which phenotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
 
   # breeder (character) name of the breeder
   # inds.todo (data frame) output of "readCheckBreedDataFile"
-  # year (int) year of the request
+  # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
 
 
@@ -105,6 +105,7 @@ phenotype <- function (breeder, inds.todo, year){
                             X=X[levels(phenos.df$ind),,drop=FALSE],
                             Beta=p0$Beta,
                             sigma2=p0$sigma2)
+    
     phenos$trait3 <- simulTrait3(dat=phenos.df,
                                  X=X[levels(phenos.df$ind),,drop=FALSE],
                                  qtn.id=p0$trait3$qtn.id,
@@ -153,4 +154,5 @@ phenotype <- function (breeder, inds.todo, year){
   pheno_data$filename <- paste0(pre.fin,"_phenos-", year, ".txt.gz")
   pheno_data$df <- phenos.df[, -grep("raw", colnames(phenos.df))]
   return(pheno_data)
+  # return("Phenotyping requested")
 }

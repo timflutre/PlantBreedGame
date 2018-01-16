@@ -72,27 +72,16 @@ output$qryPheno <- renderTable({
 
 
 # output
-pheno_data <- reactive({
+pheno_data <- eventReactive(input$requestPheno, {
   if (is.data.frame(readQryPheno())){
     phenotype(breeder(), readQryPheno(), year)
   }
+
 })
 
 
-
-output$dwnlPheno <- downloadHandler(
-  filename=pheno_data()$filename,
-  content=function(file){
-    write.table(pheno_data()$df,
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=FALSE, col.names=TRUE)
-  }
-)
-
-
-
 output$dwnlUIPheno <- renderUI({
-  if (is.data.frame(readQryPheno())){
+  if (is.list(pheno_data())){
     downloadButton("dwnlPheno", "Télécharger les résultats")
   } else p("Vérifiez votre fichier")
   
@@ -104,7 +93,8 @@ output$dwnlUIPheno <- renderUI({
 ## DEBUG
 # 
 output$PhenoDebug <- renderPrint({
-  print("--")
+  print("-----")
+  print(print(input$leftMenu))
 
 })
 

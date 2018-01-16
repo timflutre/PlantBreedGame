@@ -37,7 +37,13 @@ tabItem(tabName="geno",
 
 
           shinydashboard::tabBox(width=12, title = "Info", id = "geno_tabset", side="right", selected = "Check",
-                                 tabPanel("Output",
+                                 tabPanel("Request",
+                                          div(
+                                            tags$head(
+                                              tags$style(HTML('#requestGeno{background-color:#00A65A; color: white}'))
+                                            ),
+                                            actionButton("requestGeno", "Request Genotyping !")
+                                          ),
                                           div(
                                             h3("High-density genotyping"),
                                             uiOutput("dwnlUIGenohd")),

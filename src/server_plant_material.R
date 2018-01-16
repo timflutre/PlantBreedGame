@@ -53,15 +53,17 @@ output$plmatUploaded <- renderPrint({
 
 # summary
 output$plmatSmy <- renderPrint({
-  if (is.data.frame(readQryPlmat()))
+  if (is.data.frame(readQryPlmat())){
     dat <- readQryPlmat()
     summary(as.data.frame(apply(readQryPlmat(), MARGIN = 2, FUN = as.factor)))
+  }
 })
 
 output$plmatStr <- renderPrint({
-  if (is.data.frame(readQryPlmat()))
+  if (is.data.frame(readQryPlmat())){
     dat <- readQryPlmat()
     str(readQryPlmat())
+  }
 })
 
 
@@ -84,10 +86,19 @@ output$qryPlmat <- renderTable({
 # output
 ## no output ##
 
-output$outPlmat <- renderPrint({
+plantMatRequested <- eventReactive(input$requestPlmat, {
   if (is.data.frame(readQryPlmat())){
     create_plant_material(breeder(), readQryPlmat(), year)
+    return("Plant material are growing up !")
   }
+  return("Please check your file")
+})
+
+
+
+output$outPlmat <- renderPrint({
+
+    plantMatRequested()
 })
 
 

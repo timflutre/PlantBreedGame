@@ -73,7 +73,7 @@ output$qryGeno <- renderTable({
 
 
 # output
-geno_data <- reactive({
+geno_data <- eventReactive(input$requestGeno, {
   if (is.data.frame(readQryGeno())){
     genotype(breeder(), readQryGeno(), year)
   }
@@ -81,7 +81,7 @@ geno_data <- reactive({
 
 
 
-
+# download LD
 output$dwnlGenold <- downloadHandler(
   filename=geno_data()$filename.ld,
   content=function(file){
@@ -99,6 +99,7 @@ output$dwnlUIGenold <- renderUI({
 })
 
 
+# download HD
 output$dwnlGenohd <- downloadHandler(
   filename=geno_data()$filename.hd,
   content=function(file){
@@ -117,6 +118,7 @@ output$dwnlUIGenohd <- renderUI({
 
 
 
+# download SNP
 output$dwnlGenosnp <- downloadHandler(
   filename=geno_data()$filename.snp,
   content=function(file){

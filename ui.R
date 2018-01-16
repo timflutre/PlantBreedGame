@@ -22,7 +22,11 @@
 library(shiny)
 library(shinydashboard)
 library(RSQLite)
-library(rutilstimflutre)
+
+library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
+stopifnot(compareVersion("0.156.4",
+                         as.character(packageVersion("rutilstimflutre")))
+          != 1)
 
 
 #### Shiny ####
@@ -42,7 +46,7 @@ shinyUI(
                 
                 # Dashboard sidebar items
                 dashboardSidebar(width = W_sideBar,
-                                 sidebarMenu(
+                                 sidebarMenu(id="leftMenu",
                                    menuItem("How to play?", tabName="info", icon=icon("leaf")),
                                    menuItem("Breeder identification", tabName="id", icon=icon("user-circle")),
                                    menuItem("Request plant material", tabName="plant_mat", icon=icon("sitemap")),
