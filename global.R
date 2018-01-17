@@ -17,8 +17,9 @@
 ## License along with PlantSelBreedGame.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
+## -------------------------------------------------------------------
+## packages
 
-#### Packages ####
 library(shiny)
 library(shinydashboard)
 library(RSQLite)
@@ -26,45 +27,37 @@ library(MASS)
 library(digest)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.4",
+stopifnot(compareVersion("0.156.5",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
 
+## -------------------------------------------------------------------
+## functions
+
+source("src/functions.R", local=TRUE, encoding="UTF-8")$value
+source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 
 
-# Function
-source("src/functions.R", local=TRUE, encoding = "UTF-8")$value
-source("src/func_time.R", local=TRUE, encoding = "UTF-8")$value
+## -------------------------------------------------------------------
+## variables
 
-
-
-
-
-## VARIABLES
-root.dir <- "data"
 init.funds <- 100000
-
-
-
-# breeder <- "test"
+## breeder <- "test"
 year <- 2015
 
-# dynamic variable:
 currentGTime <- reactive({
-  # this reactive variable is reevaluated evry seconds
+  ## this reactive variable is reevaluated every second
   invalidateLater(10000)
   getGameTime(setup)
 })
 
-
-
-
-## calculated variables
-# setup:
+root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
+constants <- getBreedingGameConstants(setup$dbname)
+constants$max.upload.pheno.field <- as.Date(constants$max.upload.pheno.field,
+                                            format="%m-%d")
 
-# subset.snps:
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
 subset.snps[["hd"]] <- rownames(read.table(f))
@@ -72,9 +65,8 @@ f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
 subset.snps[["ld"]] <- rownames(read.table(f))
 
 
-
-## FUNCTIONS
-
+## -------------------------------------------------------------------
+## functions
 
 readCheckBreedDataFileJD <- function (f = NULL, df = NULL, max.nb.plots = 300, subset.snps,
                                       max.nb.inds = 1000, breeder){
@@ -130,22 +122,3 @@ readCheckBreedDataFileJD <- function (f = NULL, df = NULL, max.nb.plots = 300, s
 
   invisible(df)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
