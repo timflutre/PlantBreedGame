@@ -71,9 +71,9 @@ tabItem(
 
       h2("Experimental and financial means"),
       p(strong("Experimental site"), ": the only experimental site, Agrom-sur-Lez (AZ), has ", strong(constants$nb.plots, " plots."),
-        " Planting a plot should be requested before ", strong(format(constants$max.upload.pheno.field, "%B %d")), ", and requires about ", 500, " seeds.",
+        " Planting a plot should be requested before ", strong(format(as.Date(constants$max.upload.pheno.field, format="%m-%d"), "%B %d")), ", and requires about ", 500, " seeds.",
         " The cost of a single plot (seeding, phenotyping of the three traits and harvesting) is ", strong(constants$cost.pheno.field, " Mendels"), ", and is used as a reference for all other costs.",
-        " Phenotypic data are available ", constants$duration.pheno.field, " months after, that is not before ", strong(format(seq.Date(constants$max.upload.pheno.field, length=2, by=paste0(constants$duration.pheno.field, " months"))[2], "%B %d")), "."),
+        " Phenotypic data are available ", constants$duration.pheno.field, " months after, that is not before ", strong(format(seq.Date(as.Date(constants$max.upload.pheno.field,format="%m-%d"), length=2, by=paste0(constants$duration.pheno.field, " months"))[2], "%B %d")), "."),
       p(strong("Greenhouse"), ": it can be used all year long to phenotype ", HTML("<em>P.&nbsp;psychedelica</em>"), ", as well as perform crosses (allofecundation and autofecundation).",
         " ", strong("Rust phenotyping"), " has a ", strong(constants$duration.pheno.patho, "-month"), " delay and costs ", strong(constants$cost.pheno.patho, " plot"), " (", format(constants$cost.pheno.patho * constants$cost.pheno.field, digits=2), " Mendels).",
         " ", strong("Allofecundation"), " has a ", strong(constants$duration.allof, "-month"), " delay and costs ", strong(constants$cost.allof, " plot"), " (", format(constants$cost.allof * constants$cost.pheno.field, digits=2), " Mendels).",
@@ -108,6 +108,17 @@ tabItem(
 
       )
 
-  ) # close shinydashboard::box
+  ), # close shinydashboard::box
+  
+  shinydashboard::box(height = 300 ,width=12, title="Initial Data",
+                      p("You can download here the initial data of the game."),
+                      selectInput("iniDataFile", "", choices=list.files("data/shared/initial_data")),
+                      downloadButton("dwnlIniData", "Download your file")
+                      
+  )
+  
+  
+  
+  
   ) # close fluidRow
 ) # close tabItem

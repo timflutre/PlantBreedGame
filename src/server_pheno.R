@@ -28,7 +28,7 @@ source("src/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
 readQryPheno <- reactive({
   if(is.null(input$file.pheno))
     return(NULL)
-  test <-  try(df <- readCheckBreedDataFileJD(input$file.pheno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps, breeder=breeder()))
   if (is.data.frame(test)){
     df <- df[df$task == "pheno",]
     return(df)
@@ -74,16 +74,18 @@ output$qryPheno <- renderTable({
 # output
 pheno_data <- eventReactive(input$requestPheno, {
   if (is.data.frame(readQryPheno())){
-    phenotype(breeder(), readQryPheno(), year)
+    res <- phenotype(breeder(), readQryPheno(), getGameTime(setup))
+    reset("file.pheno")
+    return(res)
   }
 
 })
 
 
-output$dwnlUIPheno <- renderUI({
+output$phenoRequestResultUI <- renderUI({
   if (is.list(pheno_data())){
-    downloadButton("dwnlPheno", "Télécharger les résultats")
-  } else p("Vérifiez votre fichier")
+    p("Great ! Your results will be available in ", constants$duration.pheno.field, " months.")
+  } else p("Something went wrong. Please check your file.")
   
 })
 

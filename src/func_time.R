@@ -31,7 +31,7 @@ getGameTime <- function(setup){
   
   ## get sessions informations
   db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- paste0("game_sessions")
+  tbl <- paste0("sessions")
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT * FROM ", tbl)
   res <- dbGetQuery(conn=db, query)
@@ -57,7 +57,7 @@ getGameTime <- function(setup){
   }
   
   
-  # 
+  ## calculation 
   elapsTime <- 0
   for (i in 1:currentSesion){
     if (i!= currentSesion){

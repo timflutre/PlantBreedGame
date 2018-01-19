@@ -24,6 +24,7 @@
 
 tabItem(tabName="pheno",
         fluidRow(
+    useShinyjs(),
     uiOutput("UIbreederInfo4"),
 
 
@@ -49,7 +50,7 @@ tabItem(tabName="pheno",
                                         actionButton("requestPheno", "Request Phenotyping !")
                                       ),
                                       div(
-                                        uiOutput("dwnlUIPheno")
+                                        uiOutput("phenoRequestResultUI")
                                       )
                                     ),
                            

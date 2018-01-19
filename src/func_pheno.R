@@ -36,9 +36,15 @@ phenotype <- function (breeder, inds.todo, gameTime){
   pre.fin <- breeder
   data.types <- countRequestedBreedTypes(inds.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
+  
+  ## Calculate the year of the phenotyping 
+  maxDate <- strptime(paste0(data.table::year(gameTime), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
+  if (gameTime > maxDate){
+    year <- data.table::year(gameTime)+1
+  }else year <- data.table::year(gameTime)
 
-
-
+  
+  
   ## 0. load required data
   flush.console()
   f <- paste0(setup$truth.dir, "/p0.RData")
@@ -58,6 +64,9 @@ phenotype <- function (breeder, inds.todo, gameTime){
   query <- paste0("SELECT child FROM ", tbl)
   res <- dbGetQuery(conn=db, query)
   stopifnot(all(inds.todo$ind %in% res$child))
+  
+  
+  ## 2.2 Check that the requested individuals are available
 
 
 
@@ -122,7 +131,7 @@ phenotype <- function (breeder, inds.todo, gameTime){
 
     ## write the phenotypes (all inds into the same file)
     fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-                   "_phenos-", year, ".txt.gz")
+                   "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       # stop(paste0(fout, " already exists"))
       write.table(x=phenos.df[, -grep("raw", colnames(phenos.df))],

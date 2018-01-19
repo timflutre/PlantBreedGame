@@ -74,11 +74,6 @@ output$userAction <- renderUI({
                                     
                            ),
                            
-                           
-                           
-                           
-                           
-                           
                            tabPanel("Change my password",
                                     div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
                                       passwordInput("prevPsw", "Previous Password")
@@ -108,7 +103,7 @@ output$userAction <- renderUI({
 
 
 ## download files
-# list of avaiable files
+# list of avaiable files (this must be reactive value to be refresh)
 phenoFiles <- reactive({
   input$leftMenu
   getDataFileList(type="pheno", breeder=breeder())
@@ -140,6 +135,9 @@ output$dwnlGeno <- downloadHandler(
   }
 )
 
+# UI of dwnl buttons
+output$UIdwnlPheno <- renderUI({})
+  
 
 
 
@@ -206,6 +204,6 @@ output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(input$leftMenu)
+  print(strftime(currentGTime(), format= "%Y-%m-%d"))
 
 })

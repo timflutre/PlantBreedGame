@@ -23,6 +23,7 @@
 
 tabItem(tabName="geno",
         fluidRow(
+          useShinyjs(),
           uiOutput("UIbreederInfo5"),
 
           shinydashboard::box(width=12, title = "Choose an instruction file for genotyping:",
@@ -45,21 +46,16 @@ tabItem(tabName="geno",
                                             actionButton("requestGeno", "Request Genotyping !")
                                           ),
                                           div(
-                                            h3("High-density genotyping"),
-                                            uiOutput("dwnlUIGenohd")),
-                                          div(
-                                            h3("Low-density genotyping"),
-                                            uiOutput("dwnlUIGenold")),
-                                          div(
-                                            h3("Single-SNP genotyping"),
-                                            uiOutput("dwnlUIGenosnp"))
+                                            uiOutput("genoRequestResultUI"))
                                           ),
+                                 
                                  tabPanel("Data",
                                           tableOutput(outputId="qryGeno")),
+                                 
                                  tabPanel("Summary",
                                           verbatimTextOutput("GenoSmy"),
                                           verbatimTextOutput("GenoStr")),
-
+                                 
                                  tabPanel("Check",
                                           verbatimTextOutput("GenoUploaded"))
 

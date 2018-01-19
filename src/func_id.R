@@ -40,10 +40,30 @@ getDataFileList <- function (type, breeder){
   
   return(as.list(dataFile[matchId]))
 
+}
+
+availToDwnld <- function(fileName, gameTime){
+  
+  if (grepl("phenos-field", fileName)){
+    requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
+    maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
+    availDate <- seq(from=maxDate, by=paste0(constants$duration.pheno.field, " month"), length.out=2)[2]
+    if (requestDate > maxDate){
+      availDate <- seq(from=availDate, by="1 year", length.out=2)[2]
+    }
+  }
+
+  ### complete for geno etc...
+  #
+  #
+  #
+  #
+  #
+  #  
   
   
   
-  
-  
+  return(availDate <= gameTime)
   
 }
+

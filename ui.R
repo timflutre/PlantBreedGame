@@ -21,10 +21,11 @@
 #### Packages ####
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 library(RSQLite)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.4",
+stopifnot(compareVersion("0.156.5",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
@@ -40,6 +41,7 @@ W_sideBar <- 300
 ## UI :
 shinyUI(
   dashboardPage(title="Breeding Game", skin="green",
+                
                 
                 # app title
                 dashboardHeader(title=tagList(shiny::icon("leaf", "fa-2x"), "\t Breeding Game"), titleWidth=W_sideBar),

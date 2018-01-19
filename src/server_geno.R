@@ -29,7 +29,7 @@ source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 readQryGeno <- reactive({
   if(is.null(input$file.geno))
     return(NULL)
-  test <-  try(df <- readCheckBreedDataFileJD(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
   if (is.data.frame(test)){
     df <- df[df$task == "geno",]
     return(df)
@@ -75,65 +75,19 @@ output$qryGeno <- renderTable({
 # output
 geno_data <- eventReactive(input$requestGeno, {
   if (is.data.frame(readQryGeno())){
-    genotype(breeder(), readQryGeno(), year)
+    res <- genotype(breeder(), readQryGeno(), getGameTime(setup))
+    reset("file.geno")
+    return(res)
   }
 })
 
-
-
-# download LD
-output$dwnlGenold <- downloadHandler(
-  filename=geno_data()$filename.ld,
-  content=function(file){
-    write.table(geno_data()$df.ld,
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=TRUE, col.names=TRUE)
-  }
-)
-
-output$dwnlUIGenold <- renderUI({
-  if (is.data.frame(geno_data()$df.ld)){
-    downloadButton("dwnlGenold", "Download the output file")
-  } else p("No request for low-density genotyping.")
-
+output$genoRequestResultUI <- renderUI({
+  if (is.list(geno_data())){
+    p("Great ! Your results will be available in ", constants$duration.geno, " months.")
+  } else p("Something went wrong. Please check your file.")
+  
 })
 
-
-# download HD
-output$dwnlGenohd <- downloadHandler(
-  filename=geno_data()$filename.hd,
-  content=function(file){
-    write.table(geno_data()$df.hd,
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=TRUE, col.names=TRUE)
-  }
-)
-
-output$dwnlUIGenohd <- renderUI({
-  if (is.data.frame(geno_data()$df.hd)){
-    downloadButton("dwnlGenohd", "Download the output file")
-  } else p("No request for high-density genotyping.")
-
-})
-
-
-
-# download SNP
-output$dwnlGenosnp <- downloadHandler(
-  filename=geno_data()$filename.snp,
-  content=function(file){
-    write.table(geno_data()$df.snp,
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=TRUE, col.names=TRUE)
-  }
-)
-
-output$dwnlUIGenosnp <- renderUI({
-  if (is.data.frame(geno_data()$df.snp)){
-    downloadButton("dwnlGenosnp", "Download the output file")
-  } else p("No request for single-SNP genotyping.")
-
-})
 
 
 
@@ -141,7 +95,7 @@ output$dwnlUIGenosnp <- renderUI({
 # DEBUG
 
 output$GenoDebug <- renderPrint({
-  print(readCheckBreedDataFileJD(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  print(readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
 
 
 

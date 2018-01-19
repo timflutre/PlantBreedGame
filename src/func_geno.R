@@ -21,13 +21,13 @@
 ## Contain functions used in "genotyping" section.
 
 
-genotype <- function (breeder, inds.todo, year){
+genotype <- function (breeder, inds.todo, gameTime){
   # function which genotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
   
   # breeder (character) name of the breeder
   # inds.todo (data frame) output of "readCheckBreedDataFile"
-  # year (int) year of the request
+  # gameTime ("POSIXlt") of the request (given by getGameTime function)
   
   
   
@@ -98,7 +98,7 @@ genotype <- function (breeder, inds.todo, year){
       
       ## write the genotypes (all inds into the same file)
       fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-                     "_genos-", dty, ".txt.gz")
+                     "_genos-", dty, "-", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       if(!file.exists(fout)){
         write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
                     file=gzfile(fout), quote=FALSE,
@@ -135,7 +135,7 @@ genotype <- function (breeder, inds.todo, year){
     
     ## write the genotypes (all inds into the same file)
     fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-                   "-single-snps", ".txt.gz")
+                   "-single-snps", "-", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       write.table(x=all.genos,
                   file=gzfile(fout), quote=FALSE,
@@ -146,6 +146,8 @@ genotype <- function (breeder, inds.todo, year){
   
   
   ## 7. log
+  year <- year(gameTime)
+  
   flush.console()
   for(type in names(data.types)){
     if((type=="geno-hd" || type=="geno-ld" || type=="geno-single-snp") && data.types[type] > 0){
@@ -163,9 +165,9 @@ genotype <- function (breeder, inds.todo, year){
   
   # output
   geno_data <- list()
-  geno_data$filename.ld <- paste0(pre.fin,"_genos-ld", year, ".txt.gz")
-  geno_data$filename.hd <- paste0(pre.fin,"_genos-hd", year, ".txt.gz")
-  geno_data$filename.snp <- paste0(pre.fin,"_single-snps-", year, ".txt.gz")
+  geno_data$filename.ld <- paste0(pre.fin,"_genos-ld", strftime(gameTime), ".txt.gz")
+  geno_data$filename.hd <- paste0(pre.fin,"_genos-hd", strftime(gameTime), ".txt.gz")
+  geno_data$filename.snp <- paste0(pre.fin,"_single-snps-", strftime(gameTime), ".txt.gz")
   
   geno_data$df.ld <- df.geno.ld
   geno_data$df.hd <- df.geno.hd

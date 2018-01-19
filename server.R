@@ -21,12 +21,13 @@
 #### Packages ####
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 library(RSQLite)
 library(MASS)
 library(digest)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.4",
+stopifnot(compareVersion("0.156.5",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
