@@ -38,7 +38,9 @@ phenotype <- function (breeder, inds.todo, gameTime){
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   
   ## Calculate the year of the phenotyping 
-  maxDate <- strptime(paste0(data.table::year(gameTime), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
+  maxDate <- strptime(paste0(data.table::year(gameTime), "-",
+                             constants$max.upload.pheno.field),
+                      format = "%Y-%m-%d")
   if (gameTime > maxDate){
     year <- data.table::year(gameTime)+1
   }else year <- data.table::year(gameTime)
@@ -67,6 +69,10 @@ phenotype <- function (breeder, inds.todo, gameTime){
   
   
   ## 2.2 Check that the requested individuals are available
+  #
+  # TO DO
+  #
+  #
 
 
 
@@ -84,8 +90,6 @@ phenotype <- function (breeder, inds.todo, gameTime){
       stop(paste0(f, " doesn't exist"))
     load(f)
 
-    # ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id,
-    #                                rnd.choice.ref.all=FALSE)
     ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
 
     if(is.null(X)){
@@ -96,56 +100,95 @@ phenotype <- function (breeder, inds.todo, gameTime){
 
 
 
-  ## 4. handle the 'pheno' tasks for the requested individuals
+  ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   flush.console()
-  idx <- which(inds.todo$task == "pheno")
+  idx <- which(inds.todo$task == "pheno-field")
   length(idx)
   if(length(idx) > 0){
-    phenos.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
+    phenosField.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
                               nb.plots=as.numeric(inds.todo$details[idx]),
                               year=year,
                               pathogen=ifelse((year - 2005) %% 3 == 0,
                                               TRUE, FALSE))
 
 
-    phenos <- simulTraits12(dat=phenos.df,
+    phenosField <- simulTraits12(dat=phenosField.df,
                             mu=p0$mu,
                             sigma.alpha2=p0$sigma.alpha2,
-                            X=X[levels(phenos.df$ind),,drop=FALSE],
+                            X=X[levels(phenosField.df$ind),,drop=FALSE],
                             Beta=p0$Beta,
                             sigma2=p0$sigma2)
     
-    phenos$trait3 <- simulTrait3(dat=phenos.df,
-                                 X=X[levels(phenos.df$ind),,drop=FALSE],
+    phenosField$trait3 <- simulTrait3(dat=phenosField.df,
+                                 X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  qtn.id=p0$trait3$qtn.id,
                                  resist.genos=p0$trait3$resist.genos,
                                  prob.resist.no.qtl=p0$trait3$prob.resist.no.qtl)
 
-    phenos.df$trait1.raw <- phenos$Y[,1]
-    phenos.df$trait2 <- phenos$Y[,2]
-    phenos.df$trait3 <- phenos$trait3$y
-    phenos.df$trait1 <- phenos.df$trait1.raw
-    tmp <- (phenos.df$pathogen & as.logical(phenos.df$trait3))
+    phenosField.df$trait1.raw <- phenosField$Y[,1]
+    phenosField.df$trait2 <- phenosField$Y[,2]
+    phenosField.df$trait3 <- phenosField$trait3$y
+    phenosField.df$trait1 <- phenosField.df$trait1.raw
+    tmp <- (phenosField.df$pathogen & as.logical(phenosField.df$trait3))
     if(any(tmp))
-      phenos.df$trait1[tmp] <- (1 - p0$prop.yield.loss) * phenos.df$trait1[tmp]
+      phenosField.df$trait1[tmp] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[tmp]
 
     ## write the phenotypes (all inds into the same file)
     fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
                    "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       # stop(paste0(fout, " already exists"))
-      write.table(x=phenos.df[, -grep("raw", colnames(phenos.df))],
+      write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
                   file=gzfile(fout), quote=FALSE,
                   sep="\t", row.names=FALSE, col.names=TRUE)
     }
   }
 
+  
+  
+  
+  ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
+  flush.console()
+  idx <- which(inds.todo$task == "pheno-patho")
+  length(idx)
+  if(length(idx) > 0){
+    phenosPatho.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
+                              nb.plots=as.numeric(inds.todo$details[idx]),
+                              year=year,
+                              pathogen=TRUE)
+    
+    phenosPatho <- list()
+    
+    phenosPatho$trait3 <- simulTrait3(dat=phenosPatho.df,
+                                 X=X[levels(phenosPatho.df$ind),,drop=FALSE],
+                                 qtn.id=p0$trait3$qtn.id,
+                                 resist.genos=p0$trait3$resist.genos,
+                                 prob.resist.no.qtl=p0$trait3$prob.resist.no.qtl)
+    
+    phenosPatho.df$trait1.raw <- "--"
+    phenosPatho.df$trait2 <- "--"
+    phenosPatho.df$trait3 <- phenosPatho$trait3$y
+    phenosPatho.df$trait1 <- "--"
+    
+    ## write the phenotypes (all inds into the same file)
+    fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
+                   "_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
+    if(!file.exists(fout)){
+      # stop(paste0(fout, " already exists"))
+      write.table(x=phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))],
+                  file=gzfile(fout), quote=FALSE,
+                  sep="\t", row.names=FALSE, col.names=TRUE)
+    }
+  }
+  
+  
+  
 
 
   ## 7. log
   flush.console()
   for(type in names(data.types)){
-    if(type=="pheno" && data.types[type] > 0){
+    if((type=="pheno-field" | type=="pheno-patho")  && data.types[type] > 0){
       query <- paste0("INSERT INTO log(breeder,year,task,quantity)",
                       " VALUES ('", breeder,
                       "', '", year,
@@ -160,8 +203,12 @@ phenotype <- function (breeder, inds.todo, gameTime){
 
   # output
   pheno_data <- list()
-  pheno_data$filename <- paste0(pre.fin,"_phenos-", year, ".txt.gz")
-  pheno_data$df <- phenos.df[, -grep("raw", colnames(phenos.df))]
+  pheno_data$filename.field <- paste0(pre.fin,"_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
+  pheno_data$filename.patho <- paste0(pre.fin,"_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
+  pheno_data$df.field <- phenosField.df[, -grep("raw", colnames(phenosField.df))]
+  pheno_data$df.patho <- phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))]
   return(pheno_data)
   # return("Phenotyping requested")
 }
+
+

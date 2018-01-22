@@ -128,14 +128,18 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
             length(unique(df$ind)) <= max.nb.inds,
             all(!grepl("[^[:alnum:]._-]",df$ind)),
             all(!is.na(df$task)),
-            all(df$task %in% c("pheno", "geno")))
+            all(df$task %in% c("pheno-field", "pheno-patho", "geno")))
   
-  
-  if ("pheno" %in% df$task) {
-    tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno"]))
+
+  if ("pheno-field" %in% df$task) {
+    tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno-field"]))
     stopifnot(all(!is.na(tmp)),
-              !anyDuplicated(df$ind[df$task == "pheno"]),
-              sum(as.numeric(df$details[df$task == "pheno"])) <= max.nb.plots)
+              !anyDuplicated(df$ind[df$task == "pheno-field"]),
+              sum(as.numeric(df$details[df$task == "pheno-field"])) <= max.nb.plots)
+  }
+  
+  if ("pheno-patho" %in% df$task) {
+    stopifnot(!anyDuplicated(df$ind[df$task == "pheno-patho"]))
   }
   
   if ("geno" %in% df$task) {
@@ -180,17 +184,26 @@ countRequestedBreedTypes <- function(df){
                       c("allofecundation", "autofecundation",
                         "haplodiploidization"))
   } else if("ind" %in% colnames(df)){
-    types <- stats::setNames(c(ifelse("pheno" %in% df$task,
-                               sum(as.numeric(df$details[df$task ==
-                                                                "pheno"])),
-                               0),
-                        sum(df$task == "geno" &
-                            df$details == "hd"),
-                        sum(df$task == "geno" &
-                            df$details == "ld"),
-                        sum(df$task == "geno" &
-                            ! df$details %in% c("hd", "ld"))),
-                      c("pheno", "geno-hd", "geno-ld", "geno-single-snp"))
+    # types <- stats::setNames(c(ifelse("pheno" %in% df$task,
+    #                            sum(as.numeric(df$details[df$task ==
+    #                                                             "pheno"])),
+    #                            0),
+    #                     sum(df$task == "geno" &
+    #                         df$details == "hd"),
+    #                     sum(df$task == "geno" &
+    #                         df$details == "ld"),
+    #                     sum(df$task == "geno" &
+    #                         ! df$details %in% c("hd", "ld"))),
+    #                   c("pheno", "geno-hd", "geno-ld", "geno-single-snp"))
+    types <- stats::setNames(c(sum(df$task == "pheno-field"),
+                               sum(df$task == "pheno-patho"),
+                               sum(df$task == "geno" &
+                                     df$details == "hd"),
+                               sum(df$task == "geno" &
+                                     df$details == "ld"),
+                               sum(df$task == "geno" &
+                                     ! df$details %in% c("hd", "ld"))),
+                             c("pheno-field", "pheno-patho", "geno-hd", "geno-ld", "geno-single-snp"))
   }
 
   return(types)

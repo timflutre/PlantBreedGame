@@ -30,7 +30,7 @@ readQryPheno <- reactive({
     return(NULL)
   test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps, breeder=breeder()))
   if (is.data.frame(test)){
-    df <- df[df$task == "pheno",]
+    df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"),]
     return(df)
   }else {return("error")}
 })
@@ -84,7 +84,7 @@ pheno_data <- eventReactive(input$requestPheno, {
 
 output$phenoRequestResultUI <- renderUI({
   if (is.list(pheno_data())){
-    p("Great ! Your results will be available in ", constants$duration.pheno.field, " months.")
+    p("Great ! Your results will be available soon.")
   } else p("Something went wrong. Please check your file.")
   
 })

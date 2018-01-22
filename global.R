@@ -53,8 +53,7 @@ currentGTime <- reactive({
 root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
 constants <- getBreedingGameConstants(setup$dbname)
-# constants$max.upload.pheno.field <- as.Date(constants$max.upload.pheno.field,
-#                                             format="%m-%d")
+
 
 
 
