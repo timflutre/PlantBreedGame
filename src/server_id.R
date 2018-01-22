@@ -47,13 +47,23 @@ breeder <- eventReactive(input$submitPSW,{
 
 })
 
+breederStatus <- eventReactive(input$submitPSW,{
+  if (goodPsw()){
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    tbl <- "breeders"
+    query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
+    status <- dbGetQuery(conn=db, query)[,1]
+    dbDisconnect(db)
+    return(status)
+  }else {return("No Identification")}
+  
+})
+
 
 
 
 
 ## breeder menu
-
-
 output$userAction <- renderUI({
   if(goodPsw()){
     shinydashboard::tabBox(width=12, title =paste0("My account"),
@@ -61,12 +71,12 @@ output$userAction <- renderUI({
                                     div(
                                       h3("Phenotyping Data:"),
                                       selectInput("phenoFile", "", choices=phenoFiles()),
-                                      downloadButton("dwnlPheno", "Download your file")
+                                      uiOutput("UIdwnlPheno")
                                     ),
                                     div(
                                       h3("Genotyping Data:"),
                                       selectInput("genoFile", "", choices=genoFiles()),
-                                      downloadButton("dwnlGeno", "Download your file")
+                                      uiOutput("UIdwnlGeno")
                                     )
                                     
                                     
@@ -136,8 +146,23 @@ output$dwnlGeno <- downloadHandler(
 )
 
 # UI of dwnl buttons
-output$UIdwnlPheno <- renderUI({})
-  
+output$UIdwnlPheno <- renderUI({
+  if (breederStatus()=="player" && !availToDwnld(input$phenoFile,currentGTime())$isAvailable ){
+    p(paste0("Sorry, your data are not available yet. Delivery date: ",
+             availToDwnld(input$phenoFile,currentGTime())$availDate))
+  }else{
+    downloadButton("dwnlPheno", "Download your file")
+  }
+})
+
+output$UIdwnlGeno <- renderUI({
+  if (breederStatus()=="player" && !availToDwnld(input$genoFile,currentGTime())$isAvailable ){
+    p(paste0("Sorry, your data are not available yet. Delivery date: ",
+             availToDwnld(input$genoFile,currentGTime())$availDate))
+  }else{
+    downloadButton("dwnlGeno", "Download your file")
+  }
+})
 
 
 
@@ -204,6 +229,7 @@ output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(strftime(currentGTime(), format= "%Y-%m-%d"))
-
+  print(availToDwnld(input$genoFile,getGameTime(setup)))
+  print("----")
+  print(availToDwnld(input$phenoFile,getGameTime(setup)))
 })

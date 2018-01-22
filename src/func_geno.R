@@ -98,7 +98,7 @@ genotype <- function (breeder, inds.todo, gameTime){
       
       ## write the genotypes (all inds into the same file)
       fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-                     "_genos-", dty, "-", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
+                     "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       if(!file.exists(fout)){
         write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
                     file=gzfile(fout), quote=FALSE,
@@ -135,7 +135,7 @@ genotype <- function (breeder, inds.todo, gameTime){
     
     ## write the genotypes (all inds into the same file)
     fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-                   "-single-snps", "-", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
+                   "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       write.table(x=all.genos,
                   file=gzfile(fout), quote=FALSE,

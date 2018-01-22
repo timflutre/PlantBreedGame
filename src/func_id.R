@@ -43,27 +43,30 @@ getDataFileList <- function (type, breeder){
 }
 
 availToDwnld <- function(fileName, gameTime){
+  requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
   
   if (grepl("phenos-field", fileName)){
-    requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
     maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
     availDate <- seq(from=maxDate, by=paste0(constants$duration.pheno.field, " month"), length.out=2)[2]
     if (requestDate > maxDate){
       availDate <- seq(from=availDate, by="1 year", length.out=2)[2]
     }
-  }
-
-  ### complete for geno etc...
-  #
-  #
-  #
-  #
-  #
-  #  
+    
+  }else if (grepl("phenos-patho", fileName)){
+    availDate <- seq(from=requestDate, by=paste0(constants$duration.pheno.patho, " month"), length.out=2)[2]
+  }else if (grepl("genos-single-snps", fileName)){
+    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.single, " month"), length.out=2)[2]
+  }else if (grepl("genos-hd", fileName)){
+    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.hd, " month"), length.out=2)[2]
+  }else if (grepl("genos-ld", fileName)){
+    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.ld, " month"), length.out=2)[2]
+  }else(stop())
   
+  res <- list()
+  res$isAvailable <- availDate <= gameTime
+  res$availDate <- availDate
   
-  
-  return(availDate <= gameTime)
+  return(res)
   
 }
 
