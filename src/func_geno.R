@@ -146,7 +146,7 @@ genotype <- function (breeder, inds.todo, gameTime){
   
   
   ## 7. log
-  year <- year(gameTime)
+  year <- data.table::year(gameTime)
   
   flush.console()
   for(type in names(data.types)){
