@@ -22,6 +22,7 @@
 
 tabItem(tabName="plant_mat",
         fluidRow(
+          useShinyjs(),
           uiOutput("UIbreederInfo3"),
           
           
@@ -42,7 +43,7 @@ tabItem(tabName="plant_mat",
                             tags$head(
                               tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
                             ),
-                            actionButton("requestPlmat", "Request Phenotyping !")
+                            actionButton("requestPlmat", "Request plant material !")
                           ),
                           verbatimTextOutput("outPlmat")),
                  tabPanel("Data",

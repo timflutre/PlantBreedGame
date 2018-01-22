@@ -88,7 +88,8 @@ output$qryPlmat <- renderTable({
 
 plantMatRequested <- eventReactive(input$requestPlmat, {
   if (is.data.frame(readQryPlmat())){
-    create_plant_material(breeder(), readQryPlmat(), year)
+    create_plant_material(breeder(), readQryPlmat(), getGameTime(setup))
+    reset("file.plmat")
     return("Plant material are growing up !")
   }
   return("Please check your file")

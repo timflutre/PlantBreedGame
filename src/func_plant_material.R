@@ -20,12 +20,12 @@
 
 ## Contain functions used in "plant material" section.
 
-create_plant_material <- function (breeder, crosses.todo, year){
+create_plant_material <- function (breeder, crosses.todo, gameTime){
   # function which create the new generations (see game_master_plant-material.R)
   
   # breeder (character) name of the breeder
   # crosses.todo (data frame) output of "readCheckBreedPlantFile"
-  # year (int) year of the request
+  # gameTime ("POSIXlt") of the request (given by getGameTime function)
   
   
   ## Initialisation
@@ -33,6 +33,8 @@ create_plant_material <- function (breeder, crosses.todo, year){
   stopifnot(! is.null(crosses.todo))
   cross.types <- countRequestedBreedTypes(crosses.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
+  
+  year <- data.table::year(gameTime)
   
   
   ## check the presence of new individuals in the set of existing individuals
@@ -90,15 +92,28 @@ create_plant_material <- function (breeder, crosses.todo, year){
   
   
   
+  
+  
   ## insert the requested crosses into their table
   flush.console()
   nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
   for(i in 1:nrow(crosses.todo)){
+    ## calculate the available date:
+    if (crosses.todo$explanations[i]=="allofecundation"){
+      availableDate <- seq(from=gameTime, by=paste0(constants$duration.allof, " month"), length.out=2)[2]
+    }else if (crosses.todo$explanations[i]=="autofecundation"){
+      availableDate <- seq(from=gameTime, by=paste0(constants$duration.autof, " month"), length.out=2)[2]
+    }else if (crosses.todo$explanations[i]=="haplodiploidization"){
+      availableDate <- seq(from=gameTime, by=paste0(constants$duration.haplodiplo, " month"), length.out=2)[2]
+    }
+    
+    
     message(paste0(i, "/", nrow(crosses.todo)))
     query <- paste0("INSERT INTO ", tbl, " VALUES",
                     "('", crosses.todo$parent1[i],
                     "', '", crosses.todo$parent2[i],
-                    "', '", crosses.todo$child[i], "')")
+                    "', '", crosses.todo$child[i],
+                    "', '", availableDate, "')")
     res <- dbGetQuery(conn=db, query)
   }
   nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
