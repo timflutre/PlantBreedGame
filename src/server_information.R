@@ -28,21 +28,25 @@ output$dwnlIniData <- downloadHandler(
     filePath <- paste0("data/shared/initial_data/",input$iniDataFile)
     # get the extention of the file:
     ext <- rev(strsplit(input$iniDataFile, split=".", fixed = TRUE)[[1]])[1]
-
+    lines <- as.character(readLines(paste0("data/shared/initial_data/",input$iniDataFile)))
     if (ext=="gz"){
-      write.table(read.table(filePath, header = T),
-                  file=gzfile(file), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
+      writeLines(lines,con=gzfile(file))
     }else {
-      write.table(read_file(filePath, header = T),
-                  file=file, quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
+      writeLines(lines,con=file)
     }
   }
 )
 
 
 
+
+## Debug
+output$infoDebug <- renderPrint({
+  print("----")
+  print(input$iniDataFile)
+  print(class(input$iniDataFile))
+  
+})
 
 
 

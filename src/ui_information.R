@@ -115,6 +115,12 @@ tabItem(
                       selectInput("iniDataFile", "", choices=list.files("data/shared/initial_data")),
                       downloadButton("dwnlIniData", "Download your file")
                       
+  ),
+  
+  
+  shinydashboard::box(height = 300 ,width=12, title="debug",
+                      verbatimTextOutput("infoDebug")
+                      
   )
   
   
