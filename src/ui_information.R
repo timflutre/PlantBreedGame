@@ -54,7 +54,7 @@ tabItem(
         " KASPar genotyping can also be developed for single SNPs."),
       p("The species was domesticated recently.",
         " Despite the dangers in the uninhabited Aghromonpe valley, several sampling campaigns were conducted.",
-        " As a result, numerous accessions were gathered into a genetic resources collection, from which approximately ", 800, " lines were derived."),
+        " As a result, numerous accessions were gathered into a genetic resources collection, from which ", constants$nb.phenotyped.coll, " lines were derived."),
 
 
       h2("Available data"),
@@ -63,10 +63,9 @@ tabItem(
         " In addition, most lines were planted two successive years.",
         " Each year, the trial hence includes ", 75, " lines already tested in the previous year, and ", 75, " new lines."),
       p("The data collected are flower production in kg/ha (", code("trait1"), "), ", em("sepmetin"), " content in g/kg (", code("trait2"), "), and the presence of symptoms caused by ", HTML("<em>P.&nbsp;psychedelica</em>"), "(", code("trait3"), ").",
-        " For the ", 150, " lines tested the last year, genotypic data on the high-density chip are already available.",
+        " For ", constants$nb.genotyped.coll, "lines tested the last years, genotypic data on the high-density chip are already available.",
         " Moreover, phenotypes of the ", constants$nb.controls, " controls used at the end of the game are also provided (", constants$nb.years.per.ctl, " years, ", constants$nb.plots.per.ctl, " plots per control)."),
-
-      ## TODO: add download button with files in data/shared/initial_data/
+      p(strong("Download the data"), " at the bottom of this page."),
 
 
       h2("Experimental and financial means"),
@@ -109,22 +108,16 @@ tabItem(
       )
 
   ), # close shinydashboard::box
-  
-  shinydashboard::box(height = 300 ,width=12, title="Initial Data",
-                      p("You can download here the initial data of the game."),
+
+  shinydashboard::box(height=200, width=12, title="Initial data",
+                      p("Select and download each file:"),
                       selectInput("iniDataFile", "", choices=list.files("data/shared/initial_data")),
                       downloadButton("dwnlIniData", "Download your file")
-                      
   ),
-  
-  
-  shinydashboard::box(height = 300 ,width=12, title="debug",
+
+  shinydashboard::box(height=300, width=12, title="debug",
                       verbatimTextOutput("infoDebug")
-                      
   )
-  
-  
-  
-  
+
   ) # close fluidRow
 ) # close tabItem
