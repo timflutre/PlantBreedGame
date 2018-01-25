@@ -189,9 +189,9 @@ phenotype <- function (breeder, inds.todo, gameTime){
   flush.console()
   for(type in names(data.types)){
     if((type=="pheno-field" | type=="pheno-patho")  && data.types[type] > 0){
-      query <- paste0("INSERT INTO log(breeder,year,task,quantity)",
+      query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
                       " VALUES ('", breeder,
-                      "', '", year,
+                      "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
                       "', '", type, "', '",
                       data.types[type], "')")
       res <- dbGetQuery(db, query)

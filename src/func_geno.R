@@ -151,9 +151,9 @@ genotype <- function (breeder, inds.todo, gameTime){
   flush.console()
   for(type in names(data.types)){
     if((type=="geno-hd" || type=="geno-ld" || type=="geno-single-snp") && data.types[type] > 0){
-      query <- paste0("INSERT INTO log(breeder,year,task,quantity)",
+      query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
                       " VALUES ('", breeder,
-                      "', '", year,
+                      "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
                       "', '", type, "', '",
                       data.types[type], "')")
       res <- dbGetQuery(db, query)

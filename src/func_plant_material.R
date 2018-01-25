@@ -124,9 +124,9 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   flush.console()
   for(type in names(cross.types)){
     if(cross.types[type] > 0){
-      query <- paste0("INSERT INTO log(breeder,year,task,quantity)",
+      query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
                       " VALUES ('", breeder,
-                      "', '", year,
+                      "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
                       "', '", type,
                       "', '", cross.types[type], "')")
       res <- dbGetQuery(db, query)
