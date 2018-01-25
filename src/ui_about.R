@@ -18,24 +18,27 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-# UI of "about" part
-
-
 tabItem(tabName="about",
-        fluidRow(
-    ## uiOutput("UIbreederInfo6"),
 
-    shinydashboard::box(width=12, title = NULL,
+    fluidRow(
+        shinydashboard::box(width=12, title=NULL,
         div(id="about_1",
-            h3("Copyright "), p("2015 - 2018 INRA, Montpellier SupAgro"),
-            h3("Authors"), p("In alphabetical order: Jacques David, Julien Diot, Timothée Flutre."),
-            h3("Sources"), a("GitHub", href="https://github.com/timflutre/PlantSelBreedGame", target="_blank")
+            h3("Copyright "),
+            p("2015-2018:",
+              a("INRA", href="http://inra.fr/", target="_blank"),
+              ", ",
+              a("Montpellier SupAgro", href="http://supagro.fr/", target="_blank")),
+            h3("Authors"),
+            p("In alphabetical order: Jacques David, Julien Diot, Timothée Flutre."),
+            h3("Sources"),
+            a("GitHub", href="https://github.com/timflutre/PlantSelBreedGame", target="_blank")
+            )
         )
+    ),
+
+    fluidRow(
+        column(2, offset=2, img(src="logo_INRA.png", height=70, width=120), br(), br()),
+        column(2, offset=1, img(src="logo_SUPAGRO.jpg", height=70, width=120))
     )
 
-
-
-
-
-
-))
+)
