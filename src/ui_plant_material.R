@@ -54,6 +54,11 @@ tabItem(tabName="plant_mat",
                  tabPanel("Check",
                           verbatimTextOutput("plmatUploaded"))
 
+  ),
+  
+  
+  shinydashboard::box(width=12, title = "Debug",
+                      verbatimTextOutput("plmatDebug")
   )
           
           

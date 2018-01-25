@@ -31,7 +31,10 @@ readQryPheno <- reactive({
   test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps, breeder=breeder()))
   if (is.data.frame(test)){
     df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"),]
-    return(df)
+    indList <- unique(as.character(df$ind))
+    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+      return(df)
+    }else {return("error - Individuals not availables")}
   }else {return("error")}
 })
 
@@ -96,7 +99,7 @@ output$phenoRequestResultUI <- renderUI({
 # 
 output$PhenoDebug <- renderPrint({
   print("-----")
-  print(print(input$leftMenu))
+  print(readQryPheno())
 
 })
 

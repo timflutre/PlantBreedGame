@@ -149,7 +149,17 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
               all(df$details[df$task == "geno" & !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]]))
   }
   
-  ## check that the requested individuals already exist
+  ## check that the requested individuals don't already exist
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  tbl <- paste0("plant_material_", breeder)
+  stopifnot(tbl %in% dbListTables(db))
+  query <- paste0("SELECT child FROM ", tbl)
+  res <- dbGetQuery(conn=db, query)
+  stopifnot(all(df$ind %in% res$child))
+  # disconnect db
+  dbDisconnect(db)
+  
+  ## check that the requested individuals don't already exist
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
@@ -184,17 +194,7 @@ countRequestedBreedTypes <- function(df){
                       c("allofecundation", "autofecundation",
                         "haplodiploidization"))
   } else if("ind" %in% colnames(df)){
-    # types <- stats::setNames(c(ifelse("pheno" %in% df$task,
-    #                            sum(as.numeric(df$details[df$task ==
-    #                                                             "pheno"])),
-    #                            0),
-    #                     sum(df$task == "geno" &
-    #                         df$details == "hd"),
-    #                     sum(df$task == "geno" &
-    #                         df$details == "ld"),
-    #                     sum(df$task == "geno" &
-    #                         ! df$details %in% c("hd", "ld"))),
-    #                   c("pheno", "geno-hd", "geno-ld", "geno-single-snp"))
+
     types <- stats::setNames(c(sum(df$task == "pheno-field"),
                                sum(df$task == "pheno-patho"),
                                sum(df$task == "geno" &
@@ -208,3 +208,35 @@ countRequestedBreedTypes <- function(df){
 
   return(types)
 }
+
+
+
+
+
+indAvailable <- function(indList, gameTime, breeder){
+  
+  ## create the SQL format list
+  # indList <- unique(as.character(phenoGenoRequest$ind))
+  indSQLlist <- paste0("('", paste(indList, collapse="','"), "')")
+  
+  
+  
+  ## get requested individuals information
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  tbl <- paste0("plant_material_", breeder)
+  stopifnot(tbl %in% dbListTables(db))
+  query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
+  res <- dbGetQuery(conn=db, query)
+  # disconnect db
+  dbDisconnect(db)
+  
+  ## compare dates
+  funApply <- function(x){
+    difftime(gameTime, strptime(x, format = "%Y-%m-%d %H:%M:%S")) >=0
+  }
+  return(all(sapply(res$avail_from, FUN = funApply)))
+
+  
+}
+
+

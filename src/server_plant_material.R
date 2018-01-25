@@ -29,9 +29,14 @@ source("src/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
 readQryPlmat <- reactive({
   if(is.null(input$file.plmat))
     return(NULL)
-  # read.table(input$file.plmat$datapath, header=TRUE, sep="\t",
-  #            nrows=10)
-  try(readCheckBreedPlantFile(input$file.plmat$datapath))
+  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath))
+  if (is.data.frame(test)){
+    indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
+    indList <- indList[!is.na(indList)]
+    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+      return(df)
+    }else {return("error - Individuals not availables")}
+  }else {return("error")}
 
 })
 
@@ -44,7 +49,7 @@ output$plmatUploaded <- renderPrint({
     print("GOOD")
   } else if (is.null(readQryPlmat())){
     print("No file uploaded")
-  } else print("Not good")
+  } else print(readQryPlmat())
   
   
 })
@@ -79,10 +84,6 @@ output$qryPlmat <- renderTable({
 
 
 
-
-
-
-
 # output
 ## no output ##
 
@@ -104,5 +105,20 @@ output$outPlmat <- renderPrint({
 
 
 
+## DEBUG
+# 
+output$plmatDebug <- renderPrint({
+  print("-----")
+  if(is.null(input$file.plmat))
+    return(NULL)
+  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath))
+  if (is.data.frame(test)){
+    indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
+    indList <- indList[!is.na(indList)]
+  }
+  print(df)
+  print(indList)
+  
+})
 
 

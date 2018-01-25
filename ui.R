@@ -25,7 +25,7 @@ library(shinyjs)
 library(RSQLite)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.5",
+stopifnot(compareVersion("0.156.6",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 

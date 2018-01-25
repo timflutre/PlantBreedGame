@@ -27,12 +27,18 @@ source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 
 # read uploaded file
 readQryGeno <- reactive({
-  if(is.null(input$file.geno))
+  if(is.null(input$file.geno)){
     return(NULL)
+  }
   test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  
   if (is.data.frame(test)){
     df <- df[df$task == "geno",]
-    return(df)
+    indList <- unique(as.character(df$ind))
+    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+      return(df)
+    }else {return("error - Individuals not availables")}
+
   }else {return("error")}
 })
 
@@ -44,7 +50,7 @@ output$GenoUploaded <- renderPrint({
     print("GOOD")
   } else if (is.null(readQryGeno())){
     print("No file uploaded")
-  } else print("Not good")
+  } else print(readQryGeno())
 
 })
 
@@ -96,8 +102,6 @@ output$genoRequestResultUI <- renderUI({
 
 output$GenoDebug <- renderPrint({
   print(readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
-
-
-
+  print(indAvailable(indList, getGameTime(setup), breeder()))
 })
 
