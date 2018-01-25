@@ -84,6 +84,10 @@ output$userAction <- renderUI({
                                     
                            ),
                            
+                           tabPanel("My plant material",
+                                    dataTableOutput("myPltMatDT")
+                           ),
+                           
                            tabPanel("Change my password",
                                     div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
                                       passwordInput("prevPsw", "Previous Password")
@@ -166,6 +170,30 @@ output$UIdwnlGeno <- renderUI({
 
 
 
+
+## My plant-material
+myPltMat <- reactive({
+  if (input$leftMenu=="id"){
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    tbl <- paste0("plant_material_", breeder())
+    stopifnot(tbl %in% dbListTables(db))
+    query <- paste0("SELECT * FROM ", tbl)
+    res <- dbGetQuery(conn=db, query)
+    # disconnect db
+    dbDisconnect(db)
+    res$avail_from <- strftime(res$avail_from, format= "%Y-%m-%d")
+    res
+  }
+})
+
+output$myPltMatDT <- renderDataTable(myPltMat(), searchDelay = 500)
+
+
+
+
+
+
+
 ## Change Password
 pswChanged <- eventReactive(input$"changePsw", {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -229,7 +257,9 @@ output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(availToDwnld(input$genoFile,getGameTime(setup)))
-  print("----")
-  print(availToDwnld(input$phenoFile,getGameTime(setup)))
+  df <- myPltMat()
+  df$avail_from <- strftime(df$avail_from, format= "%Y-%m-%d")
+  print(class(df$avail_from))
+  print(head(df$avail_from))
+  print(input$leftMenu)
 })
