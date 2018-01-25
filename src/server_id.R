@@ -59,7 +59,29 @@ breederStatus <- eventReactive(input$submitPSW,{
   
 })
 
-
+budget <- reactive({
+  input$leftMenu
+  input$requestGeno
+  if (breeder()!="No Identification"){
+    
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    tbl <- "log"
+    query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
+    res <- dbGetQuery(conn=db, query)
+    dbDisconnect(db)
+    
+    if (nrow(res)>0){
+      funApply <- function(x){
+        prices[x[3]][[1]]*as.integer(x[4])
+      }
+      expenses <- sum(apply(res, MARGIN = 1, FUN = funApply))
+    }else{expenses <- 0}
+    
+    
+    # return(constants$cost.pheno.field*300*10*1.3-expenses)
+    return(0-expenses)
+  }
+})
 
 
 
@@ -231,20 +253,47 @@ output$UIpswChanged <- renderUI({
 
 
 ## Breeder information :
-UIbreederInfo <- reactive({
-  if(goodPsw()){
-    shinydashboard::box(width=12, title =paste0("You are connected as \"", breeder(),"\""), status = "warning", solidHeader = TRUE,
-                        h3("Date :"),p(strftime(currentGTime(), format= "%Y-%m-%d"))
-    )
-  }
+output$breederBoxID <- renderValueBox({
+  valueBox(
+    value = breeder(),
+    subtitle = "-",
+    icon = icon("user-o"),
+    color = "yellow",
+    width = 4
+  )
 })
-# for each menu
-output$UIbreederInfo1 <- renderUI({UIbreederInfo()})
-output$UIbreederInfo2 <- renderUI({UIbreederInfo()})
-output$UIbreederInfo3 <- renderUI({UIbreederInfo()})
-output$UIbreederInfo4 <- renderUI({UIbreederInfo()})
-output$UIbreederInfo5 <- renderUI({UIbreederInfo()})
-output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
+
+output$dateBoxID <- renderValueBox({
+  valueBox(
+    subtitle = "Date",
+    value = strftime(currentGTime(), format= "%Y-%m-%d"),
+    icon = icon("calendar"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+
+
+output$budgetBoxID <- renderValueBox({
+  valueBox(
+    value = budget(),
+    subtitle = "Budget",
+    icon = icon("credit-card"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$UIbreederInfoID <- renderUI({
+  if (breeder()!="No Identification"){
+    list(infoBoxOutput("breederBoxID"),
+         infoBoxOutput("dateBoxID"),
+         infoBoxOutput("budgetBoxID"))
+  }
+
+})
+
 
 
 
@@ -257,9 +306,5 @@ output$UIbreederInfo6 <- renderUI({UIbreederInfo()})
 
 output$IdDebug <- renderPrint({
   print("----")
-  df <- myPltMat()
-  df$avail_from <- strftime(df$avail_from, format= "%Y-%m-%d")
-  print(class(df$avail_from))
-  print(head(df$avail_from))
-  print(input$leftMenu)
+  print(UIbreederInfo())
 })

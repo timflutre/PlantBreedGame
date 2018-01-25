@@ -104,7 +104,7 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd=800){
 ##' @seealso \code{\link{makeExampleDataFile}}
 ##' @export
 readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, subset.snps,
-                                    max.nb.inds = 1000, breeder){
+                                    max.nb.inds = 1000){
   
   stopifnot(!is.null(f) || !is.null(df),
             is.numeric(max.nb.plots),
@@ -148,27 +148,7 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
     stopifnot(!anyDuplicated(df$ind[idx.notsnp]),
               all(df$details[df$task == "geno" & !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]]))
   }
-  
-  ## check that the requested individuals don't already exist
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn=db, query)
-  stopifnot(all(df$ind %in% res$child))
-  # disconnect db
-  dbDisconnect(db)
-  
-  ## check that the requested individuals don't already exist
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn=db, query)
-  stopifnot(all(df$ind %in% res$child))
-  # disconnect db
-  dbDisconnect(db)
-  
+
   invisible(df)
 }
 
@@ -215,11 +195,20 @@ countRequestedBreedTypes <- function(df){
 
 indAvailable <- function(indList, gameTime, breeder){
   
-  ## create the SQL format list
-  # indList <- unique(as.character(phenoGenoRequest$ind))
+  
+  ## 1 check that the requested individuals exist
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  tbl <- paste0("plant_material_", breeder)
+  stopifnot(tbl %in% dbListTables(db))
+  query <- paste0("SELECT child FROM ", tbl)
+  res <- dbGetQuery(conn=db, query)
+  dbDisconnect(db)
+  if(!all(indList %in% res$child)){
+    indExist <- FALSE
+  }else{indExist <- TRUE}
+  
+  ## 2 check available date
   indSQLlist <- paste0("('", paste(indList, collapse="','"), "')")
-  
-  
   
   ## get requested individuals information
   db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -227,16 +216,18 @@ indAvailable <- function(indList, gameTime, breeder){
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
   res <- dbGetQuery(conn=db, query)
-  # disconnect db
   dbDisconnect(db)
   
+  
+
   ## compare dates
   funApply <- function(x){
     difftime(gameTime, strptime(x, format = "%Y-%m-%d %H:%M:%S")) >=0
   }
-  return(all(sapply(res$avail_from, FUN = funApply)))
-
   
+  indGrown <- all(sapply(res$avail_from, FUN = funApply))
+
+  return(list("indExist"=indExist,"indGrown"=indGrown))
 }
 
 

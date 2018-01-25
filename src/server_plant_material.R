@@ -33,7 +33,8 @@ readQryPlmat <- reactive({
   if (is.data.frame(test)){
     indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
     indList <- indList[!is.na(indList)]
-    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
       return(df)
     }else {return("error - Individuals not availables")}
   }else {return("error")}
@@ -102,6 +103,52 @@ output$outPlmat <- renderPrint({
 
     plantMatRequested()
 })
+
+
+
+## Breeder information :
+output$breederBoxPltMat <- renderValueBox({
+  valueBox(
+    value = breeder(),
+    subtitle = "-",
+    icon = icon("user-o"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$dateBoxPltMat <- renderValueBox({
+  valueBox(
+    subtitle = "Date",
+    value = strftime(currentGTime(), format= "%Y-%m-%d"),
+    icon = icon("calendar"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+
+
+output$budgetBoxPltMat <- renderValueBox({
+  valueBox(
+    value = budget(),
+    subtitle = "Budget",
+    icon = icon("credit-card"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$UIbreederInfoPltMat <- renderUI({
+  if (breeder()!="No Identification"){
+    list(infoBoxOutput("breederBoxPltMat"),
+         infoBoxOutput("dateBoxPltMat"),
+         infoBoxOutput("budgetBoxPltMat"))
+  }
+  
+})
+
+
 
 
 

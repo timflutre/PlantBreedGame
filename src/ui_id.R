@@ -30,7 +30,7 @@ dbDisconnect(db)
 
 tabItem(tabName="id",
         fluidRow(
-          uiOutput("UIbreederInfo2"),
+          uiOutput("UIbreederInfoID"),
           div( id = "logInDiv",
             shinydashboard::box(width=12, title = NULL, # height = 85,
                                 div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;", id="id_1",

@@ -28,11 +28,12 @@ source("src/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
 readQryPheno <- reactive({
   if(is.null(input$file.pheno))
     return(NULL)
-  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps))
   if (is.data.frame(test)){
     df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"),]
     indList <- unique(as.character(df$ind))
-    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
       return(df)
     }else {return("error - Individuals not availables")}
   }else {return("error")}
@@ -93,6 +94,49 @@ output$phenoRequestResultUI <- renderUI({
 })
 
 
+
+
+## Breeder information :
+output$breederBoxPheno <- renderValueBox({
+  valueBox(
+    value = breeder(),
+    subtitle = "-",
+    icon = icon("user-o"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$dateBoxPheno <- renderValueBox({
+  valueBox(
+    subtitle = "Date",
+    value = strftime(currentGTime(), format= "%Y-%m-%d"),
+    icon = icon("calendar"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+
+
+output$budgetBoxPheno <- renderValueBox({
+  valueBox(
+    value = budget(),
+    subtitle = "Budget",
+    icon = icon("credit-card"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$UIbreederInfoPheno <- renderUI({
+  if (breeder()!="No Identification"){
+    list(infoBoxOutput("breederBoxPheno"),
+         infoBoxOutput("dateBoxPheno"),
+         infoBoxOutput("budgetBoxPheno"))
+  }
+  
+})
 
 
 ## DEBUG

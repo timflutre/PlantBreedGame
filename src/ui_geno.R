@@ -24,7 +24,7 @@
 tabItem(tabName="geno",
         fluidRow(
           useShinyjs(),
-          uiOutput("UIbreederInfo5"),
+          uiOutput("UIbreederInfoGeno"),
 
           shinydashboard::box(width=12, title = "Choose an instruction file for genotyping:",
                               div( id="geno_file",

@@ -30,12 +30,13 @@ readQryGeno <- reactive({
   if(is.null(input$file.geno)){
     return(NULL)
   }
-  test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
+  test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps))
   
   if (is.data.frame(test)){
     df <- df[df$task == "geno",]
     indList <- unique(as.character(df$ind))
-    if (indAvailable(indList, getGameTime(setup), breeder()) | breederStatus()=="game master"){# check if individuals are available
+    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
       return(df)
     }else {return("error - Individuals not availables")}
 
@@ -98,10 +99,55 @@ output$genoRequestResultUI <- renderUI({
 
 
 
+## Breeder information :
+output$breederBoxGeno <- renderValueBox({
+  valueBox(
+    value = breeder(),
+    subtitle = "-",
+    icon = icon("user-o"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$dateBoxGeno <- renderValueBox({
+  valueBox(
+    subtitle = "Date",
+    value = strftime(currentGTime(), format= "%Y-%m-%d"),
+    icon = icon("calendar"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+
+
+output$budgetBoxGeno <- renderValueBox({
+  valueBox(
+    value = budget(),
+    subtitle = "Budget",
+    icon = icon("credit-card"),
+    color = "yellow",
+    width = 4
+  )
+})
+
+output$UIbreederInfoGeno <- renderUI({
+  if (breeder()!="No Identification"){
+    list(infoBoxOutput("breederBoxGeno"),
+         infoBoxOutput("dateBoxGeno"),
+         infoBoxOutput("budgetBoxGeno"))
+  }
+  
+})
+
+
 # DEBUG
 
 output$GenoDebug <- renderPrint({
-  print(readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps, breeder=breeder()))
-  print(indAvailable(indList, getGameTime(setup), breeder()))
+  df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps)
+  indList <- unique(as.character(df$ind))
+  print(indList)
+  print(indAvail <- indAvailable(indList, getGameTime(setup), breeder()))
 })
 

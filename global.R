@@ -50,9 +50,28 @@ currentGTime <- reactive({
   getGameTime(setup)
 })
 
+  
+  
+  
+  
+  
+  
+  
+  
+
+
 root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
 constants <- getBreedingGameConstants(setup$dbname)
+
+prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field,
+               "autofecundation"=constants$cost.autof*constants$cost.pheno.field,
+               "haplodiploidization"=constants$cost.haplodiplo*constants$cost.pheno.field,
+               "pheno-field"=constants$cost.pheno.field,
+               "pheno-patho"=constants$cost.pheno.patho*constants$cost.pheno.field,
+               "geno-hd"=constants$cost.geno.hd*constants$cost.pheno.field,
+               "geno-ld"=round(constants$cost.geno.ld*constants$cost.pheno.field,2),
+               "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field)
 
 
 

@@ -25,9 +25,7 @@
 tabItem(tabName="pheno",
         fluidRow(
     useShinyjs(),
-    uiOutput("UIbreederInfo4"),
-
-
+    uiOutput("UIbreederInfoPheno"),
 
 
     shinydashboard::box(width=12, title = "Choose an instruction file for phenotyping:",
