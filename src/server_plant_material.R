@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -27,17 +27,30 @@ source("src/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
 
 # read uploaded file
 readQryPlmat <- reactive({
-  if(is.null(input$file.plmat))
+
+  # no input fileI
+  if(is.null(input$file.plmat)){
     return(NULL)
+  }
+
+
+  # read input file
   test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath))
+
   if (is.data.frame(test)){
+    # the file is ok
+
+    # list individuals
     indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
     indList <- indList[!is.na(indList)]
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
+
+    # check if individuals are available
+    if ((indAvail$indGrown | breederStatus()=="game master")
+        & indAvail$indExist){
       return(df)
     }else {return("error - Individuals not availables")}
-  }else {return("error")}
+  }else {return("error - wrong file format")}
 
 })
 
@@ -45,14 +58,14 @@ readQryPlmat <- reactive({
 
 # check
 output$plmatUploaded <- renderPrint({
-  
+
   if (is.data.frame(readQryPlmat())){
     print("GOOD")
   } else if (is.null(readQryPlmat())){
     print("No file uploaded")
   } else print(readQryPlmat())
-  
-  
+
+
 })
 
 
@@ -79,29 +92,41 @@ output$qryPlmat <- renderTable({
   if (is.data.frame(readQryPlmat())){
     readQryPlmat()
   }
-  
+
 })
 
 
 
 
 # output
-## no output ##
-
-plantMatRequested <- eventReactive(input$requestPlmat, {
+plantMatRequested <- eventReactive(input$requestPlmat,{
   if (is.data.frame(readQryPlmat())){
-    create_plant_material(breeder(), readQryPlmat(), getGameTime(setup))
-    reset("file.plmat")
-    return("Plant material are growing up !")
-  }
-  return("Please check your file")
+
+    res <- try(create_plant_material(breeder(),
+                                     readQryPlmat(),
+                                     getGameTime(setup)))
+
+    if (res=="done"){
+      return(res)
+    }else return("error")
+
+  }else return(NULL)
 })
 
 
+output$plmatRequestResultUI <- renderUI({
+  if (!is.null(plantMatRequested()) && plantMatRequested()=="done"){
+    # reset inputs
+    reset("file.plmat")
+    session$sendCustomMessage(type = "resetValue", message = "file.plmat")
+    
+    # display message
+    
+    p("Great ! Your plants are growing up !")
+  } else if (!is.null(plantMatRequested()) && plantMatRequested()=="error"){
+    p("Something went wrong. Please check your file.")
+  } else  p("")
 
-output$outPlmat <- renderPrint({
-
-    plantMatRequested()
 })
 
 
@@ -145,7 +170,7 @@ output$UIbreederInfoPltMat <- renderUI({
          infoBoxOutput("dateBoxPltMat"),
          infoBoxOutput("budgetBoxPltMat"))
   }
-  
+
 })
 
 
@@ -153,19 +178,9 @@ output$UIbreederInfoPltMat <- renderUI({
 
 
 ## DEBUG
-# 
+#
 output$plmatDebug <- renderPrint({
   print("-----")
-  if(is.null(input$file.plmat))
-    return(NULL)
-  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath))
-  if (is.data.frame(test)){
-    indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
-    indList <- indList[!is.na(indList)]
-  }
-  print(df)
-  print(indList)
-  
+
+
 })
-
-

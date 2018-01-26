@@ -50,6 +50,9 @@ availToDwnld <- function(fileName, gameTime){
   # fileName (char) name of the file
   # gameTime ("POSIXlt") (given by getGameTime function)
   
+  stopifnot(is.character(fileName),
+            fileName!="")
+  
   
   # get the date when the file was requested
   requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
@@ -78,6 +81,8 @@ availToDwnld <- function(fileName, gameTime){
   res$availDate <- availDate
   
   return(res)
+  
+  
   
 }
 

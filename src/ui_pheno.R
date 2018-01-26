@@ -26,6 +26,10 @@ tabItem(tabName="pheno",
     fluidRow(
     useShinyjs(),
     uiOutput("UIbreederInfoPheno"),
+    tags$script("Shiny.addCustomMessageHandler(
+                              'resetValue',function(variableName){
+                              Shiny.onInputChange(variableName, null);});"
+                ),
 
 
     shinydashboard::box(width=12, title = "Choose an instruction file for phenotyping:",
@@ -51,7 +55,7 @@ tabItem(tabName="pheno",
                                         uiOutput("phenoRequestResultUI")
                                       )
                                     ),
-                           
+
                            tabPanel("Data",
                                     tableOutput(outputId="qryPheno")),
                            tabPanel("Summary",
@@ -68,19 +72,3 @@ tabItem(tabName="pheno",
     )
   ) # close fluidRow
 ) # close tabItem
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

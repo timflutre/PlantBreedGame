@@ -192,13 +192,7 @@ phenotype <- function (breeder, inds.todo, gameTime){
   dbDisconnect(db)
 
   # output
-  pheno_data <- list()
-  pheno_data$filename.field <- paste0(pre.fin,"_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-  pheno_data$filename.patho <- paste0(pre.fin,"_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-  pheno_data$df.field <- phenosField.df[, -grep("raw", colnames(phenosField.df))]
-  pheno_data$df.patho <- phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))]
-  return(pheno_data)
-  # return("Phenotyping requested")
+  return("done")
 }
 
 

@@ -23,29 +23,44 @@
 source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 
 
-## server for "genotyping"
+###### server for "genotyping" ######
 
-# read uploaded file
+
+
+## read uploaded file
 readQryGeno <- reactive({
+  
+  # no input fileI
   if(is.null(input$file.geno)){
     return(NULL)
   }
-  test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps))
-  
+
+  # read input file
+  test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath,
+                                            subset.snps=subset.snps))
+
+
   if (is.data.frame(test)){
-    df <- df[df$task == "geno",]
+    # the file is ok
+
+    df <- df[df$task == "geno",] # keep only "geno" requests
+
+    # list individuals
     indList <- unique(as.character(df$ind))
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
+
+    # check if individuals are available
+    if ((indAvail$indGrown | breederStatus()=="game master")
+        & indAvail$indExist){
       return(df)
     }else {return("error - Individuals not availables")}
 
-  }else {return("error")}
+  }else {return("error - wrong file format")}# wrong file
 })
 
 
 
-# check
+## check
 output$GenoUploaded <- renderPrint({
   if (is.data.frame(readQryGeno())){
     print("GOOD")
@@ -57,7 +72,7 @@ output$GenoUploaded <- renderPrint({
 
 
 
-# summary
+## summary
 output$GenoSmy <- renderPrint({
   if (is.data.frame(readQryGeno())){
     summary(as.data.frame(apply(readQryGeno(), MARGIN = 2, FUN = as.factor)))
@@ -70,7 +85,7 @@ output$GenoStr <- renderPrint({
 })
 
 
-# data
+## data
 output$qryGeno <- renderTable({
   if (is.data.frame(readQryGeno())){
     readQryGeno()
@@ -79,20 +94,36 @@ output$qryGeno <- renderTable({
 
 
 
-# output
-geno_data <- eventReactive(input$requestGeno, {
+## output
+geno_data <- eventReactive(input$requestGeno,{
+
   if (is.data.frame(readQryGeno())){
-    res <- genotype(breeder(), readQryGeno(), getGameTime(setup))
-    reset("file.geno")
-    return(res)
-  }
+    
+    res <- try(genotype(breeder(),
+                        readQryGeno(),
+                        getGameTime(setup)))
+    if (res=="done"){
+      return(res)
+    }else return("error")
+
+  }else return(NULL)
 })
 
 output$genoRequestResultUI <- renderUI({
-  if (is.list(geno_data())){
-    p("Great ! Your results will be available in ", constants$duration.geno, " months.")
-  } else p("Something went wrong. Please check your file.")
   
+  if (!is.null(geno_data()) && geno_data()=="done"){
+    # reset inputs
+    reset("file.geno")
+    session$sendCustomMessage(type = "resetValue", message = "file.geno")
+    
+    # display message
+    p("Great ! Your results will be available in ",
+      constants$duration.geno.hd, " months.")
+    
+  } else if (!is.null(geno_data()) && geno_data()=="error"){
+    p("Something went wrong. Please check your file.")
+  } else p("")
+
 })
 
 
@@ -120,8 +151,6 @@ output$dateBoxGeno <- renderValueBox({
   )
 })
 
-
-
 output$budgetBoxGeno <- renderValueBox({
   valueBox(
     value = budget(),
@@ -138,16 +167,19 @@ output$UIbreederInfoGeno <- renderUI({
          infoBoxOutput("dateBoxGeno"),
          infoBoxOutput("budgetBoxGeno"))
   }
-  
+
 })
 
 
-# DEBUG
 
+##  DEBUG
 output$GenoDebug <- renderPrint({
-  df <- readCheckBreedDataFile(input$file.geno$datapath, subset.snps=subset.snps)
-  indList <- unique(as.character(df$ind))
-  print(indList)
-  print(indAvail <- indAvailable(indList, getGameTime(setup), breeder()))
-})
+  print("---------")
+  
+  print("-----GenoData----")
+  print(geno_data())
+  
+  print("-----readQryGeno----")
+  print(readQryGeno())
 
+})

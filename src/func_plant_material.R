@@ -78,7 +78,7 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
                                       nb.snps=sapply(parents$haplos, ncol))
   new.inds$haplos <- makeCrosses(haplos=parents$haplos,
                                  crosses=crosses.todo,
-                                 loc.crossovers=loc.crossovers, verbose=2)
+                                 loc.crossovers=loc.crossovers, verbose=0)
   
   
   ## save the haplotypes of the new individuals
@@ -132,7 +132,7 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   }
   dbDisconnect(db)
   
-  return("Done")
+  return("done")
 
 }
 

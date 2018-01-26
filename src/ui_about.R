@@ -31,14 +31,12 @@ tabItem(tabName="about",
             h3("Authors"),
             p("In alphabetical order: Jacques David, Julien Diot, Timothée Flutre."),
             h3("Sources"),
-            a("GitHub", href="https://github.com/timflutre/PlantSelBreedGame", target="_blank")
-            )
-        )
-    ),
-
-    fluidRow(
+            a("GitHub", href="https://github.com/timflutre/PlantSelBreedGame", target="_blank"),
+            p("")
+            ),
         column(5, offset=0, img(src="logo_INRA.png", height=70, width=70*2.43)),
         column(3, offset=0, img(src="logo_SUPAGRO.jpg", height=70, width=70*2.38))
+        )
     )
 
 )

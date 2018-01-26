@@ -173,21 +173,27 @@ output$dwnlGeno <- downloadHandler(
 
 # UI of dwnl buttons
 output$UIdwnlPheno <- renderUI({
-  if (breederStatus()=="player" && !availToDwnld(input$phenoFile,currentGTime())$isAvailable ){
-    p(paste0("Sorry, your data are not available yet. Delivery date: ",
-             availToDwnld(input$phenoFile,currentGTime())$availDate))
-  }else{
-    downloadButton("dwnlPheno", "Download your file")
-  }
+  if (input$phenoFile!=""){
+    if (breederStatus()=="player" && !availToDwnld(input$phenoFile,currentGTime())$isAvailable ){
+      p(paste0("Sorry, your data are not available yet. Delivery date: ",
+               availToDwnld(input$phenoFile,currentGTime())$availDate))
+    }else{
+      downloadButton("dwnlPheno", "Download your file")
+    }
+
+  }else p("")
+  
 })
 
 output$UIdwnlGeno <- renderUI({
-  if (breederStatus()=="player" && !availToDwnld(input$genoFile,currentGTime())$isAvailable ){
-    p(paste0("Sorry, your data are not available yet. Delivery date: ",
-             availToDwnld(input$genoFile,currentGTime())$availDate))
-  }else{
-    downloadButton("dwnlGeno", "Download your file")
-  }
+  if (input$phenoFile!=""){
+    if (breederStatus()=="player" && !availToDwnld(input$genoFile,currentGTime())$isAvailable ){
+      p(paste0("Sorry, your data are not available yet. Delivery date: ",
+               availToDwnld(input$genoFile,currentGTime())$availDate))
+    }else{
+      downloadButton("dwnlGeno", "Download your file")
+    }
+  }else p("")
 })
 
 
@@ -306,5 +312,6 @@ output$UIbreederInfoID <- renderUI({
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(UIbreederInfo())
+  print(input$phenoFile)
+  print(class(input$phenoFile))
 })

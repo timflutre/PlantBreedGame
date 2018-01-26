@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -23,10 +23,14 @@
 tabItem(tabName="plant_mat",
         fluidRow(
         useShinyjs(),
-        
+        tags$script("Shiny.addCustomMessageHandler(
+                                  'resetValue',function(variableName){
+                                  Shiny.onInputChange(variableName, null);});"
+                    ),
+
   uiOutput("UIbreederInfoPltMat"),
-          
-          
+
+
   shinydashboard::box(width=12, title = "Choose an instruction file for plant material:",
                       div( id="cross_file",
                            fileInput(inputId="file.plmat",
@@ -35,18 +39,22 @@ tabItem(tabName="plant_mat",
                                      accept=c(".txt", ".tsv"))
                       )
   ),
-  
-  
-  
+
+
+
   shinydashboard::tabBox(width=12, title = "Info", id = "cross_tabset", side="right", selected = "Check",
                  tabPanel("Request",
-                          div(
-                            tags$head(
-                              tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
+                            div(
+                              tags$head(
+                                tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
+                              ),
+                              actionButton("requestPlmat", "Request plant material !")
                             ),
-                            actionButton("requestPlmat", "Request plant material !")
+                            div(
+                              uiOutput("plmatRequestResultUI")
+                            )
                           ),
-                          verbatimTextOutput("outPlmat")),
+                 
                  tabPanel("Data",
                           tableOutput(outputId="qryPlmat")),
                  tabPanel("Summary",
@@ -56,20 +64,13 @@ tabItem(tabName="plant_mat",
                           verbatimTextOutput("plmatUploaded"))
 
   ),
-  
-  
+
+
   shinydashboard::box(width=12, title = "Debug",
                       verbatimTextOutput("plmatDebug")
   )
-  
-  
-  
+
+
+
  ) # close fluidRow
 ) # close tabItem
-          
-          
-
-
-
-
-

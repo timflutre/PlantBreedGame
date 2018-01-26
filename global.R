@@ -33,6 +33,11 @@ stopifnot(compareVersion("0.156.6",
           != 1)
 
 
+library(beepr) # help for debug
+
+
+
+
 ## -------------------------------------------------------------------
 ## functions
 

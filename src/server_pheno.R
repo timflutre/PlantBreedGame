@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -26,17 +26,34 @@ source("src/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
 
 # read uploaded file
 readQryPheno <- reactive({
-  if(is.null(input$file.pheno))
+
+  # no input fileI
+  if(is.null(input$file.pheno)){
     return(NULL)
-  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath, subset.snps=subset.snps))
+  }
+
+  # read input file
+  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
+                                            subset.snps=subset.snps))
+
+
   if (is.data.frame(test)){
+    # the file is ok
+
+    # keep only "pheno" requests
     df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"),]
+
+    # list individuals
     indList <- unique(as.character(df$ind))
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-    if ((indAvail$indGrown | breederStatus()=="game master") & indAvail$indExist){# check if individuals are available
+
+
+    # check if individuals are available
+    if ((indAvail$indGrown | breederStatus()=="game master")
+        & indAvail$indExist){
       return(df)
     }else {return("error - Individuals not availables")}
-  }else {return("error")}
+  }else {return("error - wrong file format")}
 })
 
 
@@ -48,7 +65,7 @@ output$PhenoUploaded <- renderPrint({
   } else if (is.null(readQryPheno())){
       print("No file uploaded")
   } else print("Not good")
-  
+
 })
 
 
@@ -76,21 +93,28 @@ output$qryPheno <- renderTable({
 
 
 # output
-pheno_data <- eventReactive(input$requestPheno, {
+pheno_data <- eventReactive(input$requestPheno,{
   if (is.data.frame(readQryPheno())){
-    res <- phenotype(breeder(), readQryPheno(), getGameTime(setup))
-    reset("file.pheno")
-    return(res)
-  }
+    res <- try(phenotype(breeder(), readQryPheno(), getGameTime(setup)))
+    beep()
+    if (res=="done"){
+      return(res)
+    }else return("error")
+
+  }else return(NULL)
 
 })
 
 
 output$phenoRequestResultUI <- renderUI({
-  if (is.list(pheno_data())){
+  if (!is.null(pheno_data()) && pheno_data()=="done"){
+    reset("file.pheno")
+    session$sendCustomMessage(type = "resetValue", message = "file.pheno")
     p("Great ! Your results will be available soon.")
-  } else p("Something went wrong. Please check your file.")
-  
+  }  else if (!is.null(pheno_data()) && pheno_data()=="error"){
+    p("Something went wrong. Please check your file.")
+  }
+
 })
 
 
@@ -135,15 +159,14 @@ output$UIbreederInfoPheno <- renderUI({
          infoBoxOutput("dateBoxPheno"),
          infoBoxOutput("budgetBoxPheno"))
   }
-  
+
 })
 
 
 ## DEBUG
-# 
+#
 output$PhenoDebug <- renderPrint({
   print("-----")
   print(readQryPheno())
 
 })
-
