@@ -194,6 +194,10 @@ countRequestedBreedTypes <- function(df){
 
 
 indAvailable <- function(indList, gameTime, breeder){
+  # function to check if individuals "grown up"
+  # indList (character verctor), list of individuals to check
+  # gameTime ("POSIXlt") (given by getGameTime function)
+  # breeder (charracter) breeder name
   
   
   ## 1 check that the requested individuals exist
@@ -207,26 +211,27 @@ indAvailable <- function(indList, gameTime, breeder){
     indExist <- FALSE
   }else{indExist <- TRUE}
   
+  
+  
+  
   ## 2 check available date
   indSQLlist <- paste0("('", paste(indList, collapse="','"), "')")
   
-  ## get requested individuals information
+  # get requested individuals information
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
   res <- dbGetQuery(conn=db, query)
   dbDisconnect(db)
-  
-  
 
-  ## compare dates
+  # compare dates
   funApply <- function(x){
     difftime(gameTime, strptime(x, format = "%Y-%m-%d %H:%M:%S")) >=0
   }
-  
   indGrown <- all(sapply(res$avail_from, FUN = funApply))
 
+  ## resuts
   return(list("indExist"=indExist,"indGrown"=indGrown))
 }
 

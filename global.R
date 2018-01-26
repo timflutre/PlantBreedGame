@@ -50,14 +50,6 @@ currentGTime <- reactive({
   getGameTime(setup)
 })
 
-  
-  
-  
-  
-  
-  
-  
-  
 
 
 root.dir <- "data"
@@ -75,15 +67,9 @@ prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field
 
 
 
-
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
 subset.snps[["hd"]] <- rownames(read.table(f))
 f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
 subset.snps[["ld"]] <- rownames(read.table(f))
-
-
-## -------------------------------------------------------------------
-## functions
-
 

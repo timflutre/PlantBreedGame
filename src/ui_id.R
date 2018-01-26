@@ -21,6 +21,8 @@
 
 # UI of "identification" part
 
+
+# get the breeders list
 db <- dbConnect(SQLite(), dbname=setup$dbname)
 tbl <- "breeders"
 query <- paste0("SELECT name FROM ", tbl)
@@ -28,11 +30,12 @@ breederNames <- dbGetQuery(conn=db, query)[,1]
 dbDisconnect(db)
 
 
+# UI
 tabItem(tabName="id",
         fluidRow(
           uiOutput("UIbreederInfoID"),
           div( id = "logInDiv",
-            shinydashboard::box(width=12, title = NULL, # height = 85,
+            shinydashboard::box(width=12, title = NULL,
                                 div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;", id="id_1",
                                     selectInput("breederName", "Breeder", choices=as.list(breederNames))
                                 ),
@@ -61,8 +64,8 @@ tabItem(tabName="id",
 
 
 
-        )
-)
+      ) # close fluidRow
+) # close tabItem
 
 
 

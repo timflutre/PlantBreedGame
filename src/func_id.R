@@ -32,8 +32,8 @@ getDataFileList <- function (type, breeder){
   dirPath <- paste0("data/shared/",breeder)
   dataFile <- list.files(dirPath)
   
+  ## Get the ids of the files
   matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="pheno"))
-  
   if (type =="pheno"){
     matchId <- which(matchId)
   }else matchId <- which(!matchId) # type =="geno"
@@ -42,9 +42,19 @@ getDataFileList <- function (type, breeder){
 
 }
 
+
+
+
 availToDwnld <- function(fileName, gameTime){
+  # function to check if files are available to download
+  # fileName (char) name of the file
+  # gameTime ("POSIXlt") (given by getGameTime function)
+  
+  
+  # get the date when the file was requested
   requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
   
+  # calculate the available date
   if (grepl("phenos-field", fileName)){
     maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
     availDate <- seq(from=maxDate, by=paste0(constants$duration.pheno.field, " month"), length.out=2)[2]
@@ -62,6 +72,7 @@ availToDwnld <- function(fileName, gameTime){
     availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.ld, " month"), length.out=2)[2]
   }else(stop())
   
+  # results
   res <- list()
   res$isAvailable <- availDate <= gameTime
   res$availDate <- availDate

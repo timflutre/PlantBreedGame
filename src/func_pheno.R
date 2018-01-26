@@ -67,14 +67,6 @@ phenotype <- function (breeder, inds.todo, gameTime){
   res <- dbGetQuery(conn=db, query)
   stopifnot(all(inds.todo$ind %in% res$child))
   
-  
-  ## 2.2 Check that the requested individuals are available
-  #
-  # TO DO
-  #
-  #
-
-
 
   ## 3. load the haplotypes and convert to genotypes
   flush.console()
@@ -197,8 +189,6 @@ phenotype <- function (breeder, inds.todo, gameTime){
       res <- dbGetQuery(db, query)
     }
   }
-
-  # disconnect db
   dbDisconnect(db)
 
   # output

@@ -159,18 +159,8 @@ genotype <- function (breeder, inds.todo, gameTime){
       res <- dbGetQuery(db, query)
     }
   }
-  
-  # disconnect db
   dbDisconnect(db)
   
   # output
-  geno_data <- list()
-  geno_data$filename.ld <- paste0(pre.fin,"_genos-ld", strftime(gameTime), ".txt.gz")
-  geno_data$filename.hd <- paste0(pre.fin,"_genos-hd", strftime(gameTime), ".txt.gz")
-  geno_data$filename.snp <- paste0(pre.fin,"_single-snps-", strftime(gameTime), ".txt.gz")
-  
-  geno_data$df.ld <- df.geno.ld
-  geno_data$df.hd <- df.geno.hd
-  geno_data$df.snp <- all.genos
-  return(geno_data)
+  return("done")
 }

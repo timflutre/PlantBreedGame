@@ -66,8 +66,9 @@ getGameTime <- function(setup){
   }
   elapsTime <- as.difftime(elapsTime*365.25, units = "days")
 
+  # result
   gameTime <- strptime("2015-01-01", format="%Y-%m-%d") + elapsTime
-
+  return(gameTime)
 }
 
 

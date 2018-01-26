@@ -22,8 +22,9 @@
 
 tabItem(tabName="plant_mat",
         fluidRow(
-          useShinyjs(),
-          uiOutput("UIbreederInfoPltMat"),
+        useShinyjs(),
+        
+  uiOutput("UIbreederInfoPltMat"),
           
           
   shinydashboard::box(width=12, title = "Choose an instruction file for plant material:",
@@ -60,15 +61,13 @@ tabItem(tabName="plant_mat",
   shinydashboard::box(width=12, title = "Debug",
                       verbatimTextOutput("plmatDebug")
   )
+  
+  
+  
+ ) # close fluidRow
+) # close tabItem
           
           
-          
-          
-          
-          
-))
-
-
 
 
 

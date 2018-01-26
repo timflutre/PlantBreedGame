@@ -37,8 +37,8 @@ tabItem(tabName="about",
     ),
 
     fluidRow(
-        column(2, offset=2, img(src="logo_INRA.png", height=70, width=120), br(), br()),
-        column(2, offset=1, img(src="logo_SUPAGRO.jpg", height=70, width=120))
+        column(5, offset=0, img(src="logo_INRA.png", height=70, width=70*2.43)),
+        column(3, offset=0, img(src="logo_SUPAGRO.jpg", height=70, width=70*2.38))
     )
 
 )

@@ -90,9 +90,7 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
     save(ind, file=f)
   }
   
-  
-  
-  
+
   
   ## insert the requested crosses into their table
   flush.console()
@@ -132,8 +130,6 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
       res <- dbGetQuery(db, query)
     }
   }
-  
-  # disconnect db
   dbDisconnect(db)
   
   return("Done")

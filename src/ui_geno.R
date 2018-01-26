@@ -24,6 +24,10 @@
 tabItem(tabName="geno",
         fluidRow(
           useShinyjs(),
+          tags$script("Shiny.addCustomMessageHandler(
+                                    'resetValue',function(variableName){
+                                    Shiny.onInputChange(variableName, null);});"
+                      ),
           uiOutput("UIbreederInfoGeno"),
 
           shinydashboard::box(width=12, title = "Choose an instruction file for genotyping:",
@@ -65,14 +69,8 @@ tabItem(tabName="geno",
                               verbatimTextOutput("GenoDebug")
           )
 
-
-
-
-
-
-
-
-        ))
+        ) # close fluidRow
+) # close tabItem
 
 
 

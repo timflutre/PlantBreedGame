@@ -23,7 +23,7 @@
 
 
 tabItem(tabName="pheno",
-        fluidRow(
+    fluidRow(
     useShinyjs(),
     uiOutput("UIbreederInfoPheno"),
 
@@ -66,6 +66,8 @@ tabItem(tabName="pheno",
     shinydashboard::box(width=12, title = "Debug",
                         verbatimTextOutput("PhenoDebug")
     )
+  ) # close fluidRow
+) # close tabItem
 
 
 
@@ -74,7 +76,7 @@ tabItem(tabName="pheno",
 
 
 
-))
+
 
 
 
