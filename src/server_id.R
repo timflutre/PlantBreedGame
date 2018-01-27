@@ -27,27 +27,41 @@ source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ## log in
-goodPsw <- eventReactive(input$submitPSW, {
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- "breeders"
-  query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
-  hashPsw <- dbGetQuery(conn=db, query)[,1]
-  dbDisconnect(db)
-  if (hashPsw==digest(input$psw, "md5", serialize = FALSE)){
-    removeUI("#logInDiv")
-    return (TRUE)
-  }else return(FALSE)
+goodPsw <- eventReactive(input$submitPSW,
+                         ignoreNULL=FALSE,{
 
+  if (input$submitPSW==0){
+    return(FALSE)
+  } else{
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    tbl <- "breeders"
+    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
+    hashPsw <- dbGetQuery(conn=db, query)[,1]
+    dbDisconnect(db)
+    if (hashPsw==digest(input$psw, "md5", serialize = FALSE)){
+      removeUI("#logInDiv")
+      return (TRUE)
+    }else return(FALSE)
+  }
 })
 
-breeder <- eventReactive(input$submitPSW,{
+# connected <- reactive({
+#   input$leftMenu
+#   res <- FALSE
+#   if (goodPsw()){
+#     res <- TRUE
+#   }
+#   return(res)
+# })
+
+breeder <- reactive({
   if (goodPsw()){
     input$breederName
   }else {"No Identification"}
 
 })
 
-breederStatus <- eventReactive(input$submitPSW,{
+breederStatus <- reactive({
   if (goodPsw()){
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     tbl <- "breeders"
@@ -312,6 +326,5 @@ output$UIbreederInfoID <- renderUI({
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(input$phenoFile)
-  print(class(input$phenoFile))
+  print(input$submitPSW)
 })
