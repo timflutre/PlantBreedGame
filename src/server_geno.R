@@ -175,11 +175,7 @@ output$UIbreederInfoGeno <- renderUI({
 ##  DEBUG
 output$GenoDebug <- renderPrint({
   print("---------")
-  
-  print("-----GenoData----")
-  print(geno_data())
-  
-  print("-----readQryGeno----")
-  print(readQryGeno())
+  print(ls())
+
 
 })

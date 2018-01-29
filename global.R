@@ -26,6 +26,7 @@ library(shinyjs)
 library(RSQLite)
 library(MASS)
 library(digest)
+library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
 stopifnot(compareVersion("0.156.6",

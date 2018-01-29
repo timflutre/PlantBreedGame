@@ -25,6 +25,7 @@ library(shinyjs)
 library(RSQLite)
 library(MASS)
 library(digest)
+library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
 stopifnot(compareVersion("0.156.6",
@@ -39,4 +40,5 @@ shinyServer(function(input, output, session) {
   source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_geno.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_eval.R", local=TRUE, encoding="UTF-8")$value
 })

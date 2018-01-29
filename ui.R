@@ -23,6 +23,7 @@ library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(RSQLite)
+library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
 stopifnot(compareVersion("0.156.6",
@@ -54,6 +55,7 @@ shinyUI(
                                    menuItem("Request plant material", tabName="plant_mat", icon=icon("sitemap")),
                                    menuItem("Request phenotyping",   tabName="pheno", icon=icon("search")),
                                    menuItem("Request genotyping",    tabName="geno",  icon=icon("database")),
+                                   menuItem("Evaluation",    tabName="eval",  icon=icon("file-text-o")),
                                    menuItem("About",     tabName="about", icon=icon("info-circle"))
                                  )
                 ),
@@ -68,7 +70,8 @@ shinyUI(
                     source("src/ui_about.R", local=TRUE, encoding = "UTF-8")$value,
                     source("src/ui_plant_material.R", local=TRUE, encoding = "UTF-8")$value,
                     source("src/ui_pheno.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_geno.R", local=TRUE, encoding = "UTF-8")$value
+                    source("src/ui_geno.R", local=TRUE, encoding = "UTF-8")$value,
+                    source("src/ui_eval.R", local=TRUE, encoding = "UTF-8")$value
                   )
                 )
   )

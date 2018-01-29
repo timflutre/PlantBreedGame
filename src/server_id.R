@@ -45,14 +45,6 @@ goodPsw <- eventReactive(input$submitPSW,
   }
 })
 
-# connected <- reactive({
-#   input$leftMenu
-#   res <- FALSE
-#   if (goodPsw()){
-#     res <- TRUE
-#   }
-#   return(res)
-# })
 
 breeder <- reactive({
   if (goodPsw()){

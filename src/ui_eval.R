@@ -18,18 +18,13 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-## UI for "evaluation" part$
-
+## UI for "evaluation" part
 
 tabItem(tabName="eval",
         fluidRow(
+          uiOutput("evalUI")
+        ) # close fluidRow
+) # close tabItem
 
-          
-          shinydashboard::box(width=12, title = "Choose candidates:",
-                              div( id="eval",
-                                   
-                              )
-          )
-        )
-)
+
 

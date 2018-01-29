@@ -155,7 +155,7 @@ phenotype <- function (breeder, inds.todo, gameTime){
                                  X=X[levels(phenosPatho.df$ind),,drop=FALSE],
                                  qtn.id=p0$trait3$qtn.id,
                                  resist.genos=p0$trait3$resist.genos,
-                                 prob.resist.no.qtl=p0$trait3$prob.resist.no.qtl)
+                                 prob.resist.no.qtl=0)
     
     phenosPatho.df$trait1.raw <- "--"
     phenosPatho.df$trait2 <- "--"
