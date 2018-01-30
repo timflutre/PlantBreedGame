@@ -47,14 +47,15 @@ tabItem(tabName="plant_mat",
                             div(
                               tags$head(
                                 tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
-                              ),
-                              actionButton("requestPlmat", "Request plant material !")
+                                ),
+                              p("Do you really want this plant material?"),
+                              actionButton("requestPlmat", "Yes, I do!")
                             ),
                             div(
                               uiOutput("plmatRequestResultUI")
                             )
                           ),
-                 
+
                  tabPanel("Data",
                           tableOutput(outputId="qryPlmat")),
                  tabPanel("Summary",

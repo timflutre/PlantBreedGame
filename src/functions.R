@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -16,6 +16,30 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with PlantSelBreedGame.  If not, see
 ## <http://www.gnu.org/licenses/>.
+
+##' Get code version
+##'
+##' Returns the code version and, possibnly, a link to the central GitHub repository.
+##' @return list with two components, display and link, to be used as a(display, href=link)
+##' @author Timothee Flutre
+##' @export
+getCodeVersion <- function(url.repo=""){
+  code.version <- list(display="", link="")
+
+  if(requireNamespace("git2r", quietly=TRUE)){
+    if(git2r::in_repository()){
+      commit.sha <- git2r::commits()[[1]]@sha
+      code.version$display <- substr(commit.sha, 1, 7)
+      code.version$link <- paste0(url.repo, "/commit/", commit.sha)
+    } else{
+      code.version$display <- "unavailable (initialize git repository to enable)"
+    }
+  } else{
+    code.version$display <- "unavailable (install git2r package to enable)"
+  }
+
+  return(code.version)
+}
 
 
 ##' Simul breeding game
@@ -105,22 +129,22 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd=800){
 ##' @export
 readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, subset.snps,
                                     max.nb.inds = 1000){
-  
+
   stopifnot(!is.null(f) || !is.null(df),
             is.numeric(max.nb.plots),
             length(max.nb.plots) == 1,
             max.nb.plots > 0,
             is.list(subset.snps),
             all(names(subset.snps) %in% c("ld", "hd")))
-  
+
   if (is.null(df)) {
     stopifnot(file.exists(f))
     df <- utils::read.table(f,header = TRUE,
                             sep = "\t",
                             stringsAsFactors = FALSE)
   }
-  
-  
+
+
   stopifnot(is.data.frame(df),
             ncol(df) >= 3,
             all(c("ind","task", "details") %in% colnames(df)),
@@ -129,7 +153,7 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
             all(!grepl("[^[:alnum:]._-]",df$ind)),
             all(!is.na(df$task)),
             all(df$task %in% c("pheno-field", "pheno-patho", "geno")))
-  
+
 
   if ("pheno-field" %in% df$task) {
     tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno-field"]))
@@ -137,11 +161,11 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
               !anyDuplicated(df$ind[df$task == "pheno-field"]),
               sum(as.numeric(df$details[df$task == "pheno-field"])) <= max.nb.plots)
   }
-  
+
   if ("pheno-patho" %in% df$task) {
     stopifnot(!anyDuplicated(df$ind[df$task == "pheno-patho"]))
   }
-  
+
   if ("geno" %in% df$task) {
     stopifnot(all(grepl("hd|ld|snp", df$details[df$task == "geno"])))
     idx.notsnp <- df$task == "geno" & !grepl("snp", df$details)
@@ -198,8 +222,8 @@ indAvailable <- function(indList, gameTime, breeder){
   # indList (character verctor), list of individuals to check
   # gameTime ("POSIXlt") (given by getGameTime function)
   # breeder (charracter) breeder name
-  
-  
+
+
   ## 1 check that the requested individuals exist
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
@@ -210,13 +234,13 @@ indAvailable <- function(indList, gameTime, breeder){
   if(!all(indList %in% res$child)){
     indExist <- FALSE
   }else{indExist <- TRUE}
-  
-  
-  
-  
+
+
+
+
   ## 2 check available date
   indSQLlist <- paste0("('", paste(indList, collapse="','"), "')")
-  
+
   # get requested individuals information
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)

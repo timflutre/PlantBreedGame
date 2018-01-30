@@ -18,7 +18,9 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-#### Packages ####
+## -------------------------------------------------------------------
+## packages
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -33,8 +35,10 @@ stopifnot(compareVersion("0.156.6",
           != 1)
 
 
-#### Shiny ####
-shinyServer(function(input, output, session) {
+## -------------------------------------------------------------------
+## Shiny server
+
+shinyServer(function(input, output, session){
   source("src/server_information.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value

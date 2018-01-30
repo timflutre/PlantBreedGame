@@ -62,28 +62,28 @@ breederStatus <- reactive({
     dbDisconnect(db)
     return(status)
   }else {return("No Identification")}
-  
+
 })
 
 budget <- reactive({
   input$leftMenu
   input$requestGeno
   if (breeder()!="No Identification"){
-    
+
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     tbl <- "log"
     query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
     res <- dbGetQuery(conn=db, query)
     dbDisconnect(db)
-    
+
     if (nrow(res)>0){
       funApply <- function(x){
         prices[x[3]][[1]]*as.integer(x[4])
       }
       expenses <- sum(apply(res, MARGIN = 1, FUN = funApply))
     }else{expenses <- 0}
-    
-    
+
+
     # return(constants$cost.pheno.field*300*10*1.3-expenses)
     return(0-expenses)
   }
@@ -106,16 +106,16 @@ output$userAction <- renderUI({
                                       selectInput("genoFile", "", choices=genoFiles()),
                                       uiOutput("UIdwnlGeno")
                                     )
-                                    
-                                    
-                                    
-                                    
+
+
+
+
                            ),
-                           
+
                            tabPanel("My plant material",
                                     dataTableOutput("myPltMatDT")
                            ),
-                           
+
                            tabPanel("Change my password",
                                     div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
                                       passwordInput("prevPsw", "Previous Password")
@@ -136,7 +136,7 @@ output$userAction <- renderUI({
                                         uiOutput("UIpswChanged")
                                     )
                            )
-                           
+
           )
   }
 })
@@ -168,7 +168,7 @@ output$dwnlPheno <- downloadHandler(
 )
 
 output$dwnlGeno <- downloadHandler(
-  filename=function () input$genoFile, # lambda function 
+  filename=function () input$genoFile, # lambda function
   content=function(file){
     filePath <- paste0("data/shared/",breeder(), "/",input$genoFile)
     write.table(read.table(filePath, header = T),
@@ -188,7 +188,7 @@ output$UIdwnlPheno <- renderUI({
     }
 
   }else p("")
-  
+
 })
 
 output$UIdwnlGeno <- renderUI({
@@ -268,7 +268,7 @@ output$UIpswChanged <- renderUI({
 output$breederBoxID <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = "-",
+    subtitle = "Breeder",
     icon = icon("user-o"),
     color = "yellow",
     width = 4

@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -18,11 +18,15 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-#### Packages ####
+## -------------------------------------------------------------------
+## packages
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(RSQLite)
+library(MASS)
+library(digest)
 library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
@@ -31,23 +35,21 @@ stopifnot(compareVersion("0.156.6",
           != 1)
 
 
-#### Shiny ####
+## -------------------------------------------------------------------
+## Shiny UI
 
 ## Parameters:
 W_sideBar <- 300
 
 
-
-
 ## UI :
 shinyUI(
   dashboardPage(title="Breeding Game", skin="green",
-                
-                
+
                 # app title
                 dashboardHeader(title=tagList(shiny::icon("leaf", "fa-2x"), "\t Breeding Game"), titleWidth=W_sideBar),
-                
-                # Dashboard sidebar items
+
+                # dashboard sidebar items
                 dashboardSidebar(width = W_sideBar,
                                  sidebarMenu(id="leftMenu",
                                    menuItem("How to play?", tabName="info", icon=icon("leaf")),
@@ -59,20 +61,20 @@ shinyUI(
                                    menuItem("About",     tabName="about", icon=icon("info-circle"))
                                  )
                 ),
-                
 
-                
-                #Dashboard body
+
+                # dashboard body
                 dashboardBody(
                   tabItems(
-                    source("src/ui_information.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_id.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_about.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_plant_material.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_pheno.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_geno.R", local=TRUE, encoding = "UTF-8")$value,
-                    source("src/ui_eval.R", local=TRUE, encoding = "UTF-8")$value
+                    source("src/ui_information.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_id.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_about.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_plant_material.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_pheno.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_geno.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_eval.R", local=TRUE, encoding="UTF-8")$value
                   )
                 )
-  )
-)
+
+     ) # close dashboardPage
+) # close shinyUI

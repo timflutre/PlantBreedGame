@@ -46,20 +46,21 @@ tabItem(tabName="geno",
                                           div(
                                             tags$head(
                                               tags$style(HTML('#requestGeno{background-color:#00A65A; color: white}'))
-                                            ),
-                                            actionButton("requestGeno", "Request Genotyping !")
+                                              ),
+                                            p("Do you really want these genotyping data?"),
+                                            actionButton("requestGeno", "Yes, I do!")
                                           ),
                                           div(
                                             uiOutput("genoRequestResultUI"))
                                           ),
-                                 
+
                                  tabPanel("Data",
                                           tableOutput(outputId="qryGeno")),
-                                 
+
                                  tabPanel("Summary",
                                           verbatimTextOutput("GenoSmy"),
                                           verbatimTextOutput("GenoStr")),
-                                 
+
                                  tabPanel("Check",
                                           verbatimTextOutput("GenoUploaded"))
 

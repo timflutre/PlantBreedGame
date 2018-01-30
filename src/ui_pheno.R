@@ -48,8 +48,9 @@ tabItem(tabName="pheno",
                                       div(
                                         tags$head(
                                           tags$style(HTML('#requestPheno{background-color:#00A65A; color: white}'))
-                                        ),
-                                        actionButton("requestPheno", "Request Phenotyping !")
+                                          ),
+                                        p("Do you really want these phenotyping data?"),
+                                        actionButton("requestPheno", "Yes, I do!")
                                       ),
                                       div(
                                         uiOutput("phenoRequestResultUI")

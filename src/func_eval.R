@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -21,16 +21,16 @@
 
 
 readCheckEvalFile <- function(f = NULL, df = NULL, maxCandidate=5){
-  
+
   stopifnot(xor(is.null(f),is.null(df)))
-  
+
   if (is.null(df)) {
     stopifnot(file.exists(f))
     df <- utils::read.table(f,header = TRUE,
                             sep = "\t",
                             stringsAsFactors = FALSE)
   }
-  
+
   stopifnot(is.data.frame(df),
             ncol(df) ==2,
             all(c("breeder","ind") %in% colnames(df)),
@@ -45,18 +45,18 @@ readCheckEvalFile <- function(f = NULL, df = NULL, maxCandidate=5){
 
 phenotype4Eval <- function (df, nRep=50){
   # function which evaluate the phenotype of individuals
-  
+
   # df (data.frame) given by readCheckEvalFile function
   # rep (int) number of repetition for each individuals
-   
-  
-  
+
+
+
   ## Initialisations
   data.types <- "evaluation"
   db <- dbConnect(SQLite(), dbname=setup$dbname)
-  
 
-  
+
+
   ## 0. load required data
   flush.console()
   f <- paste0(setup$truth.dir, "/p0.RData")
@@ -66,9 +66,9 @@ phenotype4Eval <- function (df, nRep=50){
   subset.snps[["hd"]] <- rownames(read.table(f))
   f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
   subset.snps[["ld"]] <- rownames(read.table(f))
-  
-  
-  
+
+
+
   ## 2. check that the requested individuals already exist
   flush.console()
   for (breeder in unique(df$breeder)){
@@ -81,12 +81,12 @@ phenotype4Eval <- function (df, nRep=50){
     }
   }
 
-  
-  
+
+
   ## 3. load the haplotypes and convert to genotypes
   flush.console()
   X <- NULL # TODO: allocate whole matrix at this stage
-  
+
   for (breeder in unique(df$breeder)){
     inds.todo <- df$ind[df$breeder==breeder]
     for(i in 1:length(inds.todo)){
@@ -95,29 +95,29 @@ phenotype4Eval <- function (df, nRep=50){
       if(ind.id %in% rownames(X))
         next
       message(paste0(i, "/", length(inds.todo), " ", ind.id))
-      
+
       if (breeder=="control"){
         f <- paste0(setup$truth.dir, "/", ind.id, "_haplos.RData")
       }else{
         f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
       }
-      
-      
+
+
       if(! file.exists(f))
         stop(paste0(f, " doesn't exist"))
       load(f)
-      
+
       ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
       rownames(ind$genos) <- indName
       if(is.null(X)){
         X <- ind$genos
       } else
         X <- rbind(X, ind$genos)
-      
+
     }
   }
-  
-  
+
+
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   flush.console()
 
@@ -127,14 +127,14 @@ phenotype4Eval <- function (df, nRep=50){
                                    nb.plots=rep(nRep,length(rownames(X))),
                                    year=2015,
                                    pathogen=TRUE)
-    
+
     phenosField <- simulTraits12(dat=phenosField.df,
                                  mu=p0$mu,
                                  sigma.alpha2=p0$sigma.alpha2,
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  Beta=p0$Beta,
                                  sigma2=p0$sigma2)
-    
+
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                       X=X[levels(phenosField.df$ind),,drop=FALSE],
                                       qtn.id=p0$trait3$qtn.id,
@@ -158,16 +158,16 @@ phenotype4Eval <- function (df, nRep=50){
     # }
   }
 
-  
+
   ## 7. log
   query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
                   " VALUES ('", "evaluation",
                   "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
                   "', '", 'evaluation', "', '",
                   "1", "')")
-  res <- dbGetQuery(db, query)
+  res <- dbExecute(db, query)
   dbDisconnect(db)
-  
+
   # output
   return(phenosField.df)
 }

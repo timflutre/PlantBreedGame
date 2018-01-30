@@ -17,6 +17,7 @@
 ## License along with PlantSelBreedGame.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
+
 ## -------------------------------------------------------------------
 ## packages
 
@@ -37,8 +38,6 @@ stopifnot(compareVersion("0.156.6",
 library(beepr) # help for debug
 
 
-
-
 ## -------------------------------------------------------------------
 ## functions
 
@@ -49,13 +48,11 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 ## -------------------------------------------------------------------
 ## variables
 
-
 currentGTime <- reactive({
   ## this reactive variable is reevaluated every second
   invalidateLater(10000)
   getGameTime(setup)
 })
-
 
 
 root.dir <- "data"
@@ -72,10 +69,12 @@ prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field
                "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field)
 
 
-
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
 subset.snps[["hd"]] <- rownames(read.table(f))
 f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
 subset.snps[["ld"]] <- rownames(read.table(f))
 
+
+url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
+code.version <- getCodeVersion(url.repo)
