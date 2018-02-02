@@ -40,18 +40,26 @@ output$evalUI <- renderUI({
                         )
     ),
 
-    shinydashboard::tabBox(width=12, title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
+    shinydashboard::tabBox(width=12,  title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
                         tabPanel("Trait 1",
-                                 plotlyOutput("evalGraphT1")
+                                 div(
+                                 plotlyOutput("evalGraphT1", height = "100%", width = "100%")
+                                 )
                         ),
                         tabPanel("Trait 2",
-                                 plotlyOutput("evalGraphT2")
+                                 div(
+                                 plotlyOutput("evalGraphT2", height = "100%")
+                                 )
                         ),
                         tabPanel("Trait 3",
-                                 plotlyOutput("evalGraphT3")
+                                 div(
+                                 plotlyOutput("evalGraphT3", height = "100%")
+                                 )
                         ),
                         tabPanel("Traits 1 vs 2",
-                                 plotlyOutput("evalGraphT1vT2")
+                                 div(
+                                 plotlyOutput("evalGraphT1vT2", height = "100%")
+                                 )
                         )
     ),
     shinydashboard::box(width=12, title = "Debug",
@@ -81,7 +89,7 @@ readQryEval <- reactive({
   }
 
   # read input file
-  df <- try(readCheckEvalFile(input$file.eval$datapath, maxCandidate=5))
+  df <- try(readCheckEvalFile(input$file.eval$datapath))
 
   if (is.data.frame(df)){
     # add controls in the data.frame
@@ -111,7 +119,18 @@ output$evalGraphT1 <- renderPlotly({
 
   medControl <- median(dfPheno$trait1[dfPheno$breeder=="control"])
 
-
+  
+  
+  ## Plot
+  m <- list(
+    l = 40,
+    r = 80,
+    b = 80,
+    t = 50,
+    pad = 0
+  )
+  
+  
   p <- plot_ly(data=dfPheno,
                type = 'box',
                y = ~trait1,
@@ -122,8 +141,9 @@ output$evalGraphT1 <- renderPlotly({
                           categoryorder = "array",
                           categoryarray = breederOrder
                           ),
-             yaxis = list(title = ""
-                          ))%>%
+             yaxis = list(title = ""),
+             autosize = T,
+             margin = m)%>%
       add_lines(data=NULL,
                 type='scatter',
                 y=medControl,
@@ -131,6 +151,7 @@ output$evalGraphT1 <- renderPlotly({
                 color = "control",
                 name="Median")
 
+  
 })
 output$evalGraphT2 <- renderPlotly({
   dfPheno <- dfPhenoEval()
@@ -138,6 +159,16 @@ output$evalGraphT2 <- renderPlotly({
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
   medControl <- median(dfPheno$trait2[dfPheno$breeder=="control"])
+  
+  
+  ## Plot
+  m <- list(
+    l = 40,
+    r = 80,
+    b = 80,
+    t = 50,
+    pad = 0
+  )
 
   p <- plot_ly(data=dfPheno,
                type = 'box',
@@ -154,7 +185,9 @@ output$evalGraphT2 <- renderPlotly({
            xaxis = list(title = "",
                         categoryorder = "array",
                         categoryarray = breederOrder),
-           yaxis = list(title = ""))
+           yaxis = list(title = ""),
+           autosize = T,
+           margin = m)
 
 
 })
@@ -162,12 +195,20 @@ output$evalGraphT3 <- renderPlotly({
   dfPhenoPatho <- dfPhenoEval()
   dfPhenoPatho <- dfPhenoPatho[(as.numeric(dfPhenoPatho$plot) %% input$nRep) == 1,]
 
-
-  ## the order is not good TODO
-  breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
-                    unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
+  breederOrder <- c(unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder=="control"])),
+                    unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder!="control"])))
 
 
+  ## Plot
+  m <- list(
+    l = 40,
+    r = 80,
+    b = 80,
+    t = 50,
+    pad = 0
+  )
+  
+  
   p <- plot_ly(data=dfPhenoPatho,
                type = 'bar',
                y = ~trait3*2-1,
@@ -177,19 +218,40 @@ output$evalGraphT3 <- renderPlotly({
            xaxis = list(title = "",
                         categoryorder = "array",
                         categoryarray = breederOrder),
-           yaxis = list(title = ""))
+           yaxis = list(title = ""),
+           autosize = T,
+           margin = m)
 
 })
-output$evalGraphT1vT2<- renderPlotly({
-  dfPhenoPatho <- dfPhenoEval()
-  dfPhenoPatho <- dfPhenoPatho[(as.numeric(dfPhenoPatho$plot) %% input$nRep) == 1,]
 
-  p <- plot_ly(data=dfPhenoPatho,
-               type = 'scatter',
-               y = ~GAT2,
-               x= ~GAT1,
-               color = ~breeder,
-               text=~ind) %>%
+
+
+
+output$evalGraphT1vT2<- renderPlotly({
+  dfPheno <- dfPhenoEval()
+  dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1,]
+  
+  # get the haplotype of each individual of the initial collection
+  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2])
+
+  p <- plot_ly(type = 'scatter') %>%
+    add_markers(data=dfInitColl,
+                type = 'scatter',
+                y = ~GAT2,
+                x= ~GAT1,
+                color = "Initial Collection",
+                marker=list(color="gray" , size=5 , opacity=0.5),
+                text="iniColl",
+                inherit=FALSE) %>%
+    add_markers(data=dfPheno,
+                type = 'scatter',
+                y = ~GAT2,
+                x= ~GAT1,
+                marker=list(size=8, opacity=1),
+                color=~breeder,
+                text=~ind,
+                inherit=FALSE) %>%
     layout(title = "Genotypic values of traits 1 vs 2",
            xaxis = list(title = "GA 1"),
            yaxis = list(title = "GA 2"))

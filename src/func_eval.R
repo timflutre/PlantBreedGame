@@ -20,7 +20,7 @@
 
 
 
-readCheckEvalFile <- function(f = NULL, df = NULL, maxCandidate=5){
+readCheckEvalFile <- function(f = NULL, df = NULL){
 
   stopifnot(xor(is.null(f),is.null(df)))
 
@@ -34,7 +34,6 @@ readCheckEvalFile <- function(f = NULL, df = NULL, maxCandidate=5){
   stopifnot(is.data.frame(df),
             ncol(df) ==2,
             all(c("breeder","ind") %in% colnames(df)),
-            length(unique(df$breeder)) <= maxCandidate,
             all(!grepl("[^[:alnum:]._-]",df$ind)))
 
   invisible(df)
