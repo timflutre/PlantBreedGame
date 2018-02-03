@@ -164,3 +164,51 @@ genotype <- function (breeder, inds.todo, gameTime){
   # output
   return("done")
 }
+
+
+
+createInvoiceGeno <- function(request.df){
+  # function which create the corresponding invoice of a request
+  # request.df (data.frame) of the request
+
+
+  request.df$details[grep("*snp*",request.df$details)] <- "single-snp"
+  
+  # aggregate by geno-task 
+  invoice.geno <- aggregate(rep(1,nrow(request.df)) ~ details, data = request.df, sum)
+  names(invoice.geno) <- c("Task","Quantity")
+  
+  invoice.geno$Task <- paste0("geno-",invoice.geno$Task)
+  
+  
+  # get prices
+  invoice.geno$unitaryPrice <- as.vector(as.numeric(prices[invoice.geno$Task]))
+  invoice.geno$Total <- invoice.geno$unitaryPrice*invoice.geno$Quantity
+  
+  
+  
+  ## create invoice:
+  invoice <- rbind(invoice.geno,
+                   data.frame(Task="Total",
+                              Quantity="",
+                              unitaryPrice="",
+                              Total= sum(invoice.geno$Total)))
+  
+  return(invoice)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

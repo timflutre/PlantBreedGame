@@ -71,24 +71,32 @@ output$plmatUploaded <- renderPrint({
 
 
 # summary
-output$plmatSmy <- renderPrint({
+output$PltmatInvoice <- renderTable({
   if (is.data.frame(readQryPlmat())){
-    dat <- readQryPlmat()
-    summary(as.data.frame(apply(readQryPlmat(), MARGIN = 2, FUN = as.factor)))
+    createInvoicePltmat(readQryPlmat())
   }
 })
 
-output$plmatStr <- renderPrint({
-  if (is.data.frame(readQryPlmat())){
-    dat <- readQryPlmat()
-    str(readQryPlmat())
-  }
-})
+
+
+# output$plmatSmy <- renderPrint({
+#   if (is.data.frame(readQryPlmat())){
+#     dat <- readQryPlmat()
+#     summary(as.data.frame(apply(readQryPlmat(), MARGIN = 2, FUN = as.factor)))
+#   }
+# })
+# 
+# output$plmatStr <- renderPrint({
+#   if (is.data.frame(readQryPlmat())){
+#     dat <- readQryPlmat()
+#     str(readQryPlmat())
+#   }
+# })
 
 
 
 # data
-output$qryPlmat <- renderTable({
+output$qryPlmat <- renderDataTable({
   if (is.data.frame(readQryPlmat())){
     readQryPlmat()
   }

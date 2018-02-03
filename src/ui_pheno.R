@@ -58,10 +58,11 @@ tabItem(tabName="pheno",
                                     ),
 
                            tabPanel("Data",
-                                    tableOutput(outputId="qryPheno")),
+                                    dataTableOutput(outputId="qryPheno")),
                            tabPanel("Summary",
-                                    verbatimTextOutput("PhenoSmy"),
-                                    verbatimTextOutput("PhenoStr")),
+                                    tableOutput("PhenoInvoice")),
+                                    # verbatimTextOutput("PhenoSmy"),
+                                    # verbatimTextOutput("PhenoStr")),
 
                            tabPanel("Check",
                                     verbatimTextOutput("PhenoUploaded"))
