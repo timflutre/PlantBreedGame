@@ -40,9 +40,10 @@ stopifnot(compareVersion("0.156.6",
 
 shinyServer(function(input, output, session){
   source("src/server_information.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_geno.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_eval.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_theory.R", local=TRUE, encoding="UTF-8")$value
 })
