@@ -71,16 +71,23 @@ output$PhenoUploaded <- renderPrint({
 
 
 # summary
-output$PhenoSmy <- renderPrint({
+output$PhenoInvoice <- renderTable({
   if (is.data.frame(readQryPheno())){
-    summary(as.data.frame(apply(readQryPheno(), MARGIN = 2, FUN = as.factor)))
+    createInvoicePheno(readQryPheno())
   }
 })
-output$PhenoStr <- renderPrint({
-  if (is.data.frame(readQryPheno())){
-    print(str(readQryPheno()))
-  }
-})
+
+
+# output$PhenoSmy <- renderPrint({
+#   if (is.data.frame(readQryPheno())){
+#     summary(as.data.frame(apply(readQryPheno(), MARGIN = 2, FUN = as.factor)))
+#   }
+# })
+# output$PhenoStr <- renderPrint({
+#   if (is.data.frame(readQryPheno())){
+#     print(str(readQryPheno()))
+#   }
+# })
 
 
 # data

@@ -137,3 +137,39 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
 }
 
 
+
+
+
+
+createInvoicePltmat <- function(request.df){
+  # function which create the corresponding invoice of a request
+  # request.df (data.frame) of the request
+  
+  
+  # aggregate by explanations
+  invoice.pltmat<- aggregate(rep(1,nrow(request.df)) ~ explanations, data = request.df, sum)
+  names(invoice.pltmat) <- c("Task","Quantity")
+  
+  
+  # get prices
+  invoice.pltmat$unitaryPrice <- as.vector(as.numeric(prices[invoice.pltmat$Task]))
+  invoice.pltmat$Total <- invoice.pltmat$unitaryPrice*invoice.pltmat$Quantity
+  
+  
+  
+  ## create invoice:
+  invoice <- rbind(invoice.pltmat,
+                   data.frame(Task="Total",
+                              Quantity="",
+                              unitaryPrice="",
+                              Total= sum(invoice.pltmat$Total)))
+  
+  return(invoice)
+}
+
+
+
+
+
+
+

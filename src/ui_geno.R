@@ -58,8 +58,9 @@ tabItem(tabName="geno",
                                           dataTableOutput(outputId="qryGeno")),
 
                                  tabPanel("Summary",
-                                          verbatimTextOutput("GenoSmy"),
-                                          verbatimTextOutput("GenoStr")),
+                                          tableOutput("GenoInvoice")),
+                                          # verbatimTextOutput("GenoSmy"),
+                                          # verbatimTextOutput("GenoStr")),
 
                                  tabPanel("Check",
                                           verbatimTextOutput("GenoUploaded"))

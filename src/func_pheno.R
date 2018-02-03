@@ -196,3 +196,46 @@ phenotype <- function (breeder, inds.todo, gameTime){
 }
 
 
+
+
+createInvoicePheno <- function(request.df){
+  # function which create the corresponding invoice of a request
+  # request.df (data.frame) of the request
+  
+  # extract pheno-task
+  # request.df.pheno <- request.df[request.df$task=="pheno-field"
+  #                                |request.df$task=="pheno-patho",]
+  request.df$details <- as.numeric(request.df$details)
+  
+  
+  # aggregate by task 
+  invoice.pheno <- aggregate(details~ task, data = request.df, sum)
+  names(invoice.pheno) <- c("Task","Quantity")
+  
+  # get prices
+  invoice.pheno$unitaryPrice <- as.vector(as.numeric(prices[invoice.pheno$Task]))
+  invoice.pheno$Total <- invoice.pheno$unitaryPrice*invoice.pheno$Quantity
+  
+  
+  
+  ## create invoice:
+  invoice <- rbind(invoice.pheno,
+                   data.frame(Task="Total",
+                              Quantity="",
+                              unitaryPrice="",
+                              Total= sum(invoice.pheno$Total)))
+  
+  return(invoice)
+}
+
+
+
+
+
+
+
+
+
+
+
+

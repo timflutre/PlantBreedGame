@@ -73,16 +73,22 @@ output$GenoUploaded <- renderPrint({
 
 
 ## summary
-output$GenoSmy <- renderPrint({
+output$GenoInvoice <- renderTable({
   if (is.data.frame(readQryGeno())){
-    summary(as.data.frame(apply(readQryGeno(), MARGIN = 2, FUN = as.factor)))
+    createInvoiceGeno(readQryGeno())
   }
 })
-output$GenoStr <- renderPrint({
-  if (is.data.frame(readQryGeno())){
-    print(str(readQryGeno()))
-  }
-})
+
+# output$GenoSmy <- renderPrint({
+#   if (is.data.frame(readQryGeno())){
+#     summary(as.data.frame(apply(readQryGeno(), MARGIN = 2, FUN = as.factor)))
+#   }
+# })
+# output$GenoStr <- renderPrint({
+#   if (is.data.frame(readQryGeno())){
+#     print(str(readQryGeno()))
+#   }
+# })
 
 
 ## data
