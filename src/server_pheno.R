@@ -84,7 +84,7 @@ output$PhenoStr <- renderPrint({
 
 
 # data
-output$qryPheno <- renderTable({
+output$qryPheno <- renderDataTable({
   if (is.data.frame(readQryPheno())){
     readQryPheno()
   }

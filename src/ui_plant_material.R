@@ -57,7 +57,7 @@ tabItem(tabName="plant_mat",
                           ),
 
                  tabPanel("Data",
-                          tableOutput(outputId="qryPlmat")),
+                          dataTableOutput(outputId="qryPlmat")),
                  tabPanel("Summary",
                           verbatimTextOutput("plmatSmy"),
                           verbatimTextOutput("plmatStr")),

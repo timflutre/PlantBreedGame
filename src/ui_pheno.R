@@ -58,7 +58,7 @@ tabItem(tabName="pheno",
                                     ),
 
                            tabPanel("Data",
-                                    tableOutput(outputId="qryPheno")),
+                                    dataTableOutput(outputId="qryPheno")),
                            tabPanel("Summary",
                                     verbatimTextOutput("PhenoSmy"),
                                     verbatimTextOutput("PhenoStr")),

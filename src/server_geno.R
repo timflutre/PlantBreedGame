@@ -86,7 +86,7 @@ output$GenoStr <- renderPrint({
 
 
 ## data
-output$qryGeno <- renderTable({
+output$qryGeno <- renderDataTable({
   if (is.data.frame(readQryGeno())){
     readQryGeno()
   }

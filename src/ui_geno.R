@@ -55,7 +55,7 @@ tabItem(tabName="geno",
                                           ),
 
                                  tabPanel("Data",
-                                          tableOutput(outputId="qryGeno")),
+                                          dataTableOutput(outputId="qryGeno")),
 
                                  tabPanel("Summary",
                                           verbatimTextOutput("GenoSmy"),

@@ -88,7 +88,7 @@ output$plmatStr <- renderPrint({
 
 
 # data
-output$qryPlmat <- renderTable({
+output$qryPlmat <- renderDataTable({
   if (is.data.frame(readQryPlmat())){
     readQryPlmat()
   }
