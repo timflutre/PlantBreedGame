@@ -117,7 +117,7 @@ output$evalGraphT1 <- renderPlotly({
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
-  medControl <- median(dfPheno$trait1[dfPheno$breeder=="control"])
+  medControl <- median(dfPheno$trait1[dfPheno$breeder=="control"])*1.03
 
   
   
@@ -149,7 +149,7 @@ output$evalGraphT1 <- renderPlotly({
                 y=medControl,
                 mode='lines',
                 color = "control",
-                name="Median")
+                name="103% Median")
 
   
 })
@@ -231,10 +231,18 @@ output$evalGraphT1vT2<- renderPlotly({
   dfPheno <- dfPhenoEval()
   dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1,]
   
-  # get the haplotype of each individual of the initial collection
+  # get the data for the initial collection
   f <- paste0(setup$truth.dir, "/", "p0.RData")
+  load(f)
   dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2])
-
+  
+  # linear regretion
+  linMod <- lm(GAT1~GAT2, data=dfInitColl)
+  linMod$coefficients[2]
+  xLine <- c(min(dfInitColl$GAT1), max(dfInitColl$GAT1))
+  yLine <- linMod$coefficients[1]+linMod$coefficients[2]*xLine
+    
+    
   p <- plot_ly(type = 'scatter') %>%
     add_markers(data=dfInitColl,
                 type = 'scatter',
@@ -244,6 +252,15 @@ output$evalGraphT1vT2<- renderPlotly({
                 marker=list(color="gray" , size=5 , opacity=0.5),
                 text="iniColl",
                 inherit=FALSE) %>%
+    add_lines(data=NULL,
+              type='scatter',
+              x=xLine,
+              y=yLine,
+              mode='lines',
+              color = "Initial Collection",
+              line=list(color="gray"),
+              name="Linear regretion",
+              inherit=FALSE) %>%
     add_markers(data=dfPheno,
                 type = 'scatter',
                 y = ~GAT2,
