@@ -25,8 +25,10 @@ tabItem(tabName="theory",
       shinydashboard::box(width=12, title="Notations",
         div(id="about_1",
             p("Phenotypic mean without selection: \\(\\mu_0\\)"),
+            p("Phenotypic variance without selection: \\(\\sigma_0^2\\)"),
             p("Phenotypic mean of selected parents: \\(\\mu^{(s)}\\)"),
             p("Differential of selection: \\(S = \\mu^{(s)} - \\mu_0\\)"),
+            p("Selection intensity: \\(i = \\frac{S}{\\sigma_0}\\)"),
             p("Phenotypic mean of offsprings from selected parents: \\(\\mu_1\\)"),
             p("Response to selection: \\(R = \\mu_1 - \\mu_0\\)")
             )

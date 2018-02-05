@@ -51,22 +51,23 @@ simulDat <- function(mu.0=40, sigma2=1, h2=0.75, sigma.a2=NULL,
   return(list(mu.0=mu.0, sigma2=sigma2, sigma.a2=sigma.a2, h2=h2, I=I, J=J, N=N, y=y, y.e=y.e))
 }
 
-applySelection <- function(mu.0, y, y.e, y.t=43){
+applySelection <- function(mu.0, y, y.e, y.t=43, sigma.02){
   ## selection differential
   is.sel <- (y >= y.t)
   mu.s <- mean(y[is.sel])
   S <- mu.s - mu.0
+  i <- S / sqrt(sigma.02)
 
   ## response to selection
   mu.1 <- mean(y.e[is.sel])
   R <- mu.1 - mu.0
 
-  return(list(y.t=y.t, is.sel=is.sel, mu.s=mu.s, S=S,
+  return(list(y.t=y.t, is.sel=is.sel, mu.s=mu.s, S=S, i=i,
               mu.1=mu.1, R=R))
 }
 
 plotRegMidparentsOffsprings <- function(mu.0, h2, y, y.e,
-                                        y.t=43, is.sel, mu.s, S,
+                                        y.t=43, is.sel, mu.s, S, i,
                                         mu.1, R){
   xylim <- range(c(y, y.e))
   xylim <- c(0.95*min(c(y, y.e)), 1.05*max(c(y, y.e)))
@@ -74,7 +75,7 @@ plotRegMidparentsOffsprings <- function(mu.0, h2, y, y.e,
        xlim=xylim, ylim=xylim,
        xlab="Average phenotypes of each parental pair",
        ylab="Phenotypes of each offspring")
-  title(main=bquote(bold(Linear~regression~of~offsprings~on~average~parents)~(h^2==.(h2))))
+  title(main=bquote(bold(Linear~regression~of~offsprings~on~average~parents)~(h^2==.(h2)~and~i==.(format(i, digits=3)))))
 
   ## without selection
   points(x=y[! is.sel], y=y.e[! is.sel], pch=1)
