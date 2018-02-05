@@ -43,22 +43,22 @@ output$evalUI <- renderUI({
     shinydashboard::tabBox(width=12,  title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
                         tabPanel("Trait 1",
                                  div(
-                                 plotlyOutput("evalGraphT1", height = "100%", width = "100%")
+                                 plotlyOutput("evalGraphT1", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Trait 2",
                                  div(
-                                 plotlyOutput("evalGraphT2", height = "100%")
+                                 plotlyOutput("evalGraphT2", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Trait 3",
                                  div(
-                                 plotlyOutput("evalGraphT3", height = "100%")
+                                 plotlyOutput("evalGraphT3", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Traits 1 vs 2",
                                  div(
-                                 plotlyOutput("evalGraphT1vT2", height = "100%")
+                                 plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
                                  )
                         )
     ),
@@ -191,6 +191,10 @@ output$evalGraphT2 <- renderPlotly({
 
 
 })
+
+
+
+
 output$evalGraphT3 <- renderPlotly({
   dfPhenoPatho <- dfPhenoEval()
   dfPhenoPatho <- dfPhenoPatho[(as.numeric(dfPhenoPatho$plot) %% input$nRep) == 1,]
