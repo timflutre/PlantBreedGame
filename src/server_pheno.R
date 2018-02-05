@@ -48,13 +48,15 @@ readQryPheno <- reactive({
     # list individuals
     indList <- unique(as.character(df$ind))
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-
+    
+    # check if plot are available
+    plotAvail <- plotAvailable(breeder(), df, getGameTime(setup))
 
     # check if individuals are available
-    if ((indAvail$indGrown | breederStatus()=="game master")
+    if (((indAvail$indGrown & plotAvail) | breederStatus()=="game master")
         & indAvail$indExist){
       return(df)
-    }else {return("error - Individuals not availables")}
+    }else {return("error - Individuals or Plots not availables")}
   }else {return("error - wrong file format")}
 })
 
@@ -66,7 +68,7 @@ output$PhenoUploaded <- renderPrint({
     print("GOOD")
   } else if (is.null(readQryPheno())){
       print("No file uploaded")
-  } else print("Not good")
+  } else print(readQryPheno())
 
 })
 

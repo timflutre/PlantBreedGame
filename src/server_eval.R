@@ -35,7 +35,7 @@ output$evalUI <- renderUI({
                                        label = NULL,
                                        multiple=FALSE,
                                        accept=c(".txt", ".tsv")),
-                             numericInput("nRep", "Choose the number of plot(s) per genotype:", 5, min = 1, max = 100),
+                             numericInput("nRep", "Choose the number of plot(s) per genotype:", 20, min = 1, max = 100),
                              actionButton("requestEval", "Launch evaluation!")
                         )
     ),
@@ -117,7 +117,7 @@ output$evalGraphT1 <- renderPlotly({
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
-  medControl <- median(dfPheno$trait1[dfPheno$breeder=="control"])*1.03
+  target <- median(dfPheno$trait1[dfPheno$breeder=="control"])*1.03
 
   
   
@@ -146,10 +146,9 @@ output$evalGraphT1 <- renderPlotly({
              margin = m)%>%
       add_lines(data=NULL,
                 type='scatter',
-                y=medControl,
+                y=target,
                 mode='lines',
-                color = "control",
-                name="103% Median")
+                color = "Target")
 
   
 })
@@ -158,7 +157,7 @@ output$evalGraphT2 <- renderPlotly({
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
-  medControl <- median(dfPheno$trait2[dfPheno$breeder=="control"])
+  target <- constants$register.min.trait2
   
   
   ## Plot
@@ -177,10 +176,9 @@ output$evalGraphT2 <- renderPlotly({
                color = ~breeder) %>%
     add_lines(data=NULL,
               type='scatter',
-              y=medControl,
+              y=target,
               mode='lines',
-              color = "control",
-              name="Median")%>%
+              color = "Target")%>%
     layout(title = "Phenotypic values of trait 2",
            xaxis = list(title = "",
                         categoryorder = "array",

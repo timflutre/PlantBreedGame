@@ -81,7 +81,7 @@ tabItem(
         " ", strong("Haplodiploidisation"), " has a ", strong(constants$duration.haplodiplo, "-month"), " delay, costs ", strong(constants$cost.haplodiplo, " plot"), " (", format(constants$cost.haplodiplo * constants$cost.pheno.field, digits=2), " Mendels), and a maximum of ", constants$max.nb.haplodiplos, " can be requested at once.",
         " ", strong("High-density genotyping"), " has a ", strong(constants$duration.geno.hd, "-month"), " delay and costs ", strong(constants$cost.geno.hd, " plot"), " (", format(constants$cost.geno.hd * constants$cost.pheno.field, digits=2), " Mendels).",
         " ", strong("Low-density genotyping"), " has a ", strong(constants$duration.geno.ld, "-month"), " delay and costs ", strong(format(constants$cost.geno.ld, digits=2), " plot"), " (", format(constants$cost.geno.ld * constants$cost.pheno.field, digits=2), " Mendels)."),
-      p(strong("Budget"), ": each team starts with a total budget of ", strong(format(1.3 * (constants$cost.pheno.field * constants$nb.plots), digits=2), " Mendels"), ", fully available from the start."),
+      p(strong("Budget"), ": each team starts with a total budget of ", strong(format(constants$cost.pheno.field*constants$nb.plots*10*1.3, digits=2,scientific=F), " Mendels"), ", fully available from the start."),
 
 
       h2("Final trial"),
