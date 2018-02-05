@@ -70,11 +70,13 @@ phenotype <- function (breeder, inds.todo, gameTime){
 
   ## 3. load the haplotypes and convert to genotypes
   flush.console()
-  X <- NULL # TODO: allocate whole matrix at this stage
-  for(i in 1:nrow(inds.todo)){
-    ind.id <- inds.todo$ind[i]
-    if(ind.id %in% rownames(X))
-      next
+  
+  X <- matrix(nrow = length(unique(inds.todo$ind)),
+              ncol = constants$nb.snps)
+  
+
+  for(i in 1:length(unique(inds.todo$ind))){
+    ind.id <- unique(inds.todo$ind)[i]
     message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
@@ -83,14 +85,11 @@ phenotype <- function (breeder, inds.todo, gameTime){
     load(f)
 
     ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
-
-    if(is.null(X)){
-      X <- ind$genos
-    } else
-      X <- rbind(X, ind$genos)
+    X[i,] <- ind$genos
+    
   }
-
-
+  rownames(X) <- unique(inds.todo$ind)
+  colnames(X) <- colnames(ind$genos)
 
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   flush.console()
