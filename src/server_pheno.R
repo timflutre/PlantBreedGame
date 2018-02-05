@@ -92,7 +92,6 @@ output$qryPheno <- renderDataTable({
 pheno_data <- eventReactive(input$requestPheno,{
   if (is.data.frame(readQryPheno())){
     res <- try(phenotype(breeder(), readQryPheno(), getGameTime(setup)))
-    beep()
     if (res=="done"){
       return(res)
     }else return("error")
