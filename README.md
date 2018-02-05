@@ -11,13 +11,15 @@ It is versioned using the [git](http://www.git-scm.com/) software, the central r
 
 # Installation
 
+## Locally on your computer
+
 Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it), or by cloning the git repository:
 
 ```
 git clone git@github.com:timflutre/PlantSelBreedGame.git
 ```
 
-Enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set) and unzip it.
+Enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
 
 Then, open an R session, and execute the following commands:
 
@@ -28,6 +30,27 @@ runApp()
 ```
 
 Once all requested packages are installed, a web page should automatically open in your default web browser, and you should be able to start playing!
+
+## To set up your own server
+
+First, you need to have a [Shiny server](https://www.rstudio.com/products/shiny/shiny-server/) installed and running, say, in `/srv/shiny-server`.
+We only tested with the open source version, but it should also work with the pro version.
+Then, you need to add an application to the server (let's call it `breeding` here) so that `/srv/shiny-server/breding` is an empty directory.
+For all this, have a look at the official [documentation](http://docs.rstudio.com/shiny-server/).
+
+Once your Shiny server is set up, go to the path of the `breeding` application and, inside, copy the content of our Shiny application, by downloading it as a ZIP archive (then unzip it), or by cloning the git repository (see explanations in the previous section).
+
+By default, the Shiny server runs as a unix user named `shiny`.
+You hence need to create a unix group, named for instance `breeding`, to which the `shiny` user can be added (the Shiny server may need to be restarted for this to be taken into account).
+
+Everything inside the directory of the `breeding` application should be readable and writable for users who are part of the `breeding` group.
+This is particularly the case for the data set (`data` directory, retrievable from the authors, see preceding section).
+Download the `data.zip` archive in your home on the server, unzip it, copy its content inside the directory of the `breeding` application, and set the read and write rights to the group `breeding`:
+
+```
+chgrp -R breeding data
+chmod -R ug+rw,o-rwx data
+```
 
 
 # Citation
