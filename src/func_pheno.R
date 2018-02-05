@@ -175,7 +175,7 @@ phenotype <- function (breeder, inds.todo, gameTime){
   
   
 
-
+  
   ## 7. log
   flush.console()
   for(type in names(data.types)){
@@ -229,7 +229,50 @@ createInvoicePheno <- function(request.df){
 
 
 
+plotAvailable <- function (breeder, inds.todo, gameTime) {
+  # function which check if all plot are available for phenotyping
+  
+  # breeder (character) name of the breeder
+  # inds.todo (data frame) output of "readCheckBreedDataFile"
+  # gameTime ("POSIXlt") of the request (given by getGameTime function)
+  
+  
+  ## Initialisations
+  stopifnot(breeder %in% setup$breeders)
+  
+  
+  ## get the historic of pheno requests
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
+  historyPheno <- dbGetQuery(conn=db, query)
+  dbDisconnect(db)
+  
+  ## Calculate the start date of the current pheno session:
+  limitDate <- strptime(paste0(data.table::year(gameTime), "-",
+                             constants$max.upload.pheno.field),
+                      format = "%Y-%m-%d")
+  if (gameTime > limitDate){
+    yearRequest <- data.table::year(gameTime)+1
+  }else yearRequest <- data.table::year(gameTime)
+  
+  limitDate <- strptime(paste0(yearRequest-1, "-",
+                             constants$max.upload.pheno.field),
+                      format = "%Y-%m-%d")
+  
+  
+  ## Calculate the number of plot already used:
+  historyPheno$request_date <- strptime(historyPheno$request_date, format = "%Y-%m-%d")
+  usedPlot <- sum(historyPheno$quantity[historyPheno$request_date>=limitDate])
 
+  ## compare with the request:
+  requestPlot <- sum(as.numeric(inds.todo$details[inds.todo$task=="pheno-field"]))
+  
+  if (constants$nb.plots - usedPlot - requestPlot<0){
+    return(FALSE)
+  } else return(TRUE)
+  
+  
+}
 
 
 

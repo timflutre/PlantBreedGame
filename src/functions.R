@@ -184,6 +184,7 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
 ##' @author Timothee Flutre
 ##' @export
 countRequestedBreedTypes <- function(df){
+  
   stopifnot(is.data.frame(df),
             ! is.null(colnames(df)))
 
@@ -198,9 +199,11 @@ countRequestedBreedTypes <- function(df){
                       c("allofecundation", "autofecundation",
                         "haplodiploidization"))
   } else if("ind" %in% colnames(df)){
+ 
 
-    types <- stats::setNames(c(sum(df$task == "pheno-field"),
-                               sum(df$task == "pheno-patho"),
+    
+    types <- stats::setNames(c(sum(df$details[df$task == "pheno-field"]),
+                               sum(df$details[df$task == "pheno-patho"]),
                                sum(df$task == "geno" &
                                      df$details == "hd"),
                                sum(df$task == "geno" &
