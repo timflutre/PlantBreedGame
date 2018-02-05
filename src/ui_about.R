@@ -22,17 +22,24 @@ tabItem(tabName="about",
 
     fluidRow(
         shinydashboard::box(width=12, title=NULL,
-        div(id="about_1",
+            div(id="about_1",
+            h3("Context"),
+            p("This is the ", code("PlantSelBreedGame"), " software implementing a serious game to teach selective breeding via the example of a fictitious annual plant species to students at the master level."),
+
             h3("Copyright "),
             p("2015-2018: ",
               a("INRA", href="http://inra.fr/", target="_blank"),
               ", ",
               a("Montpellier SupAgro", href="http://supagro.fr/", target="_blank")),
+
             h3("Authors"),
             p("In alphabetical order: Jacques David, Julien Diot, Timothée Flutre."),
+
             h3("Sources"),
-            p(a("Repository", href=url.repo, target="_blank")),
-            p("Current version: ",
+            p("The software takes the form of a ", a("Shiny", href="http://shiny.rstudio.com/", target="_blank"), " application, benefiting from the ", a("R", href="https://www.r-project.org/", target="_blank"), " programming language and software environment for statistical computing.",
+              "It is available under a free software license, the ", a("GNU Affero General Public License", href="https://www.gnu.org/licenses/agpl.html", target="_blank"), " (version 3 and later)."),
+            p("Code: ", a("repository", href=url.repo, target="_blank"), "; ",
+              "current version: ",
               a(code.version$display, href=code.version$link, target="_blank")),
             br(),
             br(),
