@@ -30,6 +30,8 @@ readQryPheno <- reactive({
   # no input fileI
   if(is.null(input$file.pheno)){
     return(NULL)
+  }else if (breeder()=="No Identification"){
+    return("error - You are not connected")
   }
 
   # read input file
@@ -76,19 +78,6 @@ output$PhenoInvoice <- renderTable({
     createInvoicePheno(readQryPheno())
   }
 })
-
-
-# output$PhenoSmy <- renderPrint({
-#   if (is.data.frame(readQryPheno())){
-#     summary(as.data.frame(apply(readQryPheno(), MARGIN = 2, FUN = as.factor)))
-#   }
-# })
-# output$PhenoStr <- renderPrint({
-#   if (is.data.frame(readQryPheno())){
-#     print(str(readQryPheno()))
-#   }
-# })
-
 
 # data
 output$qryPheno <- renderDataTable({

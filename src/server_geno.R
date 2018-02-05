@@ -33,6 +33,8 @@ readQryGeno <- reactive({
   # no input fileI
   if(is.null(input$file.geno)){
     return(NULL)
+  }else if (breeder()=="No Identification"){
+    return("error - You are not connected")
   }
 
   # read input file

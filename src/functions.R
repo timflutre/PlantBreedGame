@@ -87,7 +87,7 @@ makeDfPhenos <- function(ind.ids, nb.plots.per.ind, year, pathogen){
 ##' @author Timothee Flutre
 ##' @seealso \code{\link{makeExamplePlantFile}}
 ##' @export
-readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd=800){
+readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
   stopifnot(! is.null(f) || ! is.null(df),
             is.numeric(max.nb.hd),
             length(max.nb.hd) == 1,
@@ -258,5 +258,15 @@ indAvailable <- function(indList, gameTime, breeder){
   ## resuts
   return(list("indExist"=indExist,"indGrown"=indGrown))
 }
+
+
+
+
+
+
+
+
+
+
 
 

@@ -31,11 +31,14 @@ readQryPlmat <- reactive({
   # no input fileI
   if(is.null(input$file.plmat)){
     return(NULL)
+  }else if (breeder()=="No Identification"){
+    return("error - You are not connected")
   }
 
 
   # read input file
-  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath))
+  maxHD <- ifelse(breederStatus()=="game master",Inf,constants$max.nb.haplodiplos)
+  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath, max.nb.hd=maxHD))
 
   if (is.data.frame(test)){
     # the file is ok
