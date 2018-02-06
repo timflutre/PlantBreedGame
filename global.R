@@ -50,7 +50,7 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 
 currentGTime <- reactive({
   ## this reactive variable is reevaluated every second
-  invalidateLater(10000)
+  invalidateLater(5000)
   getGameTime(setup)
 })
 

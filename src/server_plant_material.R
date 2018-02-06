@@ -116,7 +116,7 @@ plantMatRequested <- eventReactive(input$requestPlmat,{
     # Create a Progress object
     progressPltMat <- shiny::Progress$new(session, min=0, max=5)
     progressPltMat$set(value = 0,
-                       message = "Create Plant Material",
+                       message = "Create Plant Material:",
                        detail = "Initialisation...")
     
     

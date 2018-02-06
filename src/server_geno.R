@@ -109,7 +109,7 @@ geno_data <- eventReactive(input$requestGeno,{
     # Create a Progress object
     progressGeno <- shiny::Progress$new(session, min=0, max=4)
     progressGeno$set(value = 0,
-                       message = "Process Geno request",
+                       message = "Process Geno request:",
                        detail = "Initialisation...")
     
     res <- try(genotype(breeder(),
