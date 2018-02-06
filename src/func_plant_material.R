@@ -110,33 +110,30 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
   ## insert the requested crosses into their table
   flush.console()
   nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
-  for(i in 1:nrow(crosses.todo)){
-    if (!is.null(progressPltMat)){
-      progressPltMat$set(value = 4,
-                         detail = paste0("Write new individuals in data base: ", crosses.todo$child[i]))
-    }
-    ## calculate the available date:
-    if (crosses.todo$explanations[i]=="allofecundation"){
+  
+  getAvailDate <- function(type){
+    if (type=="allofecundation"){
       availableDate <- seq(from=gameTime, by=paste0(constants$duration.allof, " month"), length.out=2)[2]
-    }else if (crosses.todo$explanations[i]=="autofecundation"){
+    }else if (type=="autofecundation"){
       availableDate <- seq(from=gameTime, by=paste0(constants$duration.autof, " month"), length.out=2)[2]
-    }else if (crosses.todo$explanations[i]=="haplodiploidization"){
+    }else if (type=="haplodiploidization"){
       availableDate <- seq(from=gameTime, by=paste0(constants$duration.haplodiplo, " month"), length.out=2)[2]
     }
-    
-    
-    message(paste0(i, "/", nrow(crosses.todo)))
-    query <- paste0("INSERT INTO ", tbl, " VALUES",
-                    "('", crosses.todo$parent1[i],
-                    "', '", crosses.todo$parent2[i],
-                    "', '", crosses.todo$child[i],
-                    "', '", availableDate, "')")
-    res <- dbGetQuery(conn=db, query)
+    return(strftime(availableDate, format = "%Y-%m-%d %H:%M:%S"))
   }
-  nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
+  crosses.todo$availableDate <- sapply(crosses.todo$explanations, FUN=getAvailDate)
+  crosses.todo
   
   
-  
+  query <- paste((crosses.todo$parent1),
+                 (crosses.todo$parent2),
+                 (crosses.todo$child),
+                 (crosses.todo$availableDate),
+                 sep="','",collapse = "'),('")
+  query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('",query,"')")
+  res <- dbGetQuery(conn=db, query)
+
+ 
   ## log
   flush.console()
   for(type in names(cross.types)){
