@@ -135,7 +135,11 @@ output$userAction <- renderUI({
                                     div(style="vertical-align: top;   min-width: 20%;", id="id_4",
                                         uiOutput("UIpswChanged")
                                     )
+                           ),
+                           tabPanel("Game - Master ",
+                                    uiOutput("UIserverInfo")
                            )
+                           
 
           )
   }
@@ -259,6 +263,57 @@ output$UIpswChanged <- renderUI({
 
 })
 
+
+
+
+## memory information:
+output$sizeDataFolder <- renderTable({
+  # data frame containing the size of all subfolder of "data"
+  invalidateLater(30000)
+  if (breederStatus()=="game master"){
+    folderShared <- list.dirs(path = "data/shared", full.names = TRUE, recursive = TRUE)[-1]
+    folderTruth <- list.dirs(path = "data/truth", full.names = TRUE, recursive = TRUE)[-1]
+    subFolders <- c(folderShared,folderTruth)
+    
+    funApply <- function(folder){
+      files <- list.files(folder, all.files = TRUE, recursive = TRUE, full.names=T)
+      sum(file.info(files)$size)
+    }
+    infoDataFolder <- as.data.frame(sapply(subFolders, FUN=funApply,USE.NAMES = FALSE),
+                                    col.names=c("size"))
+    names(infoDataFolder) <- c("size")
+    infoDataFolder$path <- subFolders
+    
+    
+    infoDataFolder <- rbind(infoDataFolder,
+                            data.frame(path="data/shared",
+                                       size=sum(infoDataFolder$size[infoDataFolder$path %in% folderShared]))
+    )
+    infoDataFolder <- rbind(infoDataFolder,
+                            data.frame(path="data/truth",
+                                       size=sum(infoDataFolder$size[infoDataFolder$path %in% folderTruth]))
+    )
+    infoDataFolder <- rbind(infoDataFolder,
+                            data.frame(path="data/breeding-game.sqlite",
+                                       size=file.info("data/breeding-game.sqlite")$size)
+    )
+    infoDataFolder$size <- infoDataFolder$size/10^6
+    infoDataFolder <- rev(infoDataFolder)
+    names(infoDataFolder) <- c("path", "size (Mo)")
+    
+    return(infoDataFolder)
+  }else return(NULL)
+})
+  
+
+
+output$UIserverInfo <- renderUI({
+  
+  if (breederStatus()=="game master"){
+    tableOutput("sizeDataFolder")
+  }else return(p("Sorry, this is only accessible to the game master."))
+
+})
 
 
 
