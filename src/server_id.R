@@ -136,7 +136,7 @@ output$userAction <- renderUI({
                                         uiOutput("UIpswChanged")
                                     )
                            ),
-                           tabPanel("Game-Master informations",
+                           tabPanel("Admin",
                                     uiOutput("UIserverInfo")
                            )
                            
@@ -318,7 +318,7 @@ output$sizeDataFolder <- renderTable({
 output$UIserverInfo <- renderUI({
   
   if (breederStatus()=="game master"){
-    div(h3("Server's memory:"),
+    div(h3("Disk usage:"),
          tableOutput("sizeDataFolder"))
     
   }else return(p("Sorry, this is only accessible to the game master."))
