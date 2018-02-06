@@ -106,13 +106,25 @@ output$qryGeno <- renderDataTable({
 geno_data <- eventReactive(input$requestGeno,{
 
   if (is.data.frame(readQryGeno())){
+    # Create a Progress object
+    progressGeno <- shiny::Progress$new(session, min=0, max=4)
+    progressGeno$set(value = 0,
+                       message = "Process Geno request",
+                       detail = "Initialisation...")
     
     res <- try(genotype(breeder(),
                         readQryGeno(),
-                        getGameTime(setup)))
+                        getGameTime(setup),
+                        progressGeno))
     if (res=="done"){
+      progressGeno$set(value = 4,
+                       detail = "Done")
+
       return(res)
-    }else return("error")
+    }else{
+      progressGeno$set(detail = "ERROR !")
+      return("error")
+    }
 
   }else return(NULL)
 })

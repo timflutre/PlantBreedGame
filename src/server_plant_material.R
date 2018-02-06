@@ -112,14 +112,28 @@ output$qryPlmat <- renderDataTable({
 # output
 plantMatRequested <- eventReactive(input$requestPlmat,{
   if (is.data.frame(readQryPlmat())){
-
+    
+    # Create a Progress object
+    progressPltMat <- shiny::Progress$new(session, min=0, max=5)
+    progressPltMat$set(value = 0,
+                       message = "Create Plant Material",
+                       detail = "Initialisation...")
+    
+    
     res <- try(create_plant_material(breeder(),
                                      readQryPlmat(),
-                                     getGameTime(setup)))
+                                     getGameTime(setup),
+                                     progressPltMat))
 
     if (res=="done"){
+      progressPltMat$set(value = 5,
+                         detail = "Done !")
+
       return(res)
-    }else return("error")
+    }else{
+      progressPltMat$set(detail = "ERROR !")
+      return("error")
+    }
 
   }else return(NULL)
 })
@@ -133,9 +147,9 @@ output$plmatRequestResultUI <- renderUI({
     
     # display message
     
-    p("Great ! Your plants are growing up !")
+    p("\n Great ! Your plants are growing up !")
   } else if (!is.null(plantMatRequested()) && plantMatRequested()=="error"){
-    p("Something went wrong. Please check your file.")
+    p("\n Something went wrong. Please check your file.")
   } else  p("")
 
 })

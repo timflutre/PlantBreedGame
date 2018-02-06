@@ -21,7 +21,7 @@
 
 ## Contain functions used in "phenotyping" section.
 
-phenotype <- function (breeder, inds.todo, gameTime){
+phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
   # function which phenotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
 
@@ -77,6 +77,12 @@ phenotype <- function (breeder, inds.todo, gameTime){
 
   for(i in 1:length(unique(inds.todo$ind))){
     ind.id <- unique(inds.todo$ind)[i]
+    
+    if (!is.null(progressPheno)){
+      progressPheno$set(value = 1,
+                       detail = paste0("Load haplotypes: ",paste0(i, "/", nrow(inds.todo), " ", ind.id)))
+    }
+    
     message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
@@ -94,7 +100,13 @@ phenotype <- function (breeder, inds.todo, gameTime){
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   flush.console()
   idx <- which(inds.todo$task == "pheno-field")
-  length(idx)
+
+  if (!is.null(progressPheno)){
+    progressPheno$set(value = 2,
+                      detail = "pheno simulation (field)...")
+  }
+  
+  
   if(length(idx) > 0){
     phenosField.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
                               nb.plots=as.numeric(inds.todo$details[idx]),
@@ -141,7 +153,12 @@ phenotype <- function (breeder, inds.todo, gameTime){
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
   flush.console()
   idx <- which(inds.todo$task == "pheno-patho")
-  length(idx)
+
+  if (!is.null(progressPheno)){
+    progressPheno$set(value = 3,
+                      detail = "pheno simulation (patho)...")
+  }
+  
   if(length(idx) > 0){
     phenosPatho.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
                               nb.plots=as.numeric(inds.todo$details[idx]),
@@ -189,6 +206,7 @@ phenotype <- function (breeder, inds.todo, gameTime){
     }
   }
   dbDisconnect(db)
+  
 
   # output
   return("done")

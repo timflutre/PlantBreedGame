@@ -20,7 +20,8 @@
 
 ## Contain functions used in "plant material" section.
 
-create_plant_material <- function (breeder, crosses.todo, gameTime){
+create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltMat=NULL){
+  
   # function which create the new generations (see game_master_plant-material.R)
   
   # breeder (character) name of the breeder
@@ -54,6 +55,10 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   flush.console()
   parents <- list(haplos=list())
   for(parent.id in parent.ids){
+    if (!is.null(progressPltMat)){
+      progressPltMat$set(value = 1,
+                         detail = paste0("Load haplotypes: ",parent.id))
+    }
     if("ind" %in% ls())
       rm(ind)
     f <- paste0(setup$truth.dir, "/", breeder, "/", parent.id, "_haplos.RData")
@@ -72,6 +77,12 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   
   
   ## perform the requested crosses
+  if (!is.null(progressPltMat)){
+    progressPltMat$set(value = 2,
+                       detail = "perform crosses...")
+  }
+  
+  
   flush.console()
   new.inds <- list()
   loc.crossovers <- drawLocCrossovers(crosses=crosses.todo,
@@ -84,6 +95,10 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   ## save the haplotypes of the new individuals
   flush.console()
   for(new.ind.id in getIndNamesFromHaplos(new.inds$haplos)){
+    if (!is.null(progressPltMat)){
+      progressPltMat$set(value = 3,
+                         detail = paste0("Save haplotypes: ", new.ind.id))
+    }
     message(new.ind.id)
     ind <- list(haplos=getHaplosInd(new.inds$haplos, new.ind.id))
     f <- paste0(setup$truth.dir, "/", breeder, "/", new.ind.id, "_haplos.RData")
@@ -96,6 +111,10 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
   flush.console()
   nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
   for(i in 1:nrow(crosses.todo)){
+    if (!is.null(progressPltMat)){
+      progressPltMat$set(value = 4,
+                         detail = paste0("Write new individuals in data base: ", crosses.todo$child[i]))
+    }
     ## calculate the available date:
     if (crosses.todo$explanations[i]=="allofecundation"){
       availableDate <- seq(from=gameTime, by=paste0(constants$duration.allof, " month"), length.out=2)[2]
@@ -131,6 +150,8 @@ create_plant_material <- function (breeder, crosses.todo, gameTime){
     }
   }
   dbDisconnect(db)
+  
+
   
   return("done")
 

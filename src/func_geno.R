@@ -21,7 +21,7 @@
 ## Contain functions used in "genotyping" section.
 
 
-genotype <- function (breeder, inds.todo, gameTime){
+genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
   # function which genotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
   
@@ -68,8 +68,14 @@ genotype <- function (breeder, inds.todo, gameTime){
               ncol = constants$nb.snps)
   
   for(i in 1:length(unique(inds.todo$ind))){
+
     ind.id <- unique(inds.todo$ind)[i]
     message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
+    
+    if (!is.null(progressGeno)){
+      progressGeno$set(value = 1,
+                         detail = paste0("Load haplotypes: ",paste0(i, "/", nrow(inds.todo), " ", ind.id)))
+    }
     
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
     if(! file.exists(f))
@@ -89,6 +95,12 @@ genotype <- function (breeder, inds.todo, gameTime){
   df.geno.ld <- NULL
   df.geno.hd <- NULL 
   for(dty in c("ld", "hd")){
+    
+    if (!is.null(progressGeno)){
+      progressGeno$set(value = 2,
+                         detail = paste0("Process ",dty))
+    }
+    
     idx <- which(inds.todo$task == "geno" & inds.todo$details == dty &
                    inds.todo$ind %in% rownames(X))
     message(paste0(dty, ": ", length(idx)))
@@ -126,6 +138,12 @@ genotype <- function (breeder, inds.todo, gameTime){
                             stringsAsFactors=FALSE)
     for(i in idx){
       ind.id <- inds.todo$ind[i]
+      
+      if (!is.null(progressGeno)){
+        progressGeno$set(value = 3,
+                           detail = paste0("Process single SNP: ",ind.id))
+      }
+      
       snp <- inds.todo$details[i]
       all.genos$geno[all.genos$ind == ind.id &
                        all.genos$snp == snp] <- X[ind.id, snp]
@@ -159,6 +177,8 @@ genotype <- function (breeder, inds.todo, gameTime){
   }
   dbDisconnect(db)
   
+  
+
   # output
   return("done")
 }
