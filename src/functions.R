@@ -202,8 +202,8 @@ countRequestedBreedTypes <- function(df){
  
 
     
-    types <- stats::setNames(c(sum(df$details[df$task == "pheno-field"]),
-                               sum(df$details[df$task == "pheno-patho"]),
+    types <- stats::setNames(c(sum(as.numeric(df$details[df$task == "pheno-field"])),
+                               sum(as.numeric(df$details[df$task == "pheno-patho"])),
                                sum(df$task == "geno" &
                                      df$details == "hd"),
                                sum(df$task == "geno" &
