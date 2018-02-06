@@ -136,7 +136,7 @@ output$userAction <- renderUI({
                                         uiOutput("UIpswChanged")
                                     )
                            ),
-                           tabPanel("Game - Master ",
+                           tabPanel("Game-Master informations",
                                     uiOutput("UIserverInfo")
                            )
                            
@@ -196,12 +196,13 @@ output$UIdwnlPheno <- renderUI({
 })
 
 output$UIdwnlGeno <- renderUI({
-  if (input$phenoFile!=""){
+  if (input$genoFile!=""){
     if (breederStatus()=="player" && !availToDwnld(input$genoFile,currentGTime())$isAvailable ){
       p(paste0("Sorry, your data are not available yet. Delivery date: ",
                availToDwnld(input$genoFile,currentGTime())$availDate))
     }else{
-      downloadButton("dwnlGeno", "Download your file")
+           downloadButton("dwnlGeno", "Download your file")
+      
     }
   }else p("")
 })
@@ -297,6 +298,13 @@ output$sizeDataFolder <- renderTable({
                             data.frame(path="data/breeding-game.sqlite",
                                        size=file.info("data/breeding-game.sqlite")$size)
     )
+    infoDataFolder <- rbind(infoDataFolder,
+                            data.frame(path="data",
+                                       size=sum(infoDataFolder$size))
+    )
+    infoDataFolder <- infoDataFolder[order(infoDataFolder$size, decreasing = T),]
+    
+    
     infoDataFolder$size <- infoDataFolder$size/10^6
     infoDataFolder <- rev(infoDataFolder)
     names(infoDataFolder) <- c("path", "size (Mo)")
@@ -310,7 +318,9 @@ output$sizeDataFolder <- renderTable({
 output$UIserverInfo <- renderUI({
   
   if (breederStatus()=="game master"){
-    tableOutput("sizeDataFolder")
+    div(h3("Server's memory:"),
+         tableOutput("sizeDataFolder"))
+    
   }else return(p("Sorry, this is only accessible to the game master."))
 
 })
@@ -373,5 +383,6 @@ output$UIbreederInfoID <- renderUI({
 
 output$IdDebug <- renderPrint({
   print("----")
-  print(input$submitPSW)
+  print(input$phenoFile)
+  print(input$genoFile)
 })
