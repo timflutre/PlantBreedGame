@@ -35,8 +35,6 @@ stopifnot(compareVersion("0.156.9",
           != 1)
 
 
-library(beepr) # help for debug
-
 
 ## -------------------------------------------------------------------
 ## functions
@@ -78,3 +76,22 @@ subset.snps[["ld"]] <- rownames(read.table(f))
 
 url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
 code.version <- getCodeVersion(url.repo)
+
+
+
+iServ <- 0
+## server using indicator:
+serverIndic <- reactive({
+  tRefresh <- 250
+  invalidateLater(tRefresh)
+  string <- strsplit("MENDEL",split="")[[1]]
+  
+  iServ <<- (iServ + 1)%% length(string)
+  n <- (iServ %% length(string)) +1
+  return(string[n])
+
+})
+
+
+
+

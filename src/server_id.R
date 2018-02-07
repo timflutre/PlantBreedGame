@@ -335,8 +335,7 @@ output$breederBoxID <- renderValueBox({
     value = breeder(),
     subtitle = "Breeder",
     icon = icon("user-o"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
   )
 })
 
@@ -345,8 +344,7 @@ output$dateBoxID <- renderValueBox({
     subtitle = "Date",
     value = strftime(currentGTime(), format= "%Y-%m-%d"),
     icon = icon("calendar"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
   )
 })
 
@@ -357,16 +355,25 @@ output$budgetBoxID <- renderValueBox({
     value = budget(),
     subtitle = "Budget",
     icon = icon("credit-card"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
+  )
+})
+
+output$serverIndicID <- renderValueBox({
+  valueBox(
+    value = serverIndic(),
+    subtitle = "Server load",
+    icon = icon("server"),
+    color = "yellow"
   )
 })
 
 output$UIbreederInfoID <- renderUI({
   if (breeder()!="No Identification"){
-    list(infoBoxOutput("breederBoxID"),
-         infoBoxOutput("dateBoxID"),
-         infoBoxOutput("budgetBoxID"))
+    list(infoBoxOutput("breederBoxID", width = 3),
+         infoBoxOutput("dateBoxID", width = 3),
+         infoBoxOutput("budgetBoxID", width = 3),
+         infoBoxOutput("serverIndicID", width = 3))
   }
 
 })

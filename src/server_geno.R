@@ -156,8 +156,7 @@ output$breederBoxGeno <- renderValueBox({
     value = breeder(),
     subtitle = "Breeder",
     icon = icon("user-o"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
   )
 })
 
@@ -166,8 +165,7 @@ output$dateBoxGeno <- renderValueBox({
     subtitle = "Date",
     value = strftime(currentGTime(), format= "%Y-%m-%d"),
     icon = icon("calendar"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
   )
 })
 
@@ -176,20 +174,27 @@ output$budgetBoxGeno <- renderValueBox({
     value = budget(),
     subtitle = "Budget",
     icon = icon("credit-card"),
-    color = "yellow",
-    width = 4
+    color = "yellow"
+  )
+})
+
+output$serverIndicGeno <- renderValueBox({
+  valueBox(
+    value = serverIndic(),
+    subtitle = "Server load",
+    icon = icon("server"),
+    color = "yellow"
   )
 })
 
 output$UIbreederInfoGeno <- renderUI({
   if (breeder()!="No Identification"){
-    list(infoBoxOutput("breederBoxGeno"),
-         infoBoxOutput("dateBoxGeno"),
-         infoBoxOutput("budgetBoxGeno"))
+    list(infoBoxOutput("breederBoxGeno", width = 3),
+         infoBoxOutput("dateBoxGeno", width = 3),
+         infoBoxOutput("budgetBoxGeno", width = 3),
+         infoBoxOutput("serverIndicGeno", width = 3))
   }
-
 })
-
 
 
 ##  DEBUG
