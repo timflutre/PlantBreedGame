@@ -237,10 +237,10 @@ output$evalGraphT1vT2<- renderPlotly({
   f <- paste0(setup$truth.dir, "/", "p0.RData")
   load(f)
   dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2])
-  
+
   # linear regretion
-  linMod <- lm(GAT1~GAT2, data=dfInitColl)
-  linMod$coefficients[2]
+  linMod <- lm(GAT2 ~ GAT1, data=dfInitColl)
+
   xLine <- c(min(dfInitColl$GAT1), max(dfInitColl$GAT1))
   yLine <- linMod$coefficients[1]+linMod$coefficients[2]*xLine
     
@@ -261,7 +261,7 @@ output$evalGraphT1vT2<- renderPlotly({
               mode='lines',
               color = "Initial Collection",
               line=list(color="gray"),
-              name="Linear regretion",
+              name="Linear regression",
               inherit=FALSE) %>%
     add_markers(data=dfPheno,
                 type = 'scatter',
