@@ -38,23 +38,33 @@ readQryPlmat <- reactive({
 
   # read input file
   maxHD <- ifelse(breederStatus()=="game master",Inf,constants$max.nb.haplodiplos)
+  
   test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath, max.nb.hd=maxHD))
+  
+  # check file
+  if (!is.data.frame(test)){
+    return("error - wrong file format")
+  }
+  # the file is ok
 
-  if (is.data.frame(test)){
-    # the file is ok
-
-    # list individuals
-    indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
-    indList <- indList[!is.na(indList)]
-    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-
-    # check if individuals are available
-    if ((indAvail$indGrown | breederStatus()=="game master")
-        & indAvail$indExist){
-      return(df)
-    }else {return("error - Individuals not availables")}
-  }else {return("error - wrong file format")}
-
+  
+  # check new individuals not already exist
+  childList <- unique(c(as.character(df$child)))
+  
+  if (indExist(childList, breeder())){
+    return("error - Individuals already exist")
+  }
+  
+  # list individuals
+  indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
+  indList <- indList[!is.na(indList)]
+  indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+  
+  # check if individuals are available
+  if ((indAvail$indGrown | breederStatus()=="game master")
+      & indAvail$indExist){
+    return(df)
+  }else {return("error - Individuals not availables")}
 })
 
 

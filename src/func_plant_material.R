@@ -28,7 +28,7 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
   # crosses.todo (data frame) output of "readCheckBreedPlantFile"
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
   
-  
+
   ## Initialisation
   stopifnot(breeder %in% setup$breeders)
   stopifnot(! is.null(crosses.todo))
@@ -187,6 +187,22 @@ createInvoicePltmat <- function(request.df){
 
 
 
+indExist <- function(indList, breeder){
+  # function to check if an individuals already exist
+  # indList (character verctor), list of individuals to check
+  # breeder (charracter) breeder name
+
+  # get requested individuals information
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  tbl <- paste0("plant_material_", breeder)
+  stopifnot(tbl %in% dbListTables(db))
+  query <- paste0("SELECT child FROM ", tbl)
+  res <- dbGetQuery(conn=db, query)
+  dbDisconnect(db)
+  
+  return(any(indList %in% res$child))
+  
+}
 
 
 
