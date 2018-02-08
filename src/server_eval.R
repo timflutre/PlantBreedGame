@@ -117,7 +117,7 @@ output$evalGraphT1 <- renderPlotly({
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
-  target <- median(dfPheno$trait1[dfPheno$breeder=="control"])*1.03
+  target <- median(dfPheno$trait1[dfPheno$breeder=="control"])*constants$register.min.trait1
 
   
   
