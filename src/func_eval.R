@@ -132,7 +132,8 @@ phenotype4Eval <- function (df, nRep=50){
                                  sigma.alpha2=p0$sigma.alpha2,
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  Beta=p0$Beta,
-                                 sigma2=p0$sigma2)
+                                 sigma2=p0$sigma2,
+                                 afs=p0$afs)
 
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                       X=X[levels(phenosField.df$ind),,drop=FALSE],

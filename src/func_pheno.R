@@ -106,7 +106,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
                       detail = "pheno simulation (field)...")
   }
   
-  
+
   if(length(idx) > 0){
     phenosField.df <- makeDfPhenos(ind.ids=inds.todo$ind[idx],
                               nb.plots=as.numeric(inds.todo$details[idx]),
@@ -120,7 +120,8 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
                             sigma.alpha2=p0$sigma.alpha2,
                             X=X[levels(phenosField.df$ind),,drop=FALSE],
                             Beta=p0$Beta,
-                            sigma2=p0$sigma2)
+                            sigma2=p0$sigma2,
+                            afs=p0$afs)
     
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
