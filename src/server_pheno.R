@@ -34,9 +34,12 @@ readQryPheno <- reactive({
     return("error - You are not connected")
   }
 
+
   # read input file
+  max.nb.plots <- ifelse(breederStatus()=="game master",Inf , constants$nb.plots)
   test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
-                                            subset.snps=subset.snps))
+                                            subset.snps=subset.snps,
+                                            max.nb.plots = max.nb.plots))
 
 
   if (is.data.frame(test)){
