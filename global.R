@@ -44,6 +44,11 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 
 
 ## -------------------------------------------------------------------
+## parameters:
+options(warn=-1) # don't show warnings
+debugDisplay <- FALSE # display debug 
+
+## -------------------------------------------------------------------
 ## variables
 
 currentGTime <- reactive({
@@ -78,8 +83,7 @@ url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
 code.version <- getCodeVersion(url.repo)
 
 
-# display debug 
-debugDisplay <- FALSE
+
 
 
 
