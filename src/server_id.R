@@ -26,6 +26,22 @@ source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 
+
+## get breeder list and create select input
+output$selectBreeder <- renderUI({
+  # get the breeders list
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  tbl <- "breeders"
+  query <- paste0("SELECT name FROM ", tbl)
+  breederNames <- dbGetQuery(conn=db, query)[,1]
+  dbDisconnect(db)
+  
+  selectInput("breederName", "Breeder", choices=as.list(breederNames))
+  
+})
+
+
+
 ## log in
 goodPsw <- eventReactive(input$submitPSW,
                          ignoreNULL=FALSE,{
@@ -107,9 +123,6 @@ output$userAction <- renderUI({
                                       uiOutput("UIdwnlGeno")
                                     )
 
-
-
-
                            ),
 
                            tabPanel("My plant material",
@@ -137,7 +150,7 @@ output$userAction <- renderUI({
                                     )
                            ),
                            tabPanel("Admin",
-                                    uiOutput("UIserverInfo")
+                                    uiOutput("UIadmin")
                            )
                            
 
@@ -313,13 +326,61 @@ output$sizeDataFolder <- renderTable({
   }else return(NULL)
 })
   
+## add new breeder:
+observeEvent(input$addNewBreeder,{
+  
+  progressNewBreeder <- shiny::Progress$new(session, min=0, max=7)
+  progressNewBreeder$set(value = 0,
+                   message = "Adding breeder",
+                   detail = "Initialisation...")
+  
+  addNewBreeder(input$newBreederName,
+                input$newBreederStatus,
+                input$newBreederPsw,
+                progressNewBreeder)
+  
+  progressNewBreeder$set(value = 7,
+                         detail = "Done !")
+})
 
-
-output$UIserverInfo <- renderUI({
+output$UIadmin <- renderUI({
   
   if (breederStatus()=="game master"){
-    div(h3("Disk usage:"),
-         tableOutput("sizeDataFolder"))
+    list(
+      div(style="display: inline-block; vertical-align: top; width: 30%;",
+          h3("Disk usage:"),
+          tableOutput("sizeDataFolder")),
+      
+      tags$head(
+          tags$style(HTML('.shiny-input-container{margin-bottom: 0px;}
+                          .selectize-control{margin-bottom: 0px;}'))
+        ),
+
+      div(style="display: inline-block; vertical-align: top; width: 69%;",
+          h3("Add new breeder:"),
+          tags$table(style = "width: 100%; border-collapse: collapse;",
+              tags$tr(
+                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                        textInput("newBreederName", "Breeder's name",
+                                  width="100%")
+                        ),
+                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",
+                        selectInput("newBreederStatus", "Status", choices=c("player", "game master"),
+                                    width="100%")
+                        ),
+                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                        passwordInput("newBreederPsw", "Password",
+                                      width="100%")
+                        ),
+                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                        actionButton("addNewBreeder", "Add Breeder",
+                                     width="100%", style="margin-bottom: 0px;")
+                        )
+                )
+          )
+      )
+
+    )
     
   }else return(p("Sorry, this is only accessible to the game master."))
 
