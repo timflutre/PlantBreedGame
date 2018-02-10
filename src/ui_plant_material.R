@@ -45,11 +45,7 @@ tabItem(tabName="plant_mat",
   shinydashboard::tabBox(width=12, title = "Info", id = "cross_tabset", side="right", selected = "Check",
                  tabPanel("Request",
                             div(
-                              tags$head(
-                                tags$style(HTML('#requestPlmat{background-color:#00A65A; color: white}'))
-                                ),
-                              p("Do you really want this plant material?"),
-                              actionButton("requestPlmat", "Yes, I do!")
+                              uiOutput("submitPlmatRequest")
                             ),
                             div(
                               uiOutput("plmatRequestResultUI")

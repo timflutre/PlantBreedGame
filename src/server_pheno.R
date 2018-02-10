@@ -91,7 +91,20 @@ output$qryPheno <- renderDataTable({
   }
 })
 
-
+# submit button
+output$submitPhenoRequest <- renderUI({
+  
+  colorButton <- ifelse(is.data.frame(readQryPheno()),"#00A65A","#ff0000") # yes:green, no:red
+  
+  list(
+    tags$head(
+      tags$style(HTML(paste0('#requestPheno{background-color:',colorButton,'; color: white}')))
+    ),
+    p("Do you really want these phenotyping data?"),
+    actionButton("requestPheno", "Yes, I do!") # style="background-color:red"
+  )
+  
+})
 
 # output
 pheno_data <- eventReactive(input$requestPheno,{

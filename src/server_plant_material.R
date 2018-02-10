@@ -91,23 +91,6 @@ output$PltmatInvoice <- renderTable({
 })
 
 
-
-# output$plmatSmy <- renderPrint({
-#   if (is.data.frame(readQryPlmat())){
-#     dat <- readQryPlmat()
-#     summary(as.data.frame(apply(readQryPlmat(), MARGIN = 2, FUN = as.factor)))
-#   }
-# })
-# 
-# output$plmatStr <- renderPrint({
-#   if (is.data.frame(readQryPlmat())){
-#     dat <- readQryPlmat()
-#     str(readQryPlmat())
-#   }
-# })
-
-
-
 # data
 output$qryPlmat <- renderDataTable({
   if (is.data.frame(readQryPlmat())){
@@ -116,7 +99,20 @@ output$qryPlmat <- renderDataTable({
 
 })
 
-
+# submit button
+output$submitPlmatRequest <- renderUI({
+  
+  colorButton <- ifelse(is.data.frame(readQryPlmat()),"#00A65A","#ff0000") # yes:green, no:red
+  
+  list(
+    tags$head(
+      tags$style(HTML(paste0('#requestPlmat{background-color:',colorButton,'; color: white}')))
+    ),
+    p("Do you really want this plant material?"),
+    actionButton("requestPlmat", "Yes, I do!") # style="background-color:red"
+  )
+  
+})
 
 
 # output

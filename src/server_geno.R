@@ -100,7 +100,21 @@ output$qryGeno <- renderDataTable({
   }
 })
 
-
+## submit button
+output$submitGenoRequest <- renderUI({
+  
+  colorButton <- ifelse(is.data.frame(readQryGeno()),"#00A65A","#ff0000") # yes:green, no:red
+  
+  list(
+    tags$head(
+      tags$style(HTML(paste0('#requestGeno{background-color:',colorButton,'; color: white}')))
+    ),
+    p("Do you really want these genotyping data?"),
+    actionButton("requestGeno", "Yes, I do!") # style="background-color:red"
+  )
+  
+  
+})
 
 ## output
 geno_data <- eventReactive(input$requestGeno,{
@@ -128,6 +142,8 @@ geno_data <- eventReactive(input$requestGeno,{
 
   }else return(NULL)
 })
+
+
 
 output$genoRequestResultUI <- renderUI({
   
