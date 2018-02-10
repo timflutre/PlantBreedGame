@@ -78,9 +78,13 @@ url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
 code.version <- getCodeVersion(url.repo)
 
 
+# display debug 
+debugDisplay <- FALSE
+
+
 
 iServ <- 0
-## server using indicator:
+## is the server available using indicator:
 serverIndic <- reactive({
   tRefresh <- 250
   invalidateLater(tRefresh)

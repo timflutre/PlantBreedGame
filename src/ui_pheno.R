@@ -68,9 +68,10 @@ tabItem(tabName="pheno",
                                     verbatimTextOutput("PhenoUploaded"))
 
     ),
-
-    shinydashboard::box(width=12, title = "Debug",
-                        verbatimTextOutput("PhenoDebug")
-    )
+    if (debugDisplay){
+      shinydashboard::box(width=12, title = "Debug",
+                          verbatimTextOutput("PhenoDebug")
+      )
+    }
   ) # close fluidRow
 ) # close tabItem

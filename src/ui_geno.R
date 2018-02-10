@@ -66,10 +66,12 @@ tabItem(tabName="geno",
                                           verbatimTextOutput("GenoUploaded"))
 
           ),
+          if (debugDisplay){
+            shinydashboard::box(width=12, title = "Debug",
+                                verbatimTextOutput("GenoDebug")
+            )
+          }
 
-          shinydashboard::box(width=12, title = "Debug",
-                              verbatimTextOutput("GenoDebug")
-          )
 
         ) # close fluidRow
 ) # close tabItem

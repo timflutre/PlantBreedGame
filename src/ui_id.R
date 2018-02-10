@@ -55,10 +55,11 @@ tabItem(tabName="id",
             )
           ),
           uiOutput("userAction"),
-
-          shinydashboard::box(width=12, title = "Debug",
-                              verbatimTextOutput("IdDebug")
-          )
+          if (debugDisplay){
+            shinydashboard::box(width=12, title = "Debug",
+                                verbatimTextOutput("IdDebug")
+                                )
+          }
 
 
 

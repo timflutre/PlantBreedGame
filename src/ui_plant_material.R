@@ -67,11 +67,11 @@ tabItem(tabName="plant_mat",
 
   ),
 
-
-  shinydashboard::box(width=12, title = "Debug",
-                      verbatimTextOutput("plmatDebug")
-  )
-
+  if (debugDisplay){
+    shinydashboard::box(width=12, title = "Debug",
+                        verbatimTextOutput("plmatDebug")
+    )
+  }
 
 
  ) # close fluidRow

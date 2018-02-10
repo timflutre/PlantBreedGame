@@ -62,9 +62,10 @@ output$evalUI <- renderUI({
                                  )
                         )
     ),
-    shinydashboard::box(width=12, title = "Debug",
-                        verbatimTextOutput("evalDebug")
-    )
+    if (debugDisplay){
+      shinydashboard::box(width=12, title = "Debug",
+                          verbatimTextOutput("evalDebug"))
+    }
     ) # close list
 
 
