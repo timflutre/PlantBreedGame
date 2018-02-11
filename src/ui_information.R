@@ -115,9 +115,10 @@ tabItem(
                       downloadButton("dwnlIniData", "Download your file")
   ),
 
-  shinydashboard::box(height=300, width=12, title="debug",
-                      verbatimTextOutput("infoDebug")
-  )
+  if(debugDisplay){
+    shinydashboard::box(height=300, width=12, title="debug",
+                        verbatimTextOutput("infoDebug"))
+  }
 
   ) # close fluidRow
 ) # close tabItem
