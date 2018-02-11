@@ -30,10 +30,9 @@ library(digest)
 library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.9",
+stopifnot(compareVersion("0.157.0",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
-
 
 
 ## -------------------------------------------------------------------
@@ -45,8 +44,10 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 
 ## -------------------------------------------------------------------
 ## parameters:
+
 options(warn=-1) # don't show warnings
-debugDisplay <- FALSE # display debug 
+debugDisplay <- FALSE # display debug
+
 
 ## -------------------------------------------------------------------
 ## variables
@@ -93,13 +94,8 @@ serverIndic <- reactive({
   tRefresh <- 250
   invalidateLater(tRefresh)
   string <- strsplit("MENDEL",split="")[[1]]
-  
+
   iServ <<- (iServ + 1)%% length(string)
   n <- (iServ %% length(string)) +1
   return(string[n])
-
 })
-
-
-
-

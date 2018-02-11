@@ -30,7 +30,7 @@ library(digest)
 library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.156.9",
+stopifnot(compareVersion("0.157.0",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
