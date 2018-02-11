@@ -52,12 +52,6 @@ debugDisplay <- FALSE # display debug
 ## -------------------------------------------------------------------
 ## variables
 
-currentGTime <- reactive({
-  ## this reactive variable is reevaluated every second
-  invalidateLater(5000)
-  getGameTime(setup)
-})
-
 
 root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
@@ -85,17 +79,3 @@ code.version <- getCodeVersion(url.repo)
 
 
 
-
-
-
-iServ <- 0
-## is the server available using indicator:
-serverIndic <- reactive({
-  tRefresh <- 250
-  invalidateLater(tRefresh)
-  string <- strsplit("MENDEL",split="")[[1]]
-
-  iServ <<- (iServ + 1)%% length(string)
-  n <- (iServ %% length(string)) +1
-  return(string[n])
-})

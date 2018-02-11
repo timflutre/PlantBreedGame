@@ -39,6 +39,16 @@ stopifnot(compareVersion("0.157.0",
 ## Shiny server
 
 shinyServer(function(input, output, session){
+  
+  currentGTime <- reactive({
+    ## this variable contain the game time.
+    ## it is reevaluated every 250 milliseconds
+    ## send a "tic" message to the client to get information about the server status (busy or not)
+    invalidateLater(250)
+    session$sendCustomMessage("serverTic", "tic")
+    getGameTime(setup)
+  })
+  
   source("src/server_information.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value

@@ -421,8 +421,9 @@ output$budgetBoxID <- renderValueBox({
 })
 
 output$serverIndicID <- renderValueBox({
-  valueBox(
-    value = serverIndic(),
+  ## this bow will be modified by some javascript
+  valueBoxServer(
+    value = "", 
     subtitle = "Server load",
     icon = icon("server"),
     color = "yellow"

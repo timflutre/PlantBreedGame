@@ -42,6 +42,8 @@ stopifnot(compareVersion("0.157.0",
 W_sideBar <- 300
 
 
+
+
 ## UI :
 shinyUI(
   dashboardPage(title="Breeding Game", skin="green",
@@ -66,6 +68,9 @@ shinyUI(
 
                 # dashboard body
                 dashboardBody(
+                  ## javascirpt function
+                  tags$head(tags$script(src="busyServer.js")),
+                  
                   tabItems(
                     source("src/ui_information.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_id.R", local=TRUE, encoding="UTF-8")$value,
