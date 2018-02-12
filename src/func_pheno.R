@@ -56,6 +56,8 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
   flush.console()
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
+  f <- paste0(setup$truth.dir, "/afs0.RData")
+  load(f)
   subset.snps <- list()
   f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
   subset.snps[["hd"]] <- rownames(read.table(f))
@@ -88,7 +90,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
                        detail = paste0("Load haplotypes: ",paste0(i, "/", nrow(inds.todo), " ", ind.id)))
     }
     
-    message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
+    # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
     if(! file.exists(f))
@@ -119,14 +121,13 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
                               pathogen=ifelse((year - 2005) %% 3 == 0,
                                               TRUE, FALSE))
 
-
     phenosField <- simulTraits12(dat=phenosField.df,
                             mu=p0$mu,
                             sigma.alpha2=p0$sigma.alpha2,
                             X=X[levels(phenosField.df$ind),,drop=FALSE],
                             Beta=p0$Beta,
                             sigma2=p0$sigma2,
-                            afs=p0$afs)
+                            afs=afs0)
     
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
@@ -194,7 +195,6 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
                   sep="\t", row.names=FALSE, col.names=TRUE)
     }
   }
-  
   
   
 

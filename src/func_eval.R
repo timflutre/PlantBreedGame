@@ -60,6 +60,8 @@ phenotype4Eval <- function (df, nRep=50){
   flush.console()
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
+  f <- paste0(setup$truth.dir, "/afs0.RData")
+  load(f)
   subset.snps <- list()
   f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
   subset.snps[["hd"]] <- rownames(read.table(f))
@@ -93,7 +95,7 @@ phenotype4Eval <- function (df, nRep=50){
       indName <- paste0(c(breeder, ind.id),collapse="_")
       if(ind.id %in% rownames(X))
         next
-      message(paste0(i, "/", length(inds.todo), " ", ind.id))
+      # message(paste0(i, "/", length(inds.todo), " ", ind.id))
 
       if (breeder=="control"){
         f <- paste0(setup$truth.dir, "/", ind.id, "_haplos.RData")
@@ -134,7 +136,7 @@ phenotype4Eval <- function (df, nRep=50){
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  Beta=p0$Beta,
                                  sigma2=p0$sigma2,
-                                 afs=p0$afs)
+                                 afs=afs0)
 
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                       X=X[levels(phenosField.df$ind),,drop=FALSE],

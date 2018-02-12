@@ -106,7 +106,7 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
       progressPltMat$set(value = 3,
                          detail = paste0("Save haplotypes: ", new.ind.id))
     }
-    message(new.ind.id)
+    # message(new.ind.id)
     ind <- list(haplos=getHaplosInd(new.inds$haplos, new.ind.id))
     f <- paste0(setup$truth.dir, "/", breeder, "/", new.ind.id, "_haplos.RData")
     save(ind, file=f)
