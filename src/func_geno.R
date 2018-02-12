@@ -75,7 +75,7 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
   for(i in 1:length(unique(inds.todo$ind))){
 
     ind.id <- unique(inds.todo$ind)[i]
-    message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
+    # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
     
     if (!is.null(progressGeno)){
       progressGeno$set(value = 1,
@@ -108,11 +108,12 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     
     idx <- which(inds.todo$task == "geno" & inds.todo$details == dty &
                    inds.todo$ind %in% rownames(X))
-    message(paste0(dty, ": ", length(idx)))
+    # message(paste0(dty, ": ", length(idx)))
     if(length(idx) > 0){
       
       ## write the genotypes (all inds into the same file)
-      fout <- paste0(setup$truth.dir, "/", breeder, "/", pre.fin,
+      browser()
+      fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
                      "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       if(!file.exists(fout)){
         write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
