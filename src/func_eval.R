@@ -148,15 +148,7 @@ phenotype4Eval <- function (df, nRep=50){
     phenosField.df$trait1 <- phenosField.df$trait1.raw
     phenosField.df$GAT1 <- rep(phenosField$G.A[,1], each=nRep)
     phenosField.df$GAT2 <- rep(phenosField$G.A[,2], each=nRep)
-    # ## write the phenotypes (all inds into the same file)
-    # fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
-    #                "_evaluation_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-    # if(!file.exists(fout)){
-    #   # stop(paste0(fout, " already exists"))
-    #   write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
-    #               file=gzfile(fout), quote=FALSE,
-    #               sep="\t", row.names=FALSE, col.names=TRUE)
-    # }
+
   }
 
 
