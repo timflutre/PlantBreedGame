@@ -184,25 +184,19 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
   if (Sys.info()["sysname"]!="Windows"){
     sapply(initIndsHaplo, FUN = funApply)
   }else {
-    # try with one file:
-    funApply(initIndsHaplo[1])
-    if (file.exists(paste0(newTruthDir,"/",initIndsHaplo[1]))){ #if it worked
-      sapply(initIndsHaplo[-1], FUN = funApply)
-      
-      
-    }else{
-      funApply <- function(fileName){
-        if (!is.null(progressNewBreeder)){
-          progressNewBreeder$set(value = 6,
-                                 detail = paste0("Create haplo copy:",fileName))
-        }
-        fromFile <- paste0(setup$truth.dir,"/",fileName) 
-        toFile <- paste0(newTruthDir,"/",fileName)
-        file.copy(fromFile,toFile) # copy
-        return()
+    
+    # copy files
+    funApply <- function(fileName){
+      if (!is.null(progressNewBreeder)){
+        progressNewBreeder$set(value = 6,
+                               detail = paste0("Create haplo copy:",fileName))
       }
-      sapply(initIndsHaplo, FUN = funApply)
+      fromFile <- paste0(setup$truth.dir,"/",fileName) 
+      toFile <- paste0(newTruthDir,"/",fileName)
+      file.copy(fromFile,toFile) # copy
+      return()
     }
+    sapply(initIndsHaplo, FUN = funApply)
     
   }
     
