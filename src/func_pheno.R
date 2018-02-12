@@ -32,7 +32,12 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
 
 
   ## Initialisations
-  stopifnot(breeder %in% setup$breeders)
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT name FROM breeders")
+  breederList <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  stopifnot(breeder %in% breederList$name)
+  
   pre.fin <- breeder
   data.types <- countRequestedBreedTypes(inds.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -138,7 +143,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
       phenosField.df$trait1[tmp] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[tmp]
 
     ## write the phenotypes (all inds into the same file)
-    fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
+    fout <- paste0("data/shared/",breeder, "/", pre.fin,
                    "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       # stop(paste0(fout, " already exists"))
@@ -180,7 +185,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
     phenosPatho.df$trait1 <- "--"
     
     ## write the phenotypes (all inds into the same file)
-    fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
+    fout <- paste0("data/shared/",breeder, "/", pre.fin,
                    "_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       # stop(paste0(fout, " already exists"))
@@ -257,7 +262,11 @@ plotAvailable <- function (breeder, inds.todo, gameTime) {
   
   
   ## Initialisations
-  stopifnot(breeder %in% setup$breeders)
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT name FROM breeders")
+  breederList <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  stopifnot(breeder %in% breederList$name)
   
   
   ## get the historic of pheno requests

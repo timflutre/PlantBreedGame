@@ -29,8 +29,15 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
   
 
+
+  
   ## Initialisation
-  stopifnot(breeder %in% setup$breeders)
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT name FROM breeders")
+  breederList <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  stopifnot(breeder %in% breederList$name)
+  
   stopifnot(! is.null(crosses.todo))
   cross.types <- countRequestedBreedTypes(crosses.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)

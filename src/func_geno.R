@@ -32,7 +32,12 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
   
   
   ## Initialisations
-  stopifnot(breeder %in% setup$breeders)
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT name FROM breeders")
+  breederList <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  stopifnot(breeder %in% breederList$name)
+  
   pre.fin <- breeder
   data.types <- countRequestedBreedTypes(inds.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -107,7 +112,7 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     if(length(idx) > 0){
       
       ## write the genotypes (all inds into the same file)
-      fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
+      fout <- paste0(setup$truth.dir, "/", breeder, "/", pre.fin,
                      "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       if(!file.exists(fout)){
         write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
@@ -150,7 +155,7 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     }
     
     ## write the genotypes (all inds into the same file)
-    fout <- paste0(setup$breeder.dirs[[breeder]], "/", pre.fin,
+    fout <- paste0(setup$truth.dir, "/", breeder, "/", pre.fin,
                    "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       write.table(x=all.genos,
