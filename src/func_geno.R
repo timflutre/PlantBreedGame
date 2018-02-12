@@ -112,7 +112,7 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     if(length(idx) > 0){
       
       ## write the genotypes (all inds into the same file)
-      browser()
+
       fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
                      "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       if(!file.exists(fout)){
@@ -156,7 +156,7 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     }
     
     ## write the genotypes (all inds into the same file)
-    fout <- paste0(setup$truth.dir, "/", breeder, "/", pre.fin,
+    fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
                    "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
       write.table(x=all.genos,
@@ -206,17 +206,19 @@ createInvoiceGeno <- function(request.df){
   
   
   # get prices
-  invoice.geno$unitaryPrice <- as.vector(as.numeric(prices[invoice.geno$Task]))
-  invoice.geno$Total <- invoice.geno$unitaryPrice*invoice.geno$Quantity
+  invoice.geno$Unitary_Price <- as.vector(as.numeric(prices[invoice.geno$Task]))
+  invoice.geno$Total <- invoice.geno$Unitary_Price*invoice.geno$Quantity
   
   
   
   ## create invoice:
+  
   invoice <- rbind(invoice.geno,
                    data.frame(Task="Total",
                               Quantity="",
-                              unitaryPrice="",
+                              Unitary_Price="",
                               Total= sum(invoice.geno$Total)))
+  invoice <- invoice[c("Task","Unitary_Price","Quantity","Total")]
   
   return(invoice)
 }

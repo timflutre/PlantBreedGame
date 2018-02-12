@@ -177,8 +177,8 @@ createInvoicePltmat <- function(request.df){
   
   
   # get prices
-  invoice.pltmat$unitaryPrice <- as.vector(as.numeric(prices[invoice.pltmat$Task]))
-  invoice.pltmat$Total <- invoice.pltmat$unitaryPrice*invoice.pltmat$Quantity
+  invoice.pltmat$Unitary_Price <- as.vector(as.numeric(prices[invoice.pltmat$Task]))
+  invoice.pltmat$Total <- invoice.pltmat$Unitary_Price*invoice.pltmat$Quantity
   
   
   
@@ -186,8 +186,9 @@ createInvoicePltmat <- function(request.df){
   invoice <- rbind(invoice.pltmat,
                    data.frame(Task="Total",
                               Quantity="",
-                              unitaryPrice="",
+                              Unitary_Price="",
                               Total= sum(invoice.pltmat$Total)))
+  invoice <- invoice[c("Task","Unitary_Price","Quantity","Total")]
   
   return(invoice)
 }

@@ -236,8 +236,8 @@ createInvoicePheno <- function(request.df){
   names(invoice.pheno) <- c("Task","Quantity")
   
   # get prices
-  invoice.pheno$unitaryPrice <- as.vector(as.numeric(prices[invoice.pheno$Task]))
-  invoice.pheno$Total <- invoice.pheno$unitaryPrice*invoice.pheno$Quantity
+  invoice.pheno$Unitary_Price <- as.vector(as.numeric(prices[invoice.pheno$Task]))
+  invoice.pheno$Total <- invoice.pheno$Unitary_Price*invoice.pheno$Quantity
   
   
   
@@ -245,8 +245,9 @@ createInvoicePheno <- function(request.df){
   invoice <- rbind(invoice.pheno,
                    data.frame(Task="Total",
                               Quantity="",
-                              unitaryPrice="",
+                              Unitary_Price="",
                               Total= sum(invoice.pheno$Total)))
+  invoice <- invoice[c("Task","Unitary_Price","Quantity","Total")]
   
   return(invoice)
 }
