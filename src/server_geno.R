@@ -81,24 +81,13 @@ output$GenoInvoice <- renderTable({
   }
 })
 
-# output$GenoSmy <- renderPrint({
-#   if (is.data.frame(readQryGeno())){
-#     summary(as.data.frame(apply(readQryGeno(), MARGIN = 2, FUN = as.factor)))
-#   }
-# })
-# output$GenoStr <- renderPrint({
-#   if (is.data.frame(readQryGeno())){
-#     print(str(readQryGeno()))
-#   }
-# })
-
 
 ## data
 output$qryGeno <- renderDataTable({
   if (is.data.frame(readQryGeno())){
     readQryGeno()
   }
-})
+},options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
 
 ## submit button
 output$submitGenoRequest <- renderUI({

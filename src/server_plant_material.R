@@ -97,7 +97,7 @@ output$qryPlmat <- renderDataTable({
     readQryPlmat()
   }
 
-})
+},options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
 
 # submit button
 output$submitPlmatRequest <- renderUI({

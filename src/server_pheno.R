@@ -89,7 +89,7 @@ output$qryPheno <- renderDataTable({
   if (is.data.frame(readQryPheno())){
     readQryPheno()
   }
-})
+},options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
 
 # submit button
 output$submitPhenoRequest <- renderUI({
