@@ -190,7 +190,7 @@ output$dwnlGeno <- downloadHandler(
     filePath <- paste0("data/shared/",breeder(), "/",input$genoFile)
     write.table(read.table(filePath, header = T),
                 file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=FALSE, col.names=TRUE)
+                sep="\t", row.names=TRUE, col.names=TRUE)
   }
 )
 
@@ -238,7 +238,9 @@ myPltMat <- reactive({
   }
 })
 
-output$myPltMatDT <- renderDataTable(myPltMat(), searchDelay = 500)
+output$myPltMatDT <- renderDataTable(myPltMat(),
+                                     searchDelay = 500,
+                                     options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
 
 
 
