@@ -119,6 +119,19 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
         write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
                     file=gzfile(fout), quote=FALSE,
                     sep="\t", row.names=TRUE, col.names=TRUE)
+      }else{
+        n <- 1
+        fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
+                       "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+        while(file.exists(fout)){
+          n <- n+1
+          fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
+                         "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+          
+        }
+        write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
+                    file=gzfile(fout), quote=FALSE,
+                    sep="\t", row.names=TRUE, col.names=TRUE)
       }
       
       ## save data.frame
@@ -159,6 +172,19 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
                    "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
     if(!file.exists(fout)){
+      write.table(x=all.genos,
+                  file=gzfile(fout), quote=FALSE,
+                  sep="\t", row.names=FALSE, col.names=TRUE)
+    }else{
+      n <- 1
+      fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
+                     "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+      while(file.exists(fout)){
+        n <- n+1
+        fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
+                       "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+        
+      }
       write.table(x=all.genos,
                   file=gzfile(fout), quote=FALSE,
                   sep="\t", row.names=FALSE, col.names=TRUE)
