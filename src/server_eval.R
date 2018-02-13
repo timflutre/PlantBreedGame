@@ -43,22 +43,27 @@ output$evalUI <- renderUI({
     shinydashboard::tabBox(width=12,  title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
                         tabPanel("Trait 1",
                                  div(
-                                 plotlyOutput("evalGraphT1", height = "100%",width="100%")
+                                   plotlyOutput("evalGraphT1", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Trait 2",
                                  div(
-                                 plotlyOutput("evalGraphT2", height = "100%",width="100%")
+                                   plotlyOutput("evalGraphT2", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Trait 3",
                                  div(
-                                 plotlyOutput("evalGraphT3", height = "100%",width="100%")
+                                   plotlyOutput("evalGraphT3", height = "100%",width="100%")
                                  )
                         ),
                         tabPanel("Traits 1 vs 2",
                                  div(
-                                 plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
+                                   plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
+                                 )
+                        ),
+                        tabPanel("AFS",
+                                 div(
+                                   uiOutput("evalUIAfs")
                                  )
                         )
     ),
@@ -121,7 +126,6 @@ output$evalGraphT1 <- renderPlotly({
   target <- median(dfPheno$trait1[dfPheno$breeder=="control"])*constants$register.min.trait1
 
   
-  
   ## Plot
   m <- list(
     l = 40,
@@ -136,7 +140,8 @@ output$evalGraphT1 <- renderPlotly({
                type = 'box',
                y = ~trait1,
                x= ~ind,
-               color = ~breeder) %>%
+               color = ~breeder,
+               colors = mycolors) %>%
       layout(title = "Phenotypic values of trait 1",
              xaxis = list(title = "",
                           categoryorder = "array",
@@ -144,7 +149,7 @@ output$evalGraphT1 <- renderPlotly({
                           ),
              yaxis = list(title = ""),
              autosize = T,
-             margin = m)%>%
+             margin = m) %>%
       add_lines(data=NULL,
                 type='scatter',
                 y=target,
@@ -174,7 +179,8 @@ output$evalGraphT2 <- renderPlotly({
                type = 'box',
                y = ~trait2,
                x= ~ind,
-               color = ~breeder) %>%
+               color = ~breeder,
+               colors = mycolors) %>%
     add_lines(data=NULL,
               type='scatter',
               y=target,
@@ -216,7 +222,8 @@ output$evalGraphT3 <- renderPlotly({
                type = 'bar',
                y = ~trait3*2-1,
                x= ~ind,
-               color = ~breeder) %>%
+               color = ~breeder,
+               colors = mycolors) %>%
     layout(title = "Phenotypic values of trait 3",
            xaxis = list(title = "",
                         categoryorder = "array",
@@ -246,7 +253,8 @@ output$evalGraphT1vT2<- renderPlotly({
   yLine <- linMod$coefficients[1]+linMod$coefficients[2]*xLine
     
     
-  p <- plot_ly(type = 'scatter') %>%
+  p <- plot_ly(type = 'scatter',
+               colors = mycolors) %>%
     add_markers(data=dfInitColl,
                 type = 'scatter',
                 y = ~GAT2,
@@ -277,6 +285,67 @@ output$evalGraphT1vT2<- renderPlotly({
            yaxis = list(title = "GA 2"))
 
 })
+
+
+
+
+
+output$evalUIAfs <- renderUI({
+  if (exists("dfPhenoEval")){
+    breeders <- unique(dfPhenoEval()$breeder)
+    breeders <- breeders[breeders!="control"]
+    list(
+      selectInput("afsBreeder","Breeder", choices=breeders),
+      numericInput("propAFS", "Proportion of last individuals to take", 10, min = 1, max = 100),
+      plotlyOutput("evalGraphAFS", height = "100%",width="100%"))
+  } else { p('no input')}
+
+})
+
+output$evalGraphAFS<- renderPlotly({
+  
+  # get parameters
+  prop <- input$propAFS/100
+  breeder <- input$afsBreeder
+  f <- paste0(setup$truth.dir, "/afs0.RData")
+  load(f) # afs0
+  
+
+  # get all individuals
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT * FROM plant_material_",breeder)
+  res <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  
+  # select sample
+  sampleSize <- round(nrow(res)*prop)
+  selectedInd <- res[c((nrow(res)-sampleSize+1):nrow(res)), ]
+  
+  # calculate AFS
+  progressAFS <- shiny::Progress$new(session, min=0, max=1)
+  progressAFS$set(value = 0,
+                  message = "Calculate Afs")
+  afs1 <-  getAFs(selectedInd$child, breeder, progressAFS)
+  
+  # plot
+  afs1[afs1==1] <- 0.9995 #get better sisplay
+  afs1[afs1==0] <- 0.0005 #get better sisplay
+  
+  dta <- data.frame(afs0=afs0, afs1=afs1)
+  p <- plot_ly(alpha = 0.6,colors = c("#009933","gray")) %>% # green
+        add_histogram(data=dta,
+                      x = ~afs0,
+                      color="AFs0",
+                      xbins=list("start"=0, "end"=1.05, "size"=0.05 )) %>%
+        add_histogram(data=dta,
+                      x = ~afs1,
+                      color=paste0("AFs ", breeder),
+                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ))%>%
+        layout(barmode = "overlay")
+  
+})
+
+
 
 
 output$evalDebug <- renderPrint({

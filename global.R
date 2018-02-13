@@ -48,6 +48,9 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 options(warn=-1) # don't show warnings
 debugDisplay <- FALSE # display debug
 
+mycolors <- c("#00aedb", "#a200ff", "#f47835", "#d41243", "#8ec127")
+
+
 
 ## -------------------------------------------------------------------
 ## variables

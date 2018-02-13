@@ -168,3 +168,34 @@ phenotype4Eval <- function (df, nRep=50){
 }
 
 
+
+## allalic frequency
+getAFs <- function(pop, breeder, progressAFS=NULL){
+  # pop (character verctor) names of individuals
+  X <- matrix(nrow = length(pop),
+              ncol = constants$nb.snps)
+  rownames(X) <- pop
+  
+  for(i in 1:length(pop)){
+
+    ind.id <- pop[i]
+    indName <- paste0(c(breeder, ind.id),collapse="_")
+    
+    if (!is.null(progressAFS)){
+      progressAFS$set(value = i/length(pop),
+                      detail= indName)
+    }
+    
+    # message(paste0(i, "/", length(pop), " ", ind.id))
+    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    load(f)
+    
+    ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
+    rownames(ind$genos) <- indName
+    X[i,] <- ind$genos
+  }
+  colnames(X) <- colnames(ind$genos)
+  
+  return(estimSnpAf(X=X))
+  
+}
