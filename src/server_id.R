@@ -100,7 +100,7 @@ budget <- reactive({
     }else{expenses <- 0}
 
     iniTialBuget <- constants$cost.pheno.field*constants$nb.plots*10*1.3
-    return(iniTialBuget-expenses)
+    return(round(iniTialBuget-expenses,2))
 
   }
 })
