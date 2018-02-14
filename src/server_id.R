@@ -405,7 +405,7 @@ output$breederBoxID <- renderValueBox({
 output$dateBoxID <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%Y-%m-%d"),
+    value = strftime(currentGTime(), format= "%d %B %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
