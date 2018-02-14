@@ -63,7 +63,7 @@ output$evalUI <- renderUI({
                         ),
                         tabPanel("AFs",
                                  div(
-                                   uiOutput("evalUIAfs")
+                                   uiOutput("evalUIAfsPlot")
                                  )
                         )
     ),
@@ -290,27 +290,28 @@ output$evalGraphT1vT2<- renderPlotly({
 
 
 
-output$evalUIAfs <- renderUI({
+output$evalUIAfsPlot <- renderUI({
   if (exists("dfPhenoEval")){
     breeders <- unique(dfPhenoEval()$breeder)
     breeders <- breeders[breeders!="control"]
     list(
       selectInput("afsBreeder","Breeder", choices=breeders),
       numericInput("propAFS", "Proportion of last individuals to take", 10, min = 1, max = 100),
-      plotlyOutput("evalGraphAFS", height = "100%",width="100%"))
+      plotlyOutput("evalGraphAFsHist", height = "100%",width="100%"),
+      plotlyOutput("evalGraphAFsScatter", height = "100%",width="100%"))
+    
   } else { p('no input')}
 
 })
 
-output$evalGraphAFS<- renderPlotly({
-  
+afsEval <- reactive({
   # get parameters
   prop <- input$propAFS/100
   breeder <- input$afsBreeder
   f <- paste0(setup$truth.dir, "/afs0.RData")
   load(f) # afs0
   
-
+  
   # get all individuals
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   query <- paste0("SELECT * FROM plant_material_",breeder)
@@ -327,31 +328,52 @@ output$evalGraphAFS<- renderPlotly({
                   message = "Calculate Afs")
   afs1 <-  getAFs(selectedInd$child, breeder, progressAFS)
   
-  # plot
-  afs1[afs1==1] <- 0.9995 #get better sisplay
-  afs1[afs1==0] <- 0.0005 #get better sisplay
-  
   dta <- data.frame(afs0=afs0, afs1=afs1)
+  return(dta)
+})
+
+
+output$evalGraphAFsHist<- renderPlotly({
+  
+  
+  # plot
+  dta <- afsEval()
+  dta$afs1[dta$afs1==1] <- 0.9995 #get better sisplay
+  dta$afs1[dta$afs1==0] <- 0.0005 #get better sisplay
+  
+
   p <- plot_ly(alpha=0.6, colors=c("gray", "#009933")) %>%
         add_histogram(data=dta,
                       x = ~afs0,
                       color="1",
                       name = 'Afs0',
-                      # marker=list(color="gray", opacity=0.6),
                       xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
                       inherit = TRUE) %>%
         add_histogram(data=dta,
                       x = ~afs1,
                       color="2",
-                      name = paste0("AFs ", breeder),
-                      # marker=list(color="rgb(0,153,51)", opacity=0.6), # green
+                      name = paste0("AFs ", input$afsBreeder),
                       xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
-                      inherit = TRUE)%>%
+                      inherit = TRUE) %>%
         layout(barmode = "overlay")
   
 })
 
+output$evalGraphAFsScatter<- renderPlotly({
+  
 
+  ids <- sample(row.names(afsEval()), 5000)
+  dta <- afsEval()[ids,]
+  p <- plot_ly(type = 'scatter') %>%
+       add_markers(data=dta,
+                type = 'scatter',
+                y = ~afs1,
+                x= ~afs0,
+                marker=list(color="#009933" , size=5 , opacity=0.3),
+                text="",
+                inherit=FALSE)
+  
+})
 
 
 output$evalDebug <- renderPrint({
