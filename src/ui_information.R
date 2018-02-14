@@ -109,7 +109,7 @@ tabItem(
 
   ), # close shinydashboard::box
 
-  shinydashboard::box(height=200, width=12, title="Initial data",
+  shinydashboard::box(height=400, width=12, title="Initial data",
                       p("Select and download each file:"),
                       selectInput("iniDataFile", "", choices=list.files("data/shared/initial_data")),
                       downloadButton("dwnlIniData", "Download your file")
