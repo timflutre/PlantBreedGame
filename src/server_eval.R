@@ -61,7 +61,7 @@ output$evalUI <- renderUI({
                                    plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
                                  )
                         ),
-                        tabPanel("AFS",
+                        tabPanel("AFs",
                                  div(
                                    uiOutput("evalUIAfs")
                                  )
@@ -332,15 +332,21 @@ output$evalGraphAFS<- renderPlotly({
   afs1[afs1==0] <- 0.0005 #get better sisplay
   
   dta <- data.frame(afs0=afs0, afs1=afs1)
-  p <- plot_ly(alpha = 0.6,colors = c("#009933","gray")) %>% # green
+  p <- plot_ly(alpha=0.6, colors=c("gray", "#009933")) %>%
         add_histogram(data=dta,
                       x = ~afs0,
-                      color="AFs0",
-                      xbins=list("start"=0, "end"=1.05, "size"=0.05 )) %>%
+                      color="1",
+                      name = 'Afs0',
+                      # marker=list(color="gray", opacity=0.6),
+                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
+                      inherit = TRUE) %>%
         add_histogram(data=dta,
                       x = ~afs1,
-                      color=paste0("AFs ", breeder),
-                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ))%>%
+                      color="2",
+                      name = paste0("AFs ", breeder),
+                      # marker=list(color="rgb(0,153,51)", opacity=0.6), # green
+                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
+                      inherit = TRUE)%>%
         layout(barmode = "overlay")
   
 })
