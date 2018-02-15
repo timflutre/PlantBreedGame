@@ -48,8 +48,8 @@ getGameTime <- function(setup){
   currentSesion <- which(now >= res$start & now < res$end)
   if (length(currentSesion)==0){
     ## out of game session
-    previousSession <- which(now >= res$start[1])
-
+    previousSession <- which(now >= res$start)
+    currentSesion <- max(previousSession)
     if (length(previousSession)!=0){
       now <- res$end[max(previousSession)] # end date of the laste session
     } else return (strptime("2015-01-01", format="%Y-%m-%d"))
