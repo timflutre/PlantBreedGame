@@ -45,7 +45,7 @@ getGameTime <- function(setup){
   
   
   ## get the current session
-  currentSesion <- which(now >= res$start && now < res$end)
+  currentSesion <- which(now >= res$start & now < res$end)
   if (length(currentSesion)==0){
     ## out of game session
     previousSession <- which(now >= res$start[1])
