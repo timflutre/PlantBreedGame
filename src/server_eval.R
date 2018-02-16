@@ -66,12 +66,12 @@ output$evalUI <- renderUI({
                                    uiOutput("evalUIAfsPlot")
                                  )
                         ),
-                        tabPanel("Pedigre",
+                        tabPanel("Pedigree",
                                  div(
-                                   uiOutput("evalUIpedigre")
+                                   uiOutput("evalUIpedigree")
                                  )
                         )
-                        
+
     ),
     if (debugDisplay){
       shinydashboard::box(width=12, title = "Debug",
@@ -131,7 +131,7 @@ output$evalGraphT1 <- renderPlotly({
 
   target <- median(dfPheno$trait1[dfPheno$breeder=="control"])*constants$register.min.trait1
 
-  
+
   ## Plot
   m <- list(
     l = 40,
@@ -140,8 +140,8 @@ output$evalGraphT1 <- renderPlotly({
     t = 50,
     pad = 0
   )
-  
-  
+
+
   p <- plot_ly(data=dfPheno,
                type = 'box',
                y = ~trait1,
@@ -162,7 +162,7 @@ output$evalGraphT1 <- renderPlotly({
                 mode='lines',
                 color = "Target")
 
-  
+
 })
 output$evalGraphT2 <- renderPlotly({
   dfPheno <- dfPhenoEval()
@@ -170,8 +170,8 @@ output$evalGraphT2 <- renderPlotly({
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
 
   target <- constants$register.min.trait2
-  
-  
+
+
   ## Plot
   m <- list(
     l = 40,
@@ -222,8 +222,8 @@ output$evalGraphT3 <- renderPlotly({
     t = 50,
     pad = 0
   )
-  
-  
+
+
   p <- plot_ly(data=dfPhenoPatho,
                type = 'bar',
                y = ~trait3*2-1,
@@ -246,7 +246,7 @@ output$evalGraphT3 <- renderPlotly({
 output$evalGraphT1vT2<- renderPlotly({
   dfPheno <- dfPhenoEval()
   dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1,]
-  
+
   # get the data for the initial collection
   f <- paste0(setup$truth.dir, "/", "p0.RData")
   load(f)
@@ -257,8 +257,8 @@ output$evalGraphT1vT2<- renderPlotly({
 
   xLine <- c(min(dfInitColl$GAT1), max(dfInitColl$GAT1))
   yLine <- linMod$coefficients[1]+linMod$coefficients[2]*xLine
-    
-    
+
+
   p <- plot_ly(type = 'scatter',
                colors = mycolors) %>%
     add_markers(data=dfInitColl,
@@ -305,50 +305,50 @@ output$evalUIAfsPlot <- renderUI({
       numericInput("propAFS", "Proportion of last individuals to take", 10, min = 1, max = 100),
       plotlyOutput("evalGraphAFsHist", height = "100%",width="100%"),
       plotlyOutput("evalGraphAFsScatter", height = "100%",width="100%"))
-    
+
   } else { p('no input')}
 
 })
 
 afsEval <- reactive({
-  
-  
+
+
   # get parameters
   prop <- input$propAFS/100
   breeder <- input$afsBreeder
   f <- paste0(setup$truth.dir, "/afs0.RData")
   load(f) # afs0
-  
-  
+
+
   # get all individuals
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   query <- paste0("SELECT * FROM plant_material_",breeder)
   res <- (dbGetQuery(conn=db, query))
   dbDisconnect(db)
-  
+
   # select sample
   sampleSize <- round(nrow(res)*prop)
   selectedInd <- res[c((nrow(res)-sampleSize+1):nrow(res)), ]
-  
+
   # calculate AFS
   progressAFS <- shiny::Progress$new(session, min=0, max=1)
   progressAFS$set(value = 0,
                   message = "Calculate Afs")
   afs1 <-  getAFs(selectedInd$child, breeder, progressAFS)
-  
+
   dta <- data.frame(afs0=afs0, afs1=afs1)
   return(dta)
 })
 
 
 output$evalGraphAFsHist<- renderPlotly({
-  
-  
+
+
   # plot
   dta <- afsEval()
   dta$afs1[dta$afs1==1] <- 0.9995 #get better sisplay
   dta$afs1[dta$afs1==0] <- 0.0005 #get better sisplay
-  
+
 
   p <- plot_ly(alpha=0.6, colors=c("gray", "#009933")) %>%
         add_histogram(data=dta,
@@ -364,11 +364,11 @@ output$evalGraphAFsHist<- renderPlotly({
                       xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
                       inherit = TRUE) %>%
         layout(barmode = "overlay")
-  
+
 })
 
 output$evalGraphAFsScatter<- renderPlotly({
-  
+
 
   ids <- sample(row.names(afsEval()), 5000)
   dta <- afsEval()[ids,]
@@ -380,24 +380,24 @@ output$evalGraphAFsScatter<- renderPlotly({
                 marker=list(color="#009933" , size=5 , opacity=0.3),
                 text="",
                 inherit=FALSE)
-  
+
 })
 
 
 
-output$evalUIpedigre <- renderUI({
+output$evalUIpedigree <- renderUI({
   if (exists("dfPhenoEval")){
     breeders <- unique(dfPhenoEval()$breeder)
     breeders <- breeders[breeders!="control"]
     list(
-      selectInput("pedigreBreeder","Breeder", choices=breeders),
+      selectInput("pedigreeBreeder","Breeder", choices=breeders),
       div(
-        plotOutput("evalPlotPedigre",width = "800px", height = "800px")
+        plotOutput("evalPlotPedigree",width = "800px", height = "800px")
       )
       )
-    
+
   } else { p('no input')}
-  
+
 })
 
 
@@ -405,18 +405,18 @@ genealogy <- reactive({
 
   # extract all individuals
   db <- dbConnect(SQLite(), dbname=setup$dbname)
-  query <- paste0("SELECT * FROM plant_material_",input$pedigreBreeder)
+  query <- paste0("SELECT * FROM plant_material_",input$pedigreeBreeder)
   allInds <- (dbGetQuery(conn=db, query))
   dbDisconnect(db)
-  
+
   # get submitted individuals
-  inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreBreeder]
-  
+  inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreeBreeder]
+
   subsetPedigree(allInds,inds)
-  
+
 })
 
-output$evalPlotPedigre <- renderPlot({
+output$evalPlotPedigree <- renderPlot({
   plotPedigree(genealogy()$child,
                genealogy()$parent1,
                genealogy()$parent2,
