@@ -65,7 +65,13 @@ output$evalUI <- renderUI({
                                  div(
                                    uiOutput("evalUIAfsPlot")
                                  )
+                        ),
+                        tabPanel("Pedigre",
+                                 div(
+                                   uiOutput("evalUIpedigre")
+                                 )
                         )
+                        
     ),
     if (debugDisplay){
       shinydashboard::box(width=12, title = "Debug",
@@ -244,7 +250,7 @@ output$evalGraphT1vT2<- renderPlotly({
   # get the data for the initial collection
   f <- paste0(setup$truth.dir, "/", "p0.RData")
   load(f)
-  dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2])
+  dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2], ind=names(p0$G.A[,2]))
 
   # linear regretion
   linMod <- lm(GAT2 ~ GAT1, data=dfInitColl)
@@ -261,7 +267,7 @@ output$evalGraphT1vT2<- renderPlotly({
                 x= ~GAT1,
                 color = "Initial Collection",
                 marker=list(color="gray" , size=5 , opacity=0.5),
-                text="iniColl",
+                text=~ind,
                 inherit=FALSE) %>%
     add_lines(data=NULL,
               type='scatter',
@@ -305,6 +311,8 @@ output$evalUIAfsPlot <- renderUI({
 })
 
 afsEval <- reactive({
+  
+  
   # get parameters
   prop <- input$propAFS/100
   breeder <- input$afsBreeder
@@ -374,6 +382,52 @@ output$evalGraphAFsScatter<- renderPlotly({
                 inherit=FALSE)
   
 })
+
+
+
+output$evalUIpedigre <- renderUI({
+  if (exists("dfPhenoEval")){
+    breeders <- unique(dfPhenoEval()$breeder)
+    breeders <- breeders[breeders!="control"]
+    list(
+      selectInput("pedigreBreeder","Breeder", choices=breeders),
+      div(
+        plotOutput("evalPlotPedigre",width = "800px", height = "800px")
+      )
+      )
+    
+  } else { p('no input')}
+  
+})
+
+
+genealogy <- reactive({
+
+  # extract all individuals
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("SELECT * FROM plant_material_",input$pedigreBreeder)
+  allInds <- (dbGetQuery(conn=db, query))
+  dbDisconnect(db)
+  
+  # get submitted individuals
+  inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreBreeder]
+  
+  subsetPedigree(allInds,inds)
+  
+})
+
+output$evalPlotPedigre <- renderPlot({
+  plotPedigree(genealogy()$child,
+               genealogy()$parent1,
+               genealogy()$parent2,
+               genealogy()$generation,
+               vertex.label.color = "darkgreen",
+               vertex.size = 10)
+})
+
+
+
+
 
 
 output$evalDebug <- renderPrint({
