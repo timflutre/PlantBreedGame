@@ -30,7 +30,7 @@ library(digest)
 library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.157.0",
+stopifnot(compareVersion("0.158.0",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
@@ -39,7 +39,7 @@ stopifnot(compareVersion("0.157.0",
 ## Shiny server
 
 shinyServer(function(input, output, session){
-  
+
   currentGTime <- reactive({
     ## this variable contain the game time.
     ## it is reevaluated every 250 milliseconds
@@ -48,7 +48,7 @@ shinyServer(function(input, output, session){
     session$sendCustomMessage("serverTic", "tic")
     getGameTime(setup)
   })
-  
+
   source("src/server_information.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value

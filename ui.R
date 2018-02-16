@@ -30,7 +30,7 @@ library(digest)
 library(plotly)
 
 library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.157.0",
+stopifnot(compareVersion("0.158.0",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
 
@@ -70,7 +70,7 @@ shinyUI(
                 dashboardBody(
                   ## javascirpt function
                   tags$head(tags$script(src="busyServer.js")),
-                  
+
                   tabItems(
                     source("src/ui_information.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_id.R", local=TRUE, encoding="UTF-8")$value,
