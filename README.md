@@ -64,6 +64,11 @@ Flutre T, Diot J, David J. PlantSelBreedGame: a serious game to teach plant sele
 ```
 
 
+# Example
+
+You can discover an example online [here](http://www.agap-sunshine.inra.fr/breeding-game/).
+
+
 # Issues
 
 When encountering a problem with the package, you can report issues on GitHub directly ([here](https://github.com/timflutre/PlantSelBreedGame/issues)).
