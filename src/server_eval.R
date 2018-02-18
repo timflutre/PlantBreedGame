@@ -412,8 +412,7 @@ genealogy <- reactive({
   # get submitted individuals
   inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreeBreeder]
 
-  subsetPedigree(allInds,inds)
-
+  subsetPedigree(allInds, inds)
 })
 
 output$evalPlotPedigree <- renderPlot({
