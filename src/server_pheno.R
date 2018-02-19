@@ -122,6 +122,7 @@ pheno_data <- eventReactive(input$requestPheno,{
                          progressPheno,
                          input$file.pheno$name))
     if (res=="done"){
+      writeRequest(readQryPheno(),breeder(),input$file.pheno$name)
       progressPheno$set(value = 4,
                         detail = "Done")
       return(res)

@@ -132,6 +132,7 @@ plantMatRequested <- eventReactive(input$requestPlmat,{
                                      progressPltMat))
 
     if (res=="done"){
+      writeRequest(readQryPlmat(),breeder(),input$file.plmat$name)
       progressPltMat$set(value = 5,
                          detail = "Done !")
 

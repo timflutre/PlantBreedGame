@@ -121,6 +121,7 @@ geno_data <- eventReactive(input$requestGeno,{
                         progressGeno,
                         input$file.geno$name))
     if (res=="done"){
+      writeRequest(readQryGeno(),breeder(),input$file.geno$name)
       progressGeno$set(value = 4,
                        detail = "Done")
 

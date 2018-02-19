@@ -334,5 +334,36 @@ valueBoxServer <- function (value, subtitle, icon = NULL, color = "aqua", width 
 
 
 
+writeRequest <- function(df, breeder, fileName=NULL){
+  
+  # detect type of request:
+  if(all(c("parent1", "parent2", "child") %in% colnames(df))){
+    reqType <- "pltMat"
+  }else if(any(df$task=="geno")){
+    reqType <- "geno"
+  }else{
+    reqType <- "pheno"
+  }
+
+  
+  # fileName
+  fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
+  fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType,"_",fileName,".txt")
+  n <- 0
+  while(file.exists(fout)){
+    n <- n+1
+    fout <-  paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType,"_",fileName,"_",n,".txt")
+  }
+
+  write.table(df, file=fout, sep="\t", row.names=FALSE, quote=FALSE)
+  
+  
+}
+
+
+
+
+
+
 
 
