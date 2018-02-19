@@ -34,7 +34,6 @@ readQryPheno <- reactive({
     return("error - You are not connected")
   }
 
-
   # read input file
   max.nb.plots <- ifelse(breederStatus()=="game master",Inf , constants$nb.plots)
   test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
@@ -117,7 +116,11 @@ pheno_data <- eventReactive(input$requestPheno,{
                      message = "Process Pheno request:",
                      detail = "Initialisation...")
     
-    res <- try(phenotype(breeder(), readQryPheno(), getGameTime(setup),progressPheno))
+    res <- try(phenotype(breeder(),
+                         readQryPheno(),
+                         getGameTime(setup),
+                         progressPheno,
+                         input$file.pheno$name))
     if (res=="done"){
       progressPheno$set(value = 4,
                         detail = "Done")

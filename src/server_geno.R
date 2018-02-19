@@ -114,11 +114,12 @@ geno_data <- eventReactive(input$requestGeno,{
     progressGeno$set(value = 0,
                        message = "Process Geno request:",
                        detail = "Initialisation...")
-    
+
     res <- try(genotype(breeder(),
                         readQryGeno(),
                         getGameTime(setup),
-                        progressGeno))
+                        progressGeno,
+                        input$file.geno$name))
     if (res=="done"){
       progressGeno$set(value = 4,
                        detail = "Done")

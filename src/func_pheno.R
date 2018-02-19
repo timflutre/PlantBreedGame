@@ -21,7 +21,7 @@
 
 ## Contain functions used in "phenotyping" section.
 
-phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
+phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileName=NULL){
   # function which phenotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
 
@@ -38,9 +38,35 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
   dbDisconnect(db)
   stopifnot(breeder %in% breederList$name)
   
-  pre.fin <- breeder
   data.types <- countRequestedBreedTypes(inds.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
+  
+  
+  ## calculate output file names:
+  fout <- list("pheno-field"=NULL, "pheno-patho"=NULL)
+  for (dty in c("pheno-field","pheno-patho")){
+    if (is.null(fileName)){
+      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+                          strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
+      n <- 0
+      while(file.exists(fout[[dty]])){
+        n <- n+1
+        fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+                            strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+      }
+      
+    }else{
+      fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
+      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName,".txt.gz")
+      n <- 0
+      while(file.exists(fout[[dty]])){
+        n <- n+1
+        fout[dty] <-  paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName,
+                             "_",n,".txt.gz")
+      }
+    }
+  }
+  
   
   ## Calculate the year of the phenotyping 
   maxDate <- strptime(paste0(data.table::year(gameTime), "-",
@@ -144,27 +170,10 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
       phenosField.df$trait1[tmp] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[tmp]
 
     ## write the phenotypes (all inds into the same file)
-    fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                   "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-    if(!file.exists(fout)){
-      # stop(paste0(fout, " already exists"))
-      write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }else{
-      n <- 1
-      fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                     "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-      while(file.exists(fout)){
-        n <- n+1
-        fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                       "_phenos-field_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-        
-      }
-      write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }
+    
+    write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
+                file=gzfile(fout[["pheno-field"]]), quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
   }
 
   
@@ -199,27 +208,9 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL){
     phenosPatho.df$trait1 <- "--"
     
     ## write the phenotypes (all inds into the same file)
-    fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                   "_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-    if(!file.exists(fout)){
-      # stop(paste0(fout, " already exists"))
-      write.table(x=phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))],
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }else{
-      n <- 1
-      fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                     "_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-      while(file.exists(fout)){
-        n <- n+1
-        fout <- paste0("data/shared/",breeder, "/", pre.fin,
-                       "_phenos-patho_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-        
-      }
-      write.table(x=phenosField.df[, -grep("raw", colnames(phenosField.df))],
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }
+    write.table(x=phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))],
+                file=gzfile(fout[["pheno-patho"]]), quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
   }
   
   

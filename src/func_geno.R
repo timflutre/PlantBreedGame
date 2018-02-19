@@ -21,7 +21,7 @@
 ## Contain functions used in "genotyping" section.
 
 
-genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
+genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL, fileName=NULL){
   # function which genotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
   
@@ -38,11 +38,34 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
   dbDisconnect(db)
   stopifnot(breeder %in% breederList$name)
   
-  pre.fin <- breeder
   data.types <- countRequestedBreedTypes(inds.todo)
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   
-  
+  ## calculate output file names:
+  fout <- list(ld=NULL, hd=NULL, 'single-snps'=NULL)
+  for (dty in c("ld", "hd","single-snps")){
+    if (is.null(fileName)){
+      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_genos-", dty, "_",
+                          strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
+      n <- 0
+      while(file.exists(fout[[dty]])){
+        n <- n+1
+        fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/","Result_genos-", dty, "_",
+                            strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
+      }
+      
+    }else{
+      fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
+      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_genos-", dty,"_",fileName,".txt.gz")
+      n <- 0
+      while(file.exists(fout[[dty]])){
+        n <- n+1
+        fout[dty] <-  paste0(setup$shared.dir, "/", breeder, "/", "Result_genos-", dty,"_",fileName,
+                             "_",n,".txt.gz")
+      }
+    }
+  }
+
   
   ## 0. load required data
   flush.console()
@@ -97,8 +120,6 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
   
   ## 5. handle the 'geno' tasks for the requested individuals
   flush.console()
-  df.geno.ld <- NULL
-  df.geno.hd <- NULL 
   for(dty in c("ld", "hd")){
     
     if (!is.null(progressGeno)){
@@ -112,33 +133,9 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     if(length(idx) > 0){
       
       ## write the genotypes (all inds into the same file)
-
-      fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                     "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
-      if(!file.exists(fout)){
-        write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
-                    file=gzfile(fout), quote=FALSE,
-                    sep="\t", row.names=TRUE, col.names=TRUE)
-      }else{
-        n <- 1
-        fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                       "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-        while(file.exists(fout)){
-          n <- n+1
-          fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                         "_genos-", dty, "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-          
-        }
-        write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
-                    file=gzfile(fout), quote=FALSE,
-                    sep="\t", row.names=TRUE, col.names=TRUE)
-      }
-      
-      ## save data.frame
-      if (dty == "ld"){
-        df.geno.ld <- as.data.frame(X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE])
-      } else {df.geno.hd <- as.data.frame(X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE])}
-      
+      write.table(x=X[inds.todo$ind[idx], subset.snps[[dty]], drop=FALSE],
+                  file=gzfile(fout[[dty]]), quote=FALSE,
+                  sep="\t", row.names=TRUE, col.names=TRUE)
     }
   }
   
@@ -169,26 +166,10 @@ genotype <- function (breeder, inds.todo, gameTime, progressGeno=NULL){
     }
     
     ## write the genotypes (all inds into the same file)
-    fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                   "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz")
-    if(!file.exists(fout)){
-      write.table(x=all.genos,
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }else{
-      n <- 1
-      fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                     "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-      while(file.exists(fout)){
-        n <- n+1
-        fout <- paste0(setup$shared.dir, "/", breeder, "/", pre.fin,
-                       "_genos-single-snps", "_", strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt.gz")
-        
-      }
-      write.table(x=all.genos,
-                  file=gzfile(fout), quote=FALSE,
-                  sep="\t", row.names=FALSE, col.names=TRUE)
-    }
+    write.table(x=all.genos,
+                file=gzfile(fout[["single-snps"]]), quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
+    
   }else {all.genos <- NULL}
   
   
