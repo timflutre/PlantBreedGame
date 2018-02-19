@@ -98,16 +98,36 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
     df <- utils::read.table(f, header=TRUE, sep="\t", stringsAsFactors=FALSE)
   }
 
-  stopifnot(is.data.frame(df),
-            ncol(df) >= 3,
-            all(c("parent1", "parent2", "child") %in% colnames(df)),
-            all(! is.na(df$parent1)),
-            ! any(df$parent1 == ""),
-            all(! is.na(df$child)),
-            ! any(df$child == ""),
-            anyDuplicated(df$child) == 0,
-            all(! grepl("[^[:alnum:]._-]", df$child)),
-            sum(is.na(df$parent2)) <= max.nb.hd)
+  
+  # check:
+  if (!is.data.frame(df)){
+    stop("df must be a data.frame, or your file can't be read.")
+  }
+  if (ncol(df) < 3){
+    stop("Your file has less than 3 columns, please use tabulation separator or check the encoding of your file. (it must be \"UTF8 sans BOM\")")
+  }
+  if (! all(c("parent1", "parent2", "child") %in% colnames(df))){
+    stop(paste0("Your file must contain \"parent1\", \"parent2\", and \"child\" columns. \n Your file's columns are: \"",
+               paste(colnames(df),collapse="\", \""),
+               "\". (Be sure your are using \"UTF8 sans BOM\" encoding)",collapse=""))
+  }
+  if (!all(! is.na(df$parent1)) | any(df$parent1 == "")){
+    stop("There is some \"NA\" values in the \"parent1\" column.")
+  }
+  if (!all(! is.na(df$child)) | any(df$child == "")){
+    stop("There is some \"NA\" values in the \"child\" column.")
+  }
+  if (anyDuplicated(df$child) != 0){
+    stop("There is some repetition in the child's ids.")
+  }
+  if (! all(! grepl("[^[:alnum:]._-]", df$child))){
+    stop("Some child's ids are not good.")
+  }
+  if (sum(is.na(df$parent2)) > max.nb.hd){
+    stop(paste0("Sorry, you can not request more than ",max.nb.hd," haplo-diploidisations",
+                collapse=""))
+  }
+  
 
   df$parent2[df$parent2 == ""] <- NA
 
@@ -144,33 +164,64 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
                             stringsAsFactors = FALSE)
   }
 
+  if (!is.data.frame(df)){
+    "df must be a data.frame, or your file can't be read."
+  }
+  if (ncol(df) < 3){
+    stop("Your file has less than 3 columns, please use tabulation separator or check the encoding of your file. (it must be \"UTF8 sans BOM\")")
+  }
+  if (! all(c("ind","task", "details") %in% colnames(df))){
+    stop(paste0("Your file must contain \"ind\", \"task\", and \"details\" columns. \n Your file's columns are: \"",
+                paste(colnames(df),collapse="\", \""),
+                "\". (Be sure your are using \"UTF8 sans BOM\" encoding)",collapse=""))
+  }
+  if (!all(!is.na(df$ind))){
+    stop("All individuals ids must be specified.")
+  }
+  if (length(unique(df$ind)) > max.nb.inds){
+    stop(paste0("Total number of individuals must not exceed ", max.nb.inds, " your request contains ",length(unique(df$ind)),
+                " individuals."))
+  }
+  if (! all(!grepl("[^[:alnum:]._-]",df$ind))){
+    stop("Some individuals's ids are not good.")
+  }
+  if(!(all(!is.na(df$task)) | all(df$task %in% c("pheno-field", "pheno-patho", "geno"))) ){
+    stop("Requested tasks must be one of : \"pheno-field\", \"pheno-patho\", \"geno\"")
+  }
 
-  stopifnot(is.data.frame(df),
-            ncol(df) >= 3,
-            all(c("ind","task", "details") %in% colnames(df)),
-            all(!is.na(df$ind)),
-            length(unique(df$ind)) <= max.nb.inds,
-            all(!grepl("[^[:alnum:]._-]",df$ind)),
-            all(!is.na(df$task)),
-            all(df$task %in% c("pheno-field", "pheno-patho", "geno")))
 
 
   if ("pheno-field" %in% df$task) {
     tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno-field"]))
-    stopifnot(all(!is.na(tmp)),
-              !anyDuplicated(df$ind[df$task == "pheno-field"]),
-              sum(as.numeric(df$details[df$task == "pheno-field"])) <= max.nb.plots)
+    if (!all(!is.na(tmp))){
+      stop("There is some \"NA\" in \"details\" column.")
+    }
+    if (anyDuplicated(df$ind[df$task == "pheno-field"])){
+      stop("There is some repetition in \"ind\" column.")
+    }
+    if (sum(as.numeric(df$details[df$task == "pheno-field"])) > max.nb.plots){
+      stop(paste0("Your request exeeds the maximal number of plot (max ",max.nb.plots," plots)"))
+    }
   }
 
   if ("pheno-patho" %in% df$task) {
-    stopifnot(!anyDuplicated(df$ind[df$task == "pheno-patho"]))
+    if (anyDuplicated(df$ind[df$task == "pheno-patho"])){
+      stop("There is some repetition in \"ind\" column.")
+    }
   }
 
   if ("geno" %in% df$task) {
-    stopifnot(all(grepl("hd|ld|snp", df$details[df$task == "geno"])))
+    if (! all(grepl("hd|ld|snp", df$details[df$task == "geno"]))){
+      stop("\"details\" column must contain \"hd\", \"ld\", or \"snp00000\"")
+    }
     idx.notsnp <- df$task == "geno" & !grepl("snp", df$details)
-    stopifnot(!anyDuplicated(df$ind[idx.notsnp]),
-              all(df$details[df$task == "geno" & !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]]))
+    if (anyDuplicated(df$ind[idx.notsnp])){
+      stop("There is some repetition in \"ind\" column.")
+    }
+    if (!all(df$details[df$task == "geno"& !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]])){
+      stop("Some requested SNPs don't exist.")
+    }
+              
   }
 
   invisible(df)

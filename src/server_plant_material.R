@@ -43,7 +43,7 @@ readQryPlmat <- reactive({
   
   # check file
   if (!is.data.frame(test)){
-    return("error - wrong file format")
+    return(test)
   }
   # the file is ok
 
@@ -73,10 +73,10 @@ readQryPlmat <- reactive({
 output$plmatUploaded <- renderPrint({
 
   if (is.data.frame(readQryPlmat())){
-    print("GOOD")
+    writeLines("GOOD")
   } else if (is.null(readQryPlmat())){
-    print("No file uploaded")
-  } else print(readQryPlmat())
+    writeLines("No file uploaded")
+  } else writeLines(readQryPlmat())
 
 
 })

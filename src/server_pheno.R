@@ -60,7 +60,7 @@ readQryPheno <- reactive({
         & indAvail$indExist){
       return(df)
     }else {return("error - Individuals or Plots not availables")}
-  }else {return("error - wrong file format")}
+  }else {return(test)}
 })
 
 
@@ -68,10 +68,10 @@ readQryPheno <- reactive({
 # check
 output$PhenoUploaded <- renderPrint({
   if (is.data.frame(readQryPheno())){
-    print("GOOD")
+    writeLines("GOOD")
   } else if (is.null(readQryPheno())){
-      print("No file uploaded")
-  } else print(readQryPheno())
+    writeLines("No file uploaded")
+  } else writeLines(readQryPheno())
 
 })
 

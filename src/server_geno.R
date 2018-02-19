@@ -57,7 +57,7 @@ readQryGeno <- reactive({
       return(df)
     }else {return("error - Individuals not availables")}
 
-  }else {return("error - wrong file format")}# wrong file
+  }else {return(test)}# wrong file
 })
 
 
@@ -65,10 +65,10 @@ readQryGeno <- reactive({
 ## check
 output$GenoUploaded <- renderPrint({
   if (is.data.frame(readQryGeno())){
-    print("GOOD")
+    writeLines("GOOD")
   } else if (is.null(readQryGeno())){
-    print("No file uploaded")
-  } else print(readQryGeno())
+    writeLines("No file uploaded")
+  } else writeLines(readQryGeno())
 
 })
 
