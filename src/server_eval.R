@@ -420,8 +420,11 @@ output$evalPlotPedigree <- renderPlot({
                genealogy()$parent1,
                genealogy()$parent2,
                genealogy()$generation,
+               edge.col.mother = "black",
+               edge.col.father = "black",
                vertex.label.color = "darkgreen",
-               vertex.size = 10)
+               vertex.size = 15,
+               main = input$pedigreeBreeder)
 })
 
 
