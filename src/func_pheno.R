@@ -45,7 +45,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   ## calculate output file names:
   fout <- list("pheno-field"=NULL, "pheno-patho"=NULL)
   for (dty in c("pheno-field","pheno-patho")){
-    if (is.null(fileName)){
+    if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName) ){# fileName must not contain a date
       fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
                           strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       n <- 0
@@ -57,11 +57,13 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
       
     }else{
       fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
-      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName,".txt.gz")
+      fout[dty] <- paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName, "_",
+                          strftime(gameTime, format = "%Y-%m-%d"),".txt.gz")
       n <- 0
       while(file.exists(fout[[dty]])){
         n <- n+1
-        fout[dty] <-  paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName,
+        fout[dty] <-  paste0(setup$shared.dir, "/", breeder, "/", "Result_", dty,"_",fileName, "_",
+                             strftime(gameTime, format = "%Y-%m-%d"),
                              "_",n,".txt.gz")
       }
     }
