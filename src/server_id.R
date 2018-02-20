@@ -112,16 +112,31 @@ output$userAction <- renderUI({
   if(goodPsw()){
     shinydashboard::tabBox(width=12, title =paste0("My account"),
                            tabPanel("My files",
-                                    div(
-                                      h3("Phenotyping Data:"),
-                                      selectInput("phenoFile", "", choices=phenoFiles()),
-                                      uiOutput("UIdwnlPheno")
+                                    div(style="display: inline-block; vertical-align:top; width: 50%;",
+                                      div(
+                                        h3("Phenotyping Data:"),
+                                        selectInput("phenoFile", "", choices=phenoFiles(),width="75%"),
+                                        uiOutput("UIdwnlPheno")
+                                      ),
+                                      div(
+                                        h3("Genotyping Data:"),
+                                        selectInput("genoFile", "", choices=genoFiles(),width="75%"),
+                                        uiOutput("UIdwnlGeno")
+                                      )
                                     ),
-                                    div(
-                                      h3("Genotyping Data:"),
-                                      selectInput("genoFile", "", choices=genoFiles()),
-                                      uiOutput("UIdwnlGeno")
+                                    div(style="display: inline-block; vertical-align:top; width: 49%;",
+                                      div(
+                                        h3("Plant material Data:"),
+                                        selectInput("pltMatFile", "", choices=pltMatFiles(),width="75%"),
+                                        uiOutput("UIdwnlPltMat")
+                                      ),
+                                      div(
+                                        h3("My requests:"),
+                                        selectInput("requestFile", "", choices=requestFiles(),width="75%"),
+                                        uiOutput("UIdwnlRequest")
+                                      )
                                     )
+                                    
 
                            ),
 
@@ -171,6 +186,14 @@ genoFiles <- reactive({
   input$leftMenu
   choices=getDataFileList(type="geno", breeder=breeder())
 })
+pltMatFiles <- reactive({
+  input$leftMenu
+  choices=getDataFileList(type="pltMat", breeder=breeder())
+})
+requestFiles <- reactive({
+  input$leftMenu
+  choices=getDataFileList(type="request", breeder=breeder())
+})
 
 
 # dwnl buttons
@@ -194,6 +217,27 @@ output$dwnlGeno <- downloadHandler(
   }
 )
 
+output$dwnlPltMat <- downloadHandler(
+  filename=function () input$pltMatFile, # lambda function
+  content=function(file){
+    filePath <- paste0("data/shared/",breeder(), "/",input$pltMatFile)
+    write.table(read.table(filePath, sep="\t", header = T),
+                file=file, quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
+  }
+)
+
+
+output$dwnlRequest <- downloadHandler(
+  filename=function () input$requestFile, # lambda function
+  content=function(file){
+    filePath <- paste0("data/shared/",breeder(), "/",input$requestFile)
+    write.table(read.table(filePath, sep="\t", header = T),
+                file=file, quote=FALSE,
+                sep="\t", row.names=FALSE, col.names=TRUE)
+  }
+)
+
 # UI of dwnl buttons
 output$UIdwnlPheno <- renderUI({
   if (input$phenoFile!=""){
@@ -204,7 +248,7 @@ output$UIdwnlPheno <- renderUI({
       downloadButton("dwnlPheno", "Download your file")
     }
 
-  }else p("")
+  }else p("No file selected.")
 
 })
 
@@ -217,10 +261,22 @@ output$UIdwnlGeno <- renderUI({
            downloadButton("dwnlGeno", "Download your file")
       
     }
-  }else p("")
+  }else p("No file selected.")
 })
 
+output$UIdwnlPltMat <- renderUI({
+  if (input$pltMatFile!=""){
+    downloadButton("dwnlPltMat", "Download your file")
+  }else p("No file selected.")
+  
+})
 
+output$UIdwnlRequest <- renderUI({
+  if (input$requestFile!=""){
+    downloadButton("dwnlRequest", "Download your file")
+  }else p("No file selected.")
+  
+})
 
 
 ## My plant-material

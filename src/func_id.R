@@ -26,17 +26,25 @@ getDataFileList <- function (type, breeder){
   # breeder (char) name of the breeder
   
   
-  stopifnot(type =="pheno" || type =="geno")
+  stopifnot(type =="pheno" || type =="geno"
+            || type =="pltMat" || type =="request")
   
   
   dirPath <- paste0("data/shared/",breeder)
   dataFile <- list.files(dirPath)
   
   ## Get the ids of the files
-  matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="pheno"))
+  matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_pheno"))
   if (type =="pheno"){
     matchId <- which(matchId)
-  }else matchId <- which(!matchId) # type =="geno"
+  }else if (type =="geno") {
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_geno"))
+  }else if (type =="pltMat"){
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="IndList_"))
+  }else{
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Request"))
+  }
+  
   
   return(as.list(dataFile[matchId]))
 
@@ -53,9 +61,12 @@ availToDwnld <- function(fileName, gameTime){
   stopifnot(is.character(fileName),
             fileName!="")
   
-  
+
   # get the date when the file was requested
-  requestDate <- strptime(strsplit(fileName, split = "[_.]")[[1]][3], format = "%Y-%m-%d")
+  m <- regexpr("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)
+  requestDate <- strptime(regmatches(fileName, m), format = "%Y-%m-%d")
+  
+
   
   # calculate the available date
   if (grepl("phenos-field", fileName)){
