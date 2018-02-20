@@ -222,7 +222,45 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
   
   
   
+deleteBreeder <- function(breederName){
   
+  if(breederName=="Admin"){
+    stop("Admin can't be deleted.")
+  }
+  
+  ## delete truth and shared folders
+  sharedDir <- paste0(setup$shared.dir,"/",breederName)
+  truthDir <- paste0(setup$truth.dir,"/",breederName)
+  
+  unlink(sharedDir, recursive = TRUE)
+  unlink(truthDir, recursive = TRUE)
+  
+  
+  ## clean dataBase
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  
+  # delete plant_material_oldBreeder
+  tbl <- paste0("plant_material_", breederName)
+  query <- paste0("DROP TABLE ", tbl)
+  res <- dbExecute(conn=db, query)
+  
+  # delete entry in breeders' table
+  tbl <- "breeders"
+  query <- paste0("DELETE FROM ", tbl, 
+                  " WHERE name = '",breederName,"'")
+  res <- dbExecute(conn=db, query)
+
+  # delete entry in log table
+  tbl <- "log"
+  query <- paste0("DELETE FROM ", tbl, 
+                  " WHERE breeder = '",breederName,"'")
+  res <- dbExecute(conn=db, query)
+  
+  dbDisconnect(db)
+  
+  
+  
+}
   
 
   

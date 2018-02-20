@@ -38,10 +38,7 @@ tabItem(tabName="id",
                                     passwordInput("psw", "Password")
                                 ),
                                 div(style="vertical-align: top;   min-width: 20%;", id="id_4",
-                                    tags$head(
-                                      tags$style(HTML('#submitPSW{background-color:#00A65A; color: white}'))
-                                    ),
-                                    actionButton("submitPSW", "Log in")
+                                    actionButton("submitPSW", "Log in", style="background-color:#00A65A; color: white")
                                 )
 
             )

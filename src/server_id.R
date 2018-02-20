@@ -28,15 +28,17 @@ source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ## get breeder list and create select input
-output$selectBreeder <- renderUI({
+breederList <- reactive({
   # get the breeders list
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- "breeders"
   query <- paste0("SELECT name FROM ", tbl)
   breederNames <- dbGetQuery(conn=db, query)[,1]
   dbDisconnect(db)
-  
-  selectInput("breederName", "Breeder", choices=as.list(breederNames))
+  return(breederNames)
+})
+output$selectBreeder <- renderUI({
+  selectInput("breederName", "Breeder", choices=as.list(breederList()))
   
 })
 
@@ -401,11 +403,32 @@ observeEvent(input$addNewBreeder,{
                          detail = "Done !")
 })
 
+## delete breeder:
+observeEvent(input$deleteBreeder,{
+  if (input$delBreederName!=""){
+    progressNewBreeder <- shiny::Progress$new(session, min=0, max=1)
+    progressNewBreeder$set(value = 0,
+                           message = "Deleting breeder")
+  }
+
+  if (input$delBreederName!="Admin" & input$delBreederName!=""){
+    deleteBreeder(input$delBreederName)
+    progressNewBreeder$set(value = 1,
+                           message = "Deleting breeder",
+                           detail = "Done !")
+  }else if (input$delBreederName=="Admin") {
+    progressNewBreeder$set(value = 0,
+                           message = "Deleting breeder",
+                           detail = "Sorry, Admin can't be deleted.")
+  }
+
+})
+
 output$UIadmin <- renderUI({
   
   if (breederStatus()=="game master"){
     list(
-      div(style="display: inline-block; vertical-align: top; width: 30%;",
+      div(style="display: inline-block; vertical-align: top; width: 30%;",# container left
           h3("Disk usage:"),
           tableOutput("sizeDataFolder")),
       
@@ -413,32 +436,47 @@ output$UIadmin <- renderUI({
           tags$style(HTML('.shiny-input-container{margin-bottom: 0px;}
                           .selectize-control{margin-bottom: 0px;}'))
         ),
-
-      div(style="display: inline-block; vertical-align: top; width: 69%;",
-          h3("Add new breeder:"),
-          tags$table(style = "width: 100%; border-collapse: collapse;",
-              tags$tr(
-                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                        textInput("newBreederName", "Breeder's name",
-                                  width="100%")
-                        ),
-                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",
-                        selectInput("newBreederStatus", "Status", choices=c("player", "game master"),
+      div(style="display: inline-block; vertical-align: top; width: 69%;", # container rigth
+        div(
+            h3("Add new breeder:"),
+            tags$table(style = "width: 100%; border-collapse: collapse;",
+                tags$tr(
+                  tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                          textInput("newBreederName", "Breeder's name",
                                     width="100%")
-                        ),
-                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                        passwordInput("newBreederPsw", "Password",
+                          ),
+                  tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",
+                          selectInput("newBreederStatus", "Status", choices=c("player", "game master"),
                                       width="100%")
-                        ),
-                tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                        actionButton("addNewBreeder", "Add Breeder",
-                                     width="100%", style="margin-bottom: 0px;")
-                        )
-                )
-          )
-      )
-
-    )
+                          ),
+                  tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                          passwordInput("newBreederPsw", "Password",
+                                        width="100%")
+                          ),
+                  tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                          actionButton("addNewBreeder", "Add Breeder",
+                                       width="100%", style="margin-bottom: 0px;")
+                          )
+                  )
+            )# end tags$table
+        ),# end div
+        
+        div(
+            h3("Delete breeder:"),
+            tags$table(style = "width: 100%; border-collapse: collapse;",
+                       tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",
+                               selectInput("delBreederName", "Breeder's name",choices=c("",breederList()),
+                                           selected="", width="100%")
+                       ),
+                       tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
+                               actionButton("deleteBreeder", "DO NOT click ! (Unless you are sure to delete the breeder)",
+                                            width="100%", style="margin-bottom: 0px;",
+                                            style="background-color:#ff3333; color:white;")
+                       )
+            )
+        )
+      )# end div: container rigth
+    )# end list
     
   }else return(p("Sorry, this is only accessible to the game master."))
 
