@@ -20,7 +20,7 @@
 
 ## Contain functions used in "plant material" section.
 
-create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltMat=NULL){
+create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltMat=NULL, fileName=NULL){
   
   # function which create the new generations (see game_master_plant-material.R)
   
@@ -43,6 +43,30 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   
   year <- data.table::year(gameTime)
+  
+  ## file name
+  if (is.null(fileName)){
+    fout<- paste0(setup$shared.dir, "/", breeder, "/", "IndList_",
+                        strftime(gameTime, format = "%Y-%m-%d"),".txt")
+    n <- 0
+    while(file.exists(fout)){
+      n <- n+1
+      fout<- paste0(setup$shared.dir, "/", breeder, "/", "IndList_",
+                          strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt")
+    }
+    
+  }else{
+    fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
+    fout<- paste0(setup$shared.dir, "/", breeder, "/", "IndList_",fileName, "_",
+                        strftime(gameTime, format = "%Y-%m-%d"),".txt")
+    n <- 0
+    while(file.exists(fout)){
+      n <- n+1
+      fout<-  paste0(setup$shared.dir, "/", breeder, "/", "IndList_",fileName, "_",
+                           strftime(gameTime, format = "%Y-%m-%d"),"_",n,".txt")
+    }
+  }
+
   
   
   ## check the presence of new individuals in the set of existing individuals
@@ -140,7 +164,11 @@ create_plant_material <- function (breeder, crosses.todo, gameTime, progressPltM
   query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('",query,"')")
   res <- dbGetQuery(conn=db, query)
 
- 
+  ## write table
+  write.table(x=crosses.todo[,-4],file=fout, quote=FALSE,
+              sep="\t", row.names=FALSE, col.names=TRUE)
+  
+  
   ## log
   flush.console()
   for(type in names(cross.types)){
