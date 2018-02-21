@@ -163,7 +163,7 @@ output$breederBoxPheno <- renderValueBox({
 output$dateBoxPheno <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %B %Y"),
+    value = strftime(currentGTime(), format= "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )

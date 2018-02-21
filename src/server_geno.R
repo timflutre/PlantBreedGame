@@ -170,7 +170,7 @@ output$breederBoxGeno <- renderValueBox({
 output$dateBoxGeno <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %B %Y"),
+    value = strftime(currentGTime(), format= "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
