@@ -34,6 +34,7 @@ tabItem(tabName="pheno",
 
     shinydashboard::box(width=12, title = "Choose an instruction file for phenotyping:",
                         div( id="pheno_file",
+                             uiOutput("idMessagePheno"),
                              fileInput(inputId="file.pheno",
                                        label = NULL,
                                        multiple=FALSE,

@@ -24,6 +24,15 @@ source("src/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
 
 ## server for "phenotyping"
 
+## identification message
+output$idMessagePheno <- renderUI({
+  if(breeder()=="No Identification"){
+    p("You need to identify yourself in order to make a request: click on the 'Breeder identification' tab.",
+      style="color:red;")
+  }
+})
+
+
 # read uploaded file
 readQryPheno <- reactive({
 

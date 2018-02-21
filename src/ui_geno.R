@@ -31,11 +31,13 @@ tabItem(tabName="geno",
           uiOutput("UIbreederInfoGeno"),
 
           shinydashboard::box(width=12, title = "Choose an instruction file for genotyping:",
-                              div( id="geno_file",
-                                   fileInput(inputId="file.geno",
-                                             label = NULL,
-                                             multiple=FALSE,
-                                             accept=c(".txt", ".tsv"))
+                              
+                              div(id="geno_file",
+                                  uiOutput("idMessageGeno"),
+                                  fileInput(inputId="file.geno",
+                                            label = NULL,
+                                            multiple=FALSE,
+                                            accept=c(".txt", ".tsv"))
                               )
           ),
 

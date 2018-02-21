@@ -33,6 +33,7 @@ tabItem(tabName="plant_mat",
 
   shinydashboard::box(width=12, title = "Choose an instruction file for plant material:",
                       div( id="cross_file",
+                           uiOutput("idMessagePltMat"),
                            fileInput(inputId="file.plmat",
                                      label = NULL,
                                      multiple=FALSE,

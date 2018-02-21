@@ -25,6 +25,14 @@ source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 
 ###### server for "genotyping" ######
 
+## identification message
+output$idMessageGeno <- renderUI({
+  if(breeder()=="No Identification"){
+    p("You need to identify yourself in order to make a request: click on the 'Breeder identification' tab.",
+      style="color:red;")
+  }
+})
+
 
 
 ## read uploaded file
@@ -208,7 +216,7 @@ output$UIbreederInfoGeno <- renderUI({
 ##  DEBUG
 output$GenoDebug <- renderPrint({
   print("---------")
-  print(ls())
+  print(breeder())
 
 
 })

@@ -25,6 +25,16 @@ source("src/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
 
 ## server for "plant material"
 
+## identification message
+output$idMessagePltMat <- renderUI({
+  if(breeder()=="No Identification"){
+    p("You need to identify yourself in order to make a request: click on the 'Breeder identification' tab.",
+      style="color:red;")
+  }
+})
+
+
+
 # read uploaded file
 readQryPlmat <- reactive({
 
