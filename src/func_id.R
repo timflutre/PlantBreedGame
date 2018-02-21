@@ -251,10 +251,10 @@ deleteBreeder <- function(breederName){
   res <- dbExecute(conn=db, query)
 
   # delete entry in log table
-  tbl <- "log"
-  query <- paste0("DELETE FROM ", tbl, 
-                  " WHERE breeder = '",breederName,"'")
-  res <- dbExecute(conn=db, query)
+  # tbl <- "log"
+  # query <- paste0("DELETE FROM ", tbl, 
+  #                 " WHERE breeder = '",breederName,"'")
+  # res <- dbExecute(conn=db, query)
   
   dbDisconnect(db)
   
