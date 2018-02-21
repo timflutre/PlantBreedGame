@@ -61,6 +61,7 @@ shinyUI(
                                    menuItem("Request genotyping",    tabName="geno",  icon=icon("database")),
                                    menuItem("Evaluation",    tabName="eval",  icon=icon("file-text-o")),
                                    menuItem("Theory",    tabName="theory",  icon=icon("calculator")),
+                                   menuItem("Admin",    tabName="admin",  icon=icon("cogs")),
                                    menuItem("About",     tabName="about", icon=icon("info-circle"))
                                  )
                 ),
@@ -79,6 +80,7 @@ shinyUI(
                     source("src/ui_geno.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_eval.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_theory.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_admin.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_about.R", local=TRUE, encoding="UTF-8")$value
                   )
                 )

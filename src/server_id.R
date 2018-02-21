@@ -165,9 +165,6 @@ output$userAction <- renderUI({
                                     div(style="vertical-align: top;   min-width: 20%;", id="id_4",
                                         uiOutput("UIpswChanged")
                                     )
-                           ),
-                           tabPanel("Admin",
-                                    uiOutput("UIadmin")
                            )
                            
 
@@ -298,7 +295,8 @@ myPltMat <- reactive({
 
 output$myPltMatDT <- renderDataTable(myPltMat(),
                                      searchDelay = 500,
-                                     options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
+                                     options = list(lengthMenu = c(10, 20, 50),
+                                                    pageLength = 10))
 
 
 
@@ -338,91 +336,6 @@ output$UIpswChanged <- renderUI({
 })
 
 
-
-
-## memory information:
-output$sizeDataFolder <- renderTable({
-  # data frame containing the size of all subfolder of "data"
-  invalidateLater(30000)
-  if (breederStatus()=="game master"){
-    folderShared <- list.dirs(path = "data/shared", full.names = TRUE, recursive = TRUE)[-1]
-    folderTruth <- list.dirs(path = "data/truth", full.names = TRUE, recursive = TRUE)[-1]
-    subFolders <- c(folderShared,folderTruth)
-    
-    funApply <- function(folder){
-      files <- list.files(folder, all.files = TRUE, recursive = TRUE, full.names=T)
-      sum(file.info(files)$size)
-    }
-    infoDataFolder <- as.data.frame(sapply(subFolders, FUN=funApply,USE.NAMES = FALSE),
-                                    col.names=c("size"))
-    names(infoDataFolder) <- c("size")
-    infoDataFolder$path <- subFolders
-    
-    
-    infoDataFolder <- rbind(infoDataFolder,
-                            data.frame(path="data/shared",
-                                       size=sum(infoDataFolder$size[infoDataFolder$path %in% folderShared]))
-    )
-    infoDataFolder <- rbind(infoDataFolder,
-                            data.frame(path="data/truth",
-                                       size=sum(infoDataFolder$size[infoDataFolder$path %in% folderTruth]))
-    )
-    infoDataFolder <- rbind(infoDataFolder,
-                            data.frame(path="data/breeding-game.sqlite",
-                                       size=file.info("data/breeding-game.sqlite")$size)
-    )
-    infoDataFolder <- rbind(infoDataFolder,
-                            data.frame(path="data",
-                                       size=sum(infoDataFolder$size))
-    )
-    infoDataFolder <- infoDataFolder[order(infoDataFolder$size, decreasing = T),]
-    
-    
-    infoDataFolder$size <- infoDataFolder$size/10^6
-    infoDataFolder <- rev(infoDataFolder)
-    names(infoDataFolder) <- c("path", "size (Mo)")
-    
-    return(infoDataFolder)
-  }else return(NULL)
-})
-  
-## add new breeder:
-observeEvent(input$addNewBreeder,{
-  
-  progressNewBreeder <- shiny::Progress$new(session, min=0, max=7)
-  progressNewBreeder$set(value = 0,
-                   message = "Adding breeder",
-                   detail = "Initialisation...")
-  
-  addNewBreeder(input$newBreederName,
-                input$newBreederStatus,
-                input$newBreederPsw,
-                progressNewBreeder)
-  
-  progressNewBreeder$set(value = 7,
-                         detail = "Done !")
-})
-
-## delete breeder:
-observeEvent(input$deleteBreeder,{
-  if (input$delBreederName!=""){
-    progressNewBreeder <- shiny::Progress$new(session, min=0, max=1)
-    progressNewBreeder$set(value = 0,
-                           message = "Deleting breeder")
-  }
-
-  if (input$delBreederName!="Admin" & input$delBreederName!=""){
-    deleteBreeder(input$delBreederName)
-    progressNewBreeder$set(value = 1,
-                           message = "Deleting breeder",
-                           detail = "Done !")
-  }else if (input$delBreederName=="Admin") {
-    progressNewBreeder$set(value = 0,
-                           message = "Deleting breeder",
-                           detail = "Sorry, Admin can't be deleted.")
-  }
-
-})
 
 output$UIadmin <- renderUI({
   
@@ -499,7 +412,7 @@ output$breederBoxID <- renderValueBox({
 output$dateBoxID <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %B %Y"),
+    value = strftime(currentGTime(), format= "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
