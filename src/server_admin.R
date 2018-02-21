@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -29,24 +29,24 @@ output$adminUI <- renderUI({
   if (breederStatus()=="game master"){
     list(
       shinydashboard::tabBox(width=12, title = "Admin", id = "admin_tabset", side="left",
-                             tabPanel("Sessions managment",
+                             tabPanel("Manage sessions",
                                       div(style="margin-bottom:50px;",
                                         h3("Current sessions:"),
                                         tableOutput("sessionsTable")
                                       ),
-                                      
+
                                       div(# add New session
                                         div(style="margin-bottom: 20px;",# inputs
-                                          h3("Add new session:"),
+                                          h3("Add a new session:"),
                                           div(style="display: inline-block; vertical-align:top; width: 33%; min-width:300px;", #start
                                             h4("Start"),
                                             tags$table(style = "width: 300px; border-collapse: collapse;", # start table 1
                                               tags$td(style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                      dateInput("startDate", "Date",
+                                                      dateInput("startDate", "date",
                                                                 width = "100px")
                                               ),
                                               tags$td(style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                      numericInput("startHour", "Hour", value=9, min=0, max=23, step=1,
+                                                      numericInput("startHour", "hour", value=9, min=0, max=23, step=1,
                                                                    width = "75px")
                                               ),
                                               tags$td(style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
@@ -55,25 +55,25 @@ output$adminUI <- renderUI({
                                               )
                                             )# end table 1
                                           ),# end div "start"
-                                          
+
                                           div(style="display: inline-block; vertical-align:top; width: 33%; min-width:300px;", #end
                                             h4("End"),
                                             tags$table(style = "width: 300px; border-collapse: collapse;", # start table 2
                                               tags$td(style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                      dateInput("endDate", "Date",
+                                                      dateInput("endDate", "date",
                                                                 width = "100px")
                                               ),
                                               tags$td(style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                      numericInput("endHour", "Hour", value=9, min=0, max=23, step=1,
+                                                      numericInput("endHour", "hour", value=9, min=0, max=23, step=1,
                                                                    width = "75px")
                                               ),
                                               tags$td(style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                      numericInput("endMin", "Minute", value=0, min=0, max=59, step=1,
+                                                      numericInput("endMin", "minute", value=0, min=0, max=59, step=1,
                                                                    width = "75px")
                                               )
                                             )# end table 2
                                           ),# end div "end"
-                                          
+
                                           div(style="display: inline-block; vertical-align:top; width:33%; min-width:300px;", #year time
                                               h4("Year time"),
                                               tags$table(style = "border-collapse: collapse;", # start table 3
@@ -81,20 +81,20 @@ output$adminUI <- renderUI({
                                                        numericInput("yearTime", "Duration of one year (in minutes)", value=60, min=0, max=Inf, step=1)
                                                )
                                               )# end table 3
-                                              
+
                                           )# end div "year time"
                                         ),# end div inputs
-                                        
+
                                         div(style="display: inline-block; vertical-align:top; width:25%; margin-bottom: 50px; padding-left: 10px;", #button
-                                            actionButton("addSession", "Add new session")
+                                            actionButton("addSession", "Add this new session")
 
                                         )# end div "button"
 
 
                                       ),# end div "add New session"
-                                      
 
-                                      
+
+
                                       div(style = "margin-bottom:100px;",# delete session
                                         h3("Delete sessions:"),
                                         tags$table(style = "width: 100%; border-collapse: collapse;",
@@ -103,22 +103,22 @@ output$adminUI <- renderUI({
                                                                        selected="", width="100%")
                                                    ),
                                                    tags$td(style = "width: 50%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                           actionButton("deleteSession", "DO NOT click ! (Unless you are sure to delete the session)",
+                                                           actionButton("deleteSession", "DO NOT click! (unless you are sure to delete this session)",
                                                                         width="100%", style="margin-bottom: 0px;",
                                                                         style="background-color:#ff3333; color:white;")
                                                    )
                                         )
                                       )# end div "delete session"
                              ),# end tabPanel sessions managment
-                             
-                             
-                             
-                             
-                             
-                             
-                             tabPanel("Add/Delete Breeders",
+
+
+
+
+
+
+                             tabPanel("Manage breeders",
                                       div(# add New breeders
-                                        h3("Add new breeder:"),
+                                        h3("Add a new breeder:"),
                                         tags$head(
                                           tags$style(HTML('.shiny-input-container{margin-bottom: 0px;}
                                                           .selectize-control{margin-bottom: 0px;}')
@@ -139,34 +139,34 @@ output$adminUI <- renderUI({
                                                                            width="100%")
                                                      ),
                                                      tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                             actionButton("addNewBreeder", "Add Breeder",
+                                                             actionButton("addNewBreeder", "Add this new breeder",
                                                                           width="100%", style="margin-bottom: 0px;")
                                                      )
                                                    )
                                         )# end tags$table
                                         ),# end div "add new breeder"
-                                      
-                                      
+
+
                                       div(# delete breeders
-                                        h3("Delete breeder:"),
+                                        h3("Delete a breeder:"),
                                         tags$table(style = "width: 100%; border-collapse: collapse;",
                                                    tags$td(style = "width: 50%; vertical-align: bottom; padding: 10px;",
                                                            selectInput("delBreederName", "Breeder's name",choices=c("",breederList()),
                                                                        selected="", width="100%")
                                                    ),
                                                    tags$td(style = "width: 50%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                           actionButton("deleteBreeder", "DO NOT click ! (Unless you are sure to delete the breeder)",
+                                                           actionButton("deleteBreeder", "DO NOT click! (unless you are sure to delete this breeder)",
                                                                         width="100%", style="margin-bottom: 0px;",
                                                                         style="background-color:#ff3333; color:white;")
                                                    )
                                         )
                                       )# end div "delete breeders"
                              ),# end tabPanel "Add/Delete Breeders"
-                             
-                             
-                             
-                             
-                             
+
+
+
+
+
                              tabPanel("Disk usage",
                                       div(
                                         h3("Disk usage:"),
@@ -176,8 +176,8 @@ output$adminUI <- renderUI({
                              )# end tabPanel "Disk usage"
       )# close tabBox
     ) # close list
-    
-    
+
+
   }else{
     shinydashboard::box(width=12, title = "Content unavailable",
                         div(p("Sorry, this is only accessible to the game master."))
@@ -189,12 +189,12 @@ output$adminUI <- renderUI({
 
 ## add new breeder:
 observeEvent(input$addNewBreeder,{
-  
+
   progressNewBreeder <- shiny::Progress$new(session, min=0, max=7)
   progressNewBreeder$set(value = 0,
                          message = "Adding breeder",
                          detail = "Initialisation...")
-  
+
     t <- try(addNewBreeder(input$newBreederName,
                            input$newBreederStatus,
                            input$newBreederPsw,
@@ -202,10 +202,10 @@ observeEvent(input$addNewBreeder,{
 
     if (class(t)!="try-error"){
       progressNewBreeder$set(value = 7,
-                             detail = "Done !")
+                             detail = "Done!")
     }else{progressNewBreeder$set(value = 1,
                                  detail = t)}
-  
+
 
 })
 
@@ -216,32 +216,32 @@ observeEvent(input$deleteBreeder,{
     progressDelBreeder$set(value = 0,
                            message = "Deleting breeder")
   }
-  
+
   if (input$delBreederName!="Admin" & input$delBreederName!=""){
     deleteBreeder(input$delBreederName)
     progressDelBreeder$set(value = 1,
                            message = "Deleting breeder",
-                           detail = "Done !")
+                           detail = "Done!")
   }else if (input$delBreederName=="Admin") {
     progressDelBreeder$set(value = 0,
                            message = "Deleting breeder",
                            detail = "Sorry, Admin can't be deleted.")
   }
-  
+
 })
 
 
 
 ## sessions managment
 sessionsList <- eventReactive((input$addSession|input$deleteSession),ignoreNULL=FALSE,{
-  
+
   # get session table from the data base:
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   query <- paste0("SELECT * FROM sessions")
   res <- dbGetQuery(conn=db, query)
   dbDisconnect(db)
   return(res)
-  
+
 })
 
 output$sessionsTable <- renderTable({
@@ -254,11 +254,11 @@ observeEvent(input$addSession,{
                         format="%Y-%m-%d %H:%M")
   endDate <- strptime(paste0(input$endDate," ", input$endHour,":",input$endMin),
                         format="%Y-%m-%d %H:%M")
-  
+
   if (startDate<endDate){
     #calculate in number:
     numId <- max(sessionsList()$num)+1
-      
+
     # complete "sessions" table
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     query <- paste0("INSERT INTO sessions", " VALUES",
@@ -267,32 +267,32 @@ observeEvent(input$addSession,{
     dbDisconnect(db)
     showNotification("Session added.", type = c("message"))
     return(res)
-    
+
   }else{
     showNotification("Error: Start date must be earlier than end date", type = c("error"))
   }
-  
-  
-  
-  
 
-  
+
+
+
+
+
 })
- 
+
 # delete session
 observeEvent(input$deleteSession,{
   if (input$delSession!=""){
 
     # delete entry in sessions' table
     db <- dbConnect(SQLite(), dbname=setup$dbname)
-    query <- paste0("DELETE FROM sessions", 
+    query <- paste0("DELETE FROM sessions",
                     " WHERE num = ",input$delSession)
     res <- dbExecute(conn=db, query)
     dbDisconnect(db)
     showNotification("Session removed",type = "message")
-    
+
   }
- 
+
 })
 
 
@@ -311,7 +311,7 @@ output$sizeDataFolder <- renderTable({
       folderShared <- list.dirs(path = "data/shared", full.names = TRUE, recursive = TRUE)[-1]
       folderTruth <- list.dirs(path = "data/truth", full.names = TRUE, recursive = TRUE)[-1]
       subFolders <- c(folderShared,folderTruth)
-      
+
       funApply <- function(folder){
         files <- list.files(folder, all.files = TRUE, recursive = TRUE, full.names=T)
         sum(file.info(files)$size)
@@ -320,8 +320,8 @@ output$sizeDataFolder <- renderTable({
                                       col.names=c("size"))
       names(infoDataFolder) <- c("size")
       infoDataFolder$path <- subFolders
-      
-      
+
+
       infoDataFolder <- rbind(infoDataFolder,
                               data.frame(path="data/shared",
                                          size=sum(infoDataFolder$size[infoDataFolder$path %in% folderShared]))
@@ -339,12 +339,12 @@ output$sizeDataFolder <- renderTable({
                                          size=sum(infoDataFolder$size))
       )
       infoDataFolder <- infoDataFolder[order(infoDataFolder$size, decreasing = T),]
-      
-      
+
+
       infoDataFolder$size <- infoDataFolder$size/10^6
       infoDataFolder <- rev(infoDataFolder)
       names(infoDataFolder) <- c("path", "size (Mo)")
-      
+
       return(infoDataFolder)
     }else return(NULL)
   },message = "Calculating... Please wait.")

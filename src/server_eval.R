@@ -61,14 +61,14 @@ output$evalUI <- renderUI({
                                    plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
                                  )
                         ),
-                        tabPanel("AFs",
-                                 div(
-                                   uiOutput("evalUIAfsPlot")
-                                 )
-                        ),
                         tabPanel("Pedigree",
                                  div(
                                    uiOutput("evalUIpedigree")
+                                 )
+                        ),
+                        tabPanel("AFs",
+                                 div(
+                                   uiOutput("evalUIAfsPlot")
                                  )
                         )
 
@@ -333,7 +333,7 @@ afsEval <- reactive({
   # calculate AFS
   progressAFS <- shiny::Progress$new(session, min=0, max=1)
   progressAFS$set(value = 0,
-                  message = "Calculate Afs")
+                  message = "Calculate AFs")
   afs1 <-  getAFs(selectedInd$child, breeder, progressAFS)
 
   dta <- data.frame(afs0=afs0, afs1=afs1)
@@ -346,29 +346,30 @@ output$evalGraphAFsHist<- renderPlotly({
 
   # plot
   dta <- afsEval()
-  dta$afs1[dta$afs1==1] <- 0.9995 #get better sisplay
-  dta$afs1[dta$afs1==0] <- 0.0005 #get better sisplay
+  dta$afs1[dta$afs1==1] <- 0.9995 # get better display
+  dta$afs1[dta$afs1==0] <- 0.0005 # get better display
 
 
   p <- plot_ly(alpha=0.6, colors=c("gray", "#009933")) %>%
-        add_histogram(data=dta,
+        add_histogram(data = dta,
                       x = ~afs0,
-                      color="1",
-                      name = 'Afs0',
-                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
+                      color = "1",
+                      name = "initial AFs",
+                      xbins = list("start"=0, "end"=1.05, "size"=0.05 ),
                       inherit = TRUE) %>%
-        add_histogram(data=dta,
+        add_histogram(data = dta,
                       x = ~afs1,
-                      color="2",
-                      name = paste0("AFs ", input$afsBreeder),
-                      xbins=list("start"=0, "end"=1.05, "size"=0.05 ),
+                      color = "2",
+                      name = "final AFs",#paste0("AFs ", input$afsBreeder),
+                      xbins = list("start"=0, "end"=1.05, "size"=0.05 ),
                       inherit = TRUE) %>%
-        layout(barmode = "overlay")
+        layout(barmode = "overlay",
+               title = input$afsBreeder,
+               xaxis = list(title="allele frequencies"))
 
 })
 
 output$evalGraphAFsScatter<- renderPlotly({
-
 
   ids <- sample(row.names(afsEval()), 5000)
   dta <- afsEval()[ids,]
@@ -379,7 +380,10 @@ output$evalGraphAFsScatter<- renderPlotly({
                 x= ~afs0,
                 marker=list(color="#009933" , size=5 , opacity=0.3),
                 text="",
-                inherit=FALSE)
+                inherit=FALSE) %>%
+    layout(title = input$afsBreeder,
+           xaxis = list(title="initial allele frequencies"),
+           yaxis = list(title="final allele frequencies"))
 
 })
 

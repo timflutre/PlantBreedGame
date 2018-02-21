@@ -39,7 +39,7 @@ breederList <- reactive({
 })
 output$selectBreeder <- renderUI({
   selectInput("breederName", "Breeder", choices=as.list(breederList()))
-  
+
 })
 
 
@@ -116,19 +116,19 @@ output$userAction <- renderUI({
                            tabPanel("My files",
                                     div(style="display: inline-block; vertical-align:top; width: 50%;",
                                       div(
-                                        h3("Phenotyping Data:"),
+                                        h3("Phenotyping data:"),
                                         selectInput("phenoFile", "", choices=phenoFiles(),width="75%"),
                                         uiOutput("UIdwnlPheno")
                                       ),
                                       div(
-                                        h3("Genotyping Data:"),
+                                        h3("Genotyping data:"),
                                         selectInput("genoFile", "", choices=genoFiles(),width="75%"),
                                         uiOutput("UIdwnlGeno")
                                       )
                                     ),
                                     div(style="display: inline-block; vertical-align:top; width: 49%;",
                                       div(
-                                        h3("Plant material Data:"),
+                                        h3("Plant material data:"),
                                         selectInput("pltMatFile", "", choices=pltMatFiles(),width="75%"),
                                         uiOutput("UIdwnlPltMat")
                                       ),
@@ -138,7 +138,7 @@ output$userAction <- renderUI({
                                         uiOutput("UIdwnlRequest")
                                       )
                                     )
-                                    
+
 
                            ),
 
@@ -160,13 +160,13 @@ output$userAction <- renderUI({
                                         tags$head(
                                           tags$style(HTML('#changePsw{background-color:gray; color: white}'))
                                         ),
-                                        actionButton("changePsw", "Change my password ! ")
+                                        actionButton("changePsw", "Change my password!")
                                     ),
                                     div(style="vertical-align: top;   min-width: 20%;", id="id_4",
                                         uiOutput("UIpswChanged")
                                     )
                            )
-                           
+
 
           )
   }
@@ -258,7 +258,7 @@ output$UIdwnlGeno <- renderUI({
                availToDwnld(input$genoFile,currentGTime())$availDate))
     }else{
            downloadButton("dwnlGeno", "Download your file")
-      
+
     }
   }else p("No file selected.")
 })
@@ -267,14 +267,14 @@ output$UIdwnlPltMat <- renderUI({
   if (input$pltMatFile!=""){
     downloadButton("dwnlPltMat", "Download your file")
   }else p("No file selected.")
-  
+
 })
 
 output$UIdwnlRequest <- renderUI({
   if (input$requestFile!=""){
     downloadButton("dwnlRequest", "Download your file")
   }else p("No file selected.")
-  
+
 })
 
 
@@ -338,13 +338,13 @@ output$UIpswChanged <- renderUI({
 
 
 output$UIadmin <- renderUI({
-  
+
   if (breederStatus()=="game master"){
     list(
       div(style="display: inline-block; vertical-align: top; width: 30%;",# container left
           h3("Disk usage:"),
           tableOutput("sizeDataFolder")),
-      
+
       tags$head(
           tags$style(HTML('.shiny-input-container{margin-bottom: 0px;}
                           .selectize-control{margin-bottom: 0px;}'))
@@ -373,7 +373,7 @@ output$UIadmin <- renderUI({
                   )
             )# end tags$table
         ),# end div
-        
+
         div(
             h3("Delete breeder:"),
             tags$table(style = "width: 100%; border-collapse: collapse;",
@@ -382,7 +382,7 @@ output$UIadmin <- renderUI({
                                            selected="", width="100%")
                        ),
                        tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                               actionButton("deleteBreeder", "DO NOT click ! (Unless you are sure to delete the breeder)",
+                               actionButton("deleteBreeder", "DO NOT click! (unless you are sure to delete the breeder)",
                                             width="100%", style="margin-bottom: 0px;",
                                             style="background-color:#ff3333; color:white;")
                        )
@@ -390,7 +390,7 @@ output$UIadmin <- renderUI({
         )
       )# end div: container rigth
     )# end list
-    
+
   }else return(p("Sorry, this is only accessible to the game master."))
 
 })
@@ -432,7 +432,7 @@ output$budgetBoxID <- renderValueBox({
 output$serverIndicID <- renderValueBox({
   ## this bow will be modified by some javascript
   valueBoxServer(
-    value = "", 
+    value = "",
     subtitle = "Server load",
     icon = icon("server"),
     color = "yellow"
