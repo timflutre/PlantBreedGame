@@ -152,8 +152,8 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
 
 deleteBreeder <- function(breederName){
   
-  if(breederName=="Admin"){
-    stop("Admin can't be deleted.")
+  if(breederName=="admin"){
+    stop("admin can't be deleted.")
   }
   
   ## delete truth and shared folders

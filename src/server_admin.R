@@ -217,15 +217,15 @@ observeEvent(input$deleteBreeder,{
                            message = "Deleting breeder")
   }
 
-  if (input$delBreederName!="Admin" & input$delBreederName!=""){
+  if (input$delBreederName!="admin" & input$delBreederName!=""){
     deleteBreeder(input$delBreederName)
     progressDelBreeder$set(value = 1,
                            message = "Deleting breeder",
                            detail = "Done!")
-  }else if (input$delBreederName=="Admin") {
+  }else if (input$delBreederName=="admin") {
     progressDelBreeder$set(value = 0,
                            message = "Deleting breeder",
-                           detail = "Sorry, Admin can't be deleted.")
+                           detail = "Sorry, admin can't be deleted.")
   }
 
 })
