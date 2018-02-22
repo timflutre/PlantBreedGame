@@ -131,7 +131,7 @@ output$adminUI <- renderUI({
                                                                        width="100%")
                                                      ),
                                                      tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",
-                                                             selectInput("newBreederStatus", "Status", choices=c("player", "game master"),
+                                                             selectInput("newBreederStatus", "Status", choices=c("player","tester","game master"),
                                                                          width="100%")
                                                      ),
                                                      tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",

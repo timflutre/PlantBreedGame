@@ -47,7 +47,8 @@ readQryPlmat <- reactive({
 
 
   # read input file
-  maxHD <- ifelse(breederStatus()=="game master",Inf,constants$max.nb.haplodiplos)
+  maxHD <- ifelse(breederStatus()!="player",
+                  Inf,constants$max.nb.haplodiplos)
   
   test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath, max.nb.hd=maxHD))
   
@@ -71,7 +72,7 @@ readQryPlmat <- reactive({
   indAvail <- indAvailable(indList, getGameTime(setup), breeder())
   
   # check if individuals are available
-  if ((indAvail$indGrown | breederStatus()=="game master")
+  if ((indAvail$indGrown | breederStatus()!="player")
       & indAvail$indExist){
     return(df)
   }else {return("error - Individuals not availables")}

@@ -60,7 +60,7 @@ readQryGeno <- reactive({
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
 
     # check if individuals are available
-    if ((indAvail$indGrown | breederStatus()=="game master")
+    if ((indAvail$indGrown | breederStatus()!="player")
         & indAvail$indExist){
       return(df)
     }else {return("error - Individuals not availables")}

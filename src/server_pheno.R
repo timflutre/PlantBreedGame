@@ -44,7 +44,8 @@ readQryPheno <- reactive({
   }
 
   # read input file
-  max.nb.plots <- ifelse(breederStatus()=="game master",Inf , constants$nb.plots)
+  max.nb.plots <- ifelse(breederStatus()!="player",
+                         Inf , constants$nb.plots)
   test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
                                             subset.snps=subset.snps,
                                             max.nb.plots = max.nb.plots))
@@ -64,7 +65,7 @@ readQryPheno <- reactive({
     plotAvail <- plotAvailable(breeder(), df, getGameTime(setup))
 
     # check if individuals are available
-    if (((indAvail$indGrown & plotAvail) | breederStatus()=="game master")
+    if (((indAvail$indGrown & plotAvail) | breederStatus()!="player")
         & indAvail$indExist){
       return(df)
     }else {return("error - Individuals or Plots not availables")}
