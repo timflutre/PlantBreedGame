@@ -22,9 +22,8 @@
 addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
   ## this function create a nex breeder
   ## breederName (char) name of the new breeder
-  
-  
-  if(grepl("[:blank:]", breederName)){
+
+  if(grepl("[ ]", breederName)){
     stop("Breeder's name must'not contain spaces")
   }
   #### initialisation:
