@@ -169,7 +169,7 @@ output$genoRequestResultUI <- renderUI({
 output$breederBoxGeno <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = "Breeder",
+    subtitle =breederStatus(),
     icon = icon("user-o"),
     color = "yellow"
   )

@@ -178,7 +178,7 @@ output$plmatRequestResultUI <- renderUI({
 output$breederBoxPltMat <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = "Breeder",
+    subtitle = breederStatus(),
     icon = icon("user-o"),
     color = "yellow"
   )

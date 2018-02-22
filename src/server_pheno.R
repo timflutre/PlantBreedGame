@@ -164,7 +164,7 @@ output$phenoRequestResultUI <- renderUI({
 output$breederBoxPheno <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = "Breeder",
+    subtitle = breederStatus(),
     icon = icon("user-o"),
     color = "yellow"
   )
