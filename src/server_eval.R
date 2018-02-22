@@ -27,7 +27,7 @@ source("src/func_eval.R", local=TRUE, encoding="UTF-8")$value
 
 ## generate the UI:
 output$evalUI <- renderUI({
-  if (breederStatus()!="player"){
+  if (breeder()!="No Identification" & breederStatus()!="player"){
     list(
     shinydashboard::box(width=12, title = "Choose an evaluation file:",
                         div( id="eval_file",
