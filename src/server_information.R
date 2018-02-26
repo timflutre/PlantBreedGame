@@ -21,7 +21,7 @@
 ## server for information part
 
 
-## NOT OPERATIONAL #############
+
 output$dwnlIniData <- downloadHandler(
   filename=function () input$iniDataFile, # lambda function
   content=function(file){
