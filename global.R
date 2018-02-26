@@ -43,18 +43,21 @@ source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
 
 
 ## -------------------------------------------------------------------
-## parameters:
+## parameters
 
 options(warn=-1) # don't show warnings
 debugDisplay <- FALSE # display debug
 
 mycolors <- c("#00aedb", "#a200ff", "#f47835", "#d41243", "#8ec127")
 
+if(Sys.info()["sysname"] == "Windows"){
+  Sys.setlocale("LC_TIME", "English")
+} else
+  Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
 ## -------------------------------------------------------------------
 ## variables
-
 
 root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
@@ -69,16 +72,11 @@ prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field
                "geno-ld"=round(constants$cost.geno.ld*constants$cost.pheno.field,2),
                "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field)
 
-
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
 subset.snps[["hd"]] <- rownames(read.table(f))
 f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
 subset.snps[["ld"]] <- rownames(read.table(f))
 
-
 url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
 code.version <- getCodeVersion(url.repo)
-
-
-
