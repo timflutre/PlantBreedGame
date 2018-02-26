@@ -60,7 +60,7 @@ readQryPheno <- reactive({
     # list individuals
     indList <- unique(as.character(df$ind))
     indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-    
+
     # check if plot are available
     plotAvail <- plotAvailable(breeder(), df, getGameTime(setup))
 
@@ -102,9 +102,9 @@ output$qryPheno <- renderDataTable({
 
 # submit button
 output$submitPhenoRequest <- renderUI({
-  
+
   colorButton <- ifelse(is.data.frame(readQryPheno()),"#00A65A","#ff0000") # yes:green, no:red
-  
+
   list(
     tags$head(
       tags$style(HTML(paste0('#requestPheno{background-color:',colorButton,'; color: white}')))
@@ -112,20 +112,20 @@ output$submitPhenoRequest <- renderUI({
     p("Do you really want these phenotyping data?"),
     actionButton("requestPheno", "Yes, I do!") # style="background-color:red"
   )
-  
+
 })
 
 # output
 pheno_data <- eventReactive(input$requestPheno,{
   if (is.data.frame(readQryPheno())){
-    
-    
+
+
     # Create a Progress object
     progressPheno <- shiny::Progress$new(session, min=0, max=4)
     progressPheno$set(value = 0,
                      message = "Process Pheno request:",
                      detail = "Initialisation...")
-    
+
     res <- try(phenotype(breeder(),
                          readQryPheno(),
                          getGameTime(setup),
@@ -139,7 +139,7 @@ pheno_data <- eventReactive(input$requestPheno,{
     }else{
       progressPheno$set(detail = "ERROR !")
       return("error")
-    } 
+    }
 
   }else return(NULL)
 
@@ -164,7 +164,7 @@ output$phenoRequestResultUI <- renderUI({
 output$breederBoxPheno <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = breederStatus(),
+    subtitle = paste("Status:", breederStatus()),
     icon = icon("user-o"),
     color = "yellow"
   )
@@ -193,7 +193,7 @@ output$budgetBoxPheno <- renderValueBox({
 output$serverIndicPheno <- renderValueBox({
   ## this bow will be modified by some javascript
   valueBoxServer(
-    value = "", 
+    value = "",
     subtitle = "Server load",
     icon = icon("server"),
     color = "yellow"

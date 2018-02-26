@@ -37,7 +37,7 @@ output$idMessageGeno <- renderUI({
 
 ## read uploaded file
 readQryGeno <- reactive({
-  
+
   # no input fileI
   if(is.null(input$file.geno)){
     return(NULL)
@@ -99,9 +99,9 @@ output$qryGeno <- renderDataTable({
 
 ## submit button
 output$submitGenoRequest <- renderUI({
-  
+
   colorButton <- ifelse(is.data.frame(readQryGeno()),"#00A65A","#ff0000") # yes:green, no:red
-  
+
   list(
     tags$head(
       tags$style(HTML(paste0('#requestGeno{background-color:',colorButton,'; color: white}')))
@@ -109,8 +109,8 @@ output$submitGenoRequest <- renderUI({
     p("Do you really want these genotyping data?"),
     actionButton("requestGeno", "Yes, I do!") # style="background-color:red"
   )
-  
-  
+
+
 })
 
 ## output
@@ -145,16 +145,16 @@ geno_data <- eventReactive(input$requestGeno,{
 
 
 output$genoRequestResultUI <- renderUI({
-  
+
   if (!is.null(geno_data()) && geno_data()=="done"){
     # reset inputs
     reset("file.geno")
     session$sendCustomMessage(type = "resetValue", message = "file.geno")
-    
+
     # display message
     p("Great ! Your results will be available in ",
       constants$duration.geno.hd, " months.")
-    
+
   } else if (!is.null(geno_data()) && geno_data()=="error"){
     p("Something went wrong. Please check your file.")
   } else p("")
@@ -169,7 +169,7 @@ output$genoRequestResultUI <- renderUI({
 output$breederBoxGeno <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle =breederStatus(),
+    subtitle = paste("Status:", breederStatus()),
     icon = icon("user-o"),
     color = "yellow"
   )
@@ -196,7 +196,7 @@ output$budgetBoxGeno <- renderValueBox({
 output$serverIndicGeno <- renderValueBox({
   ## this bow will be modified by some javascript
   valueBoxServer(
-    value = "", 
+    value = "",
     subtitle = "Server load",
     icon = icon("server"),
     color = "yellow"

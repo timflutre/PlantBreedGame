@@ -49,28 +49,28 @@ readQryPlmat <- reactive({
   # read input file
   maxHD <- ifelse(breederStatus()!="player",
                   Inf,constants$max.nb.haplodiplos)
-  
+
   test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath, max.nb.hd=maxHD))
-  
+
   # check file
   if (!is.data.frame(test)){
     return(test)
   }
   # the file is ok
 
-  
+
   # check new individuals not already exist
   childList <- unique(c(as.character(df$child)))
-  
+
   if (indExist(childList, breeder())){
     return("error - Individuals already exist")
   }
-  
+
   # list individuals
   indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
   indList <- indList[!is.na(indList)]
   indAvail <- indAvailable(indList, getGameTime(setup), breeder())
-  
+
   # check if individuals are available
   if ((indAvail$indGrown | breederStatus()!="player")
       & indAvail$indExist){
@@ -112,9 +112,9 @@ output$qryPlmat <- renderDataTable({
 
 # submit button
 output$submitPlmatRequest <- renderUI({
-  
+
   colorButton <- ifelse(is.data.frame(readQryPlmat()),"#00A65A","#ff0000") # yes:green, no:red
-  
+
   list(
     tags$head(
       tags$style(HTML(paste0('#requestPlmat{background-color:',colorButton,'; color: white}')))
@@ -122,21 +122,21 @@ output$submitPlmatRequest <- renderUI({
     p("Do you really want this plant material?"),
     actionButton("requestPlmat", "Yes, I do!") # style="background-color:red"
   )
-  
+
 })
 
 
 # output
 plantMatRequested <- eventReactive(input$requestPlmat,{
   if (is.data.frame(readQryPlmat())){
-    
+
     # Create a Progress object
     progressPltMat <- shiny::Progress$new(session, min=0, max=5)
     progressPltMat$set(value = 0,
                        message = "Create Plant Material:",
                        detail = "Initialisation...")
-    
-    
+
+
     res <- try(create_plant_material(breeder(),
                                      readQryPlmat(),
                                      getGameTime(setup),
@@ -162,9 +162,9 @@ output$plmatRequestResultUI <- renderUI({
     # reset inputs
     reset("file.plmat")
     session$sendCustomMessage(type = "resetValue", message = "file.plmat")
-    
+
     # display message
-    
+
     p("\n Great ! Your plants are growing up !")
   } else if (!is.null(plantMatRequested()) && plantMatRequested()=="error"){
     p("\n Something went wrong. Please check your file.")
@@ -178,7 +178,7 @@ output$plmatRequestResultUI <- renderUI({
 output$breederBoxPltMat <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = breederStatus(),
+    subtitle = paste("Status:", breederStatus()),
     icon = icon("user-o"),
     color = "yellow"
   )
@@ -207,7 +207,7 @@ output$budgetBoxPltMat <- renderValueBox({
 output$serverIndicPltMat <- renderValueBox({
   ## this bow will be modified by some javascript
   valueBoxServer(
-    value = "", 
+    value = "",
     subtitle = "Server load",
     icon = icon("server"),
     color = "yellow"

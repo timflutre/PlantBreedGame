@@ -341,7 +341,7 @@ output$UIpswChanged <- renderUI({
 output$breederBoxID <- renderValueBox({
   valueBox(
     value = breeder(),
-    subtitle = breederStatus(),
+    subtitle = paste("Status:", breederStatus()),
     icon = icon("user-o"),
     color = "yellow"
   )
