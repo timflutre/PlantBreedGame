@@ -98,18 +98,19 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
     df <- utils::read.table(f, header=TRUE, sep="\t", stringsAsFactors=FALSE)
   }
 
-  
+
   # check:
   if (!is.data.frame(df)){
     stop("df must be a data.frame, or your file can't be read.")
   }
   if (ncol(df) < 3){
-    stop("Your file has less than 3 columns, please use tabulation separator or check the encoding of your file. (it must be \"UTF8 sans BOM\")")
+    stop(paste0("Your file has less than 3 columns, please use a tabulation as separator,",
+                " or check the encoding of your file (must be \"UTF-8\" without BOM)"))
   }
   if (! all(c("parent1", "parent2", "child") %in% colnames(df))){
-    stop(paste0("Your file must contain \"parent1\", \"parent2\", and \"child\" columns. \n Your file's columns are: \"",
-               paste(colnames(df),collapse="\", \""),
-               "\". (Be sure your are using \"UTF8 sans BOM\" encoding)",collapse=""))
+    stop(paste0("Your file must contain \"parent1\", \"parent2\" and \"child\" columns, instead of: \"",
+                paste(colnames(df),collapse="\", \""),
+                "\". (Be sure your are using the \"UTF-8\" encoding without BOM.)",collapse=""))
   }
   if (!all(! is.na(df$parent1)) | any(df$parent1 == "")){
     stop("There is some \"NA\" values in the \"parent1\" column.")
@@ -118,7 +119,7 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
     stop("There is some \"NA\" values in the \"child\" column.")
   }
   if (anyDuplicated(df$child) != 0){
-    stop("There is some repetition in the child's ids.")
+    stop("There are duplicates in the \"child\" column.")
   }
   if (! all(! grepl("[^[:alnum:]._-]", df$child))){
     stop("Some child's ids are not good.")
@@ -127,7 +128,7 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
     stop(paste0("Sorry, you can not request more than ",max.nb.hd," haplo-diploidisations",
                 collapse=""))
   }
-  
+
 
   df$parent2[df$parent2 == ""] <- NA
 
@@ -221,7 +222,7 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
     if (!all(df$details[df$task == "geno"& !df$details %in% c("ld", "hd")] %in% subset.snps[["hd"]])){
       stop("Some requested SNPs don't exist.")
     }
-              
+
   }
 
   invisible(df)
@@ -235,7 +236,7 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
 ##' @author Timothee Flutre
 ##' @export
 countRequestedBreedTypes <- function(df){
-  
+
   stopifnot(is.data.frame(df),
             ! is.null(colnames(df)))
 
@@ -250,9 +251,7 @@ countRequestedBreedTypes <- function(df){
                       c("allofecundation", "autofecundation",
                         "haplodiploidization"))
   } else if("ind" %in% colnames(df)){
- 
 
-    
     types <- stats::setNames(c(sum(as.numeric(df$details[df$task == "pheno-field"])),
                                sum(as.numeric(df$details[df$task == "pheno-patho"])),
                                sum(df$task == "geno" &
@@ -268,17 +267,13 @@ countRequestedBreedTypes <- function(df){
 }
 
 
-
-
-
 indAvailable <- function(indList, gameTime, breeder){
-  # function to check if individuals "grown up"
-  # indList (character verctor), list of individuals to check
+  # function to check if individuals are available
+  # indList (character vector), list of individuals to check
   # gameTime ("POSIXlt") (given by getGameTime function)
-  # breeder (charracter) breeder name
+  # breeder (character) breeder name
 
-
-  ## 1 check that the requested individuals exist
+  ## 1. check that the requested individuals exist
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
@@ -287,15 +282,12 @@ indAvailable <- function(indList, gameTime, breeder){
   dbDisconnect(db)
   if(!all(indList %in% res$child)){
     indExist <- FALSE
-  }else{indExist <- TRUE}
+  } else{indExist <- TRUE}
 
-
-
-
-  ## 2 check available date
+  ## 2. check available date
   indSQLlist <- paste0("('", paste(indList, collapse="','"), "')")
 
-  # get requested individuals information
+  ## 3. get requested individuals information
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
@@ -309,33 +301,27 @@ indAvailable <- function(indList, gameTime, breeder){
   }
   indGrown <- all(sapply(res$avail_from, FUN = funApply))
 
-  ## resuts
-  return(list("indExist"=indExist,"indGrown"=indGrown))
+  return(list("indExist"=indExist, "indGrown"=indGrown))
 }
-
-
 
 
 ## value box modified
 valueBoxServer <- function (value, subtitle, icon = NULL, color = "aqua", width = 4,href = NULL){
   shinydashboard:::validateColor(color)
-  if (!is.null(icon)) 
+  if (!is.null(icon))
     shinydashboard:::tagAssert(icon, type = "i")
-  boxContent <- div(class = paste0("small-box ","serverIndicator "), 
-                    div(class = "inner", style="color: #fff", h3(value), p(subtitle)), if (!is.null(icon)) 
+  boxContent <- div(class = paste0("small-box ","serverIndicator "),
+                    div(class = "inner", style="color: #fff", h3(value), p(subtitle)), if (!is.null(icon))
                       div(class = "icon-large", icon))
-  if (!is.null(href)) 
+  if (!is.null(href))
     boxContent <- a(href = href, boxContent)
-  div(class = if (!is.null(width)) 
+  div(class = if (!is.null(width))
     paste0("col-sm-", width), boxContent)
 }
 
 
-
-
-
 writeRequest <- function(df, breeder, fileName=NULL){
-  
+
   # detect type of request:
   if(all(c("parent1", "parent2", "child") %in% colnames(df))){
     reqType <- "pltMat"
@@ -345,7 +331,7 @@ writeRequest <- function(df, breeder, fileName=NULL){
     reqType <- "pheno"
   }
 
-  
+
   # fileName
   fileName <- strsplit(fileName, split="[.]")[[1]][1] # delete extention
   fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType,"_",fileName,".txt")
@@ -356,14 +342,4 @@ writeRequest <- function(df, breeder, fileName=NULL){
   }
 
   write.table(df, file=fout, sep="\t", row.names=FALSE, quote=FALSE)
-  
-  
 }
-
-
-
-
-
-
-
-
