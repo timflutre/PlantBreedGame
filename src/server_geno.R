@@ -46,8 +46,11 @@ readQryGeno <- reactive({
   }
 
   # read input file
+  max.nb.inds <- ifelse(breederStatus()!="player",
+                        Inf , constants$max.nb.inds)
   test <-  try(df <- readCheckBreedDataFile(input$file.geno$datapath,
-                                            subset.snps=subset.snps))
+                                            subset.snps=subset.snps,
+                                            max.nb.inds=max.nb.inds))
 
 
   if (is.data.frame(test)){
