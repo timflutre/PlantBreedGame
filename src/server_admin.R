@@ -250,23 +250,27 @@ output$sessionsTable <- renderTable({
 
 # add session
 observeEvent(input$addSession,{
+  browser()
   startDate <- strptime(paste0(input$startDate," ", input$startHour,":",input$startMin),
                         format="%Y-%m-%d %H:%M")
   endDate <- strptime(paste0(input$endDate," ", input$endHour,":",input$endMin),
                         format="%Y-%m-%d %H:%M")
-
-  if (startDate<endDate){
-    #calculate in number:
-    numId <- max(sessionsList()$num)+1
-
-    # complete "sessions" table
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
-    query <- paste0("INSERT INTO sessions", " VALUES",
-                    " ('", numId,"','", startDate,"','", endDate,"','", input$yearTime,"')")
-    res <- dbExecute(conn=db, query)
-    dbDisconnect(db)
-    showNotification("Session added.", type = c("message"))
-    return(res)
+  
+  if (startDate < endDate){
+      #calculate in number:
+      if (nrow(sessionsList()) != 0){
+          numId <- max(sessionsList()$num)+1
+      }else numId <- 1
+      
+      
+      # complete "sessions" table
+      db <- dbConnect(SQLite(), dbname=setup$dbname)
+      query <- paste0("INSERT INTO sessions", " VALUES",
+                      " ('", numId,"','", startDate,"','", endDate,"','", input$yearTime,"')")
+      res <- dbExecute(conn=db, query)
+      dbDisconnect(db)
+      showNotification("Session added.", type = c("message"))
+      return(res)
 
   }else{
     showNotification("Error: Start date must be earlier than end date", type = c("error"))
