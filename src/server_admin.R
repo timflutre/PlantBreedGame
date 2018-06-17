@@ -248,16 +248,44 @@ output$sessionsTable <- renderTable({
   sessionsList()
 })
 
+
 # add session
 observeEvent(input$addSession,{
-  browser()
   startDate <- strptime(paste0(input$startDate," ", input$startHour,":",input$startMin),
                         format="%Y-%m-%d %H:%M")
   endDate <- strptime(paste0(input$endDate," ", input$endHour,":",input$endMin),
                         format="%Y-%m-%d %H:%M")
   
-  if (startDate < endDate){
-      #calculate in number:
+  error <- 0
+  
+  # check start date before end date
+  if (startDate >= endDate){
+      error <- error + 1
+      showNotification("Error: Start date must be earlier than end date.", type = c("error"))
+  }
+  
+  # check overlaps
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- "SELECT * FROM sessions"
+  res <- dbGetQuery(conn=db, query)
+  dbDisconnect(db)
+  
+  overlapse <- apply(res, 1, function(session){
+      sessionStart <- strptime(session["start"], format="%Y-%m-%d %H:%M")
+      sessionEnd <- strptime(session["end"], format="%Y-%m-%d %H:%M")
+      if((startDate < sessionStart &  endDate <= sessionStart)
+         | (startDate >= sessionEnd &  endDate > sessionEnd)){
+          return(FALSE)
+      } else return(TRUE)
+  })
+  
+  if (any(overlapse)){
+      error <- error + 1
+      showNotification("Error: Sessions must not be overlapped.", type = c("error"))
+  }
+  
+  #calculate id number:
+  if( error == 0){
       if (nrow(sessionsList()) != 0){
           numId <- max(sessionsList()$num)+1
       }else numId <- 1
@@ -270,17 +298,7 @@ observeEvent(input$addSession,{
       res <- dbExecute(conn=db, query)
       dbDisconnect(db)
       showNotification("Session added.", type = c("message"))
-      return(res)
-
-  }else{
-    showNotification("Error: Start date must be earlier than end date", type = c("error"))
   }
-
-
-
-
-
-
 })
 
 # delete session
