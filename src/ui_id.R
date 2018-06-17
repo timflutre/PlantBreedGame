@@ -41,7 +41,7 @@ tabItem(tabName="id",
                                     actionButton("submitPSW", "Log in", style="background-color:#00A65A; color: white")
                                 ),
                                 div(style="vertical-align: top; margin-top:10px; min-width: 20%;", id="id_5",
-                                    p("Breeders can have differnts status:"),
+                                    p("Breeders can have differents status:"),
                                     tags$ul(
                                         tags$li(strong("Game-Master:"), "Highest privilege. You have access to \"Admin\" and \"Evaluation\" tabs. Your data files are available without any time restriction."),
                                         tags$li(strong("Tester:"), "Is for people who want to test this game. You have access to \"Evaluation\" tab and your data files are available without any time restriction."),
