@@ -30,7 +30,7 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
 
-
+  
   ## Initialisations
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   query <- paste0("SELECT name FROM breeders")
@@ -77,8 +77,8 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   if (gameTime > maxDate){
     year <- data.table::year(gameTime)+1
   }else year <- data.table::year(gameTime)
-
   
+
   
   ## 0. load required data
   flush.console()
@@ -92,7 +92,14 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
   subset.snps[["ld"]] <- rownames(read.table(f))
 
-
+  ## 1. Calculate year effect
+  yearEffectSeed <- 42 # should be a variable from game setup
+  set.seed(yearEffectSeed+year) # seed depend of the year
+  Alpha <- matrix(c(stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[1])),
+                    stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[2]))),
+                  nrow=1, ncol=T,
+                  dimnames=list(year, c("trait1","trait2")))
+  set.seed(Sys.time()) # remove seed
 
   ## 2. check that the requested individuals already exist
   flush.console()
@@ -148,10 +155,11 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
                               year=year,
                               pathogen=ifelse((year - 2005) %% 3 == 0,
                                               TRUE, FALSE))
-
+    
     phenosField <- simulTraits12(dat=phenosField.df,
                             mu=p0$mu,
                             sigma.alpha2=p0$sigma.alpha2,
+                            Alpha = Alpha,
                             X=X[levels(phenosField.df$ind),,drop=FALSE],
                             Beta=p0$Beta,
                             sigma2=p0$sigma2,
