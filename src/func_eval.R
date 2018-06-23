@@ -199,3 +199,29 @@ getAFs <- function(pop, breeder, progressAFS=NULL){
   return(estimSnpAf(X=X))
   
 }
+
+
+
+#' getBreederHistory
+#' @description Get the breeder's requests history.
+#' @param breeder breeder's name as a character string.
+#' @param setup game's setup.
+#'
+#' @return \code{data.frame} with all breeder's request.
+#' @export
+getBreederHistory <- function(breeder, setup) {
+    # get data
+    db <- RSQLite::dbConnect(SQLite(), dbname=setup$dbname)
+    query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder,"\'")
+    res <- RSQLite::dbGetQuery(conn=db, query)
+    dbDisconnect(db)
+    
+    # manage variable class
+    res$task <- as.factor(res$task)
+    res$request_date <- as.Date(res$request_date)
+
+    res[,c("breeder","task","quantity","request_date")]
+}
+
+
+

@@ -27,7 +27,7 @@ source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 
-## get breeder list and create select input
+## get breeder list and create select input ----
 breederList <- reactive({
   # get the breeders list
   db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -44,7 +44,7 @@ output$selectBreeder <- renderUI({
 
 
 
-## log in
+## log in ----
 goodPsw <- eventReactive(input$submitPSW,
                          ignoreNULL=FALSE,{
 
@@ -109,7 +109,7 @@ budget <- reactive({
 
 
 
-## breeder menu
+## breeder menu ----
 output$userAction <- renderUI({
   if(goodPsw()){
     shinydashboard::tabBox(width=12, title =paste0("My account"),
@@ -175,7 +175,7 @@ output$userAction <- renderUI({
 
 
 
-## download files
+## download files ----
 # list of avaiable files (this must be reactive value to be refresh)
 phenoFiles <- reactive({
   input$leftMenu
@@ -195,7 +195,7 @@ requestFiles <- reactive({
 })
 
 
-# dwnl buttons
+# dwnl buttons ----
 output$dwnlPheno <- downloadHandler(
   filename=function () input$phenoFile, # lambda function
   content=function(file){
@@ -237,7 +237,7 @@ output$dwnlRequest <- downloadHandler(
   }
 )
 
-# UI of dwnl buttons
+# UI of dwnl buttons ----
 output$UIdwnlPheno <- renderUI({
   if (input$phenoFile!=""){
     if (breederStatus()=="player" && !availToDwnld(input$phenoFile,currentGTime())$isAvailable ){
@@ -278,7 +278,7 @@ output$UIdwnlRequest <- renderUI({
 })
 
 
-## My plant-material
+## My plant-material ----
 myPltMat <- reactive({
   if (input$leftMenu=="id"){
     db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -289,14 +289,14 @@ myPltMat <- reactive({
     # disconnect db
     dbDisconnect(db)
     res$avail_from <- strftime(res$avail_from, format= "%Y-%m-%d")
-    res
+    DT::datatable(res,options = list(lengthMenu = c(10, 20, 50),
+                                     pageLength = 10,
+                                     searchDelay = 500))
+
   }
 })
 
-output$myPltMatDT <- renderDataTable(myPltMat(),
-                                     searchDelay = 500,
-                                     options = list(lengthMenu = c(10, 20, 50),
-                                                    pageLength = 10))
+output$myPltMatDT <- DT::renderDataTable(myPltMat())
 
 
 
@@ -304,7 +304,7 @@ output$myPltMatDT <- renderDataTable(myPltMat(),
 
 
 
-## Change Password
+## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   tbl <- "breeders"

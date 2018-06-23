@@ -23,6 +23,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(DT)
 library(shinyjs)
 library(RSQLite)
 library(MASS)
@@ -33,7 +34,6 @@ library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
 stopifnot(compareVersion("0.158.2",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
-
 
 ## -------------------------------------------------------------------
 ## functions

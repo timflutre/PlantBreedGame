@@ -25,7 +25,7 @@ source("src/func_eval.R", local=TRUE, encoding="UTF-8")$value
 
 ###### server for "genotyping" ######
 
-## generate the UI:
+## Main UI ----
 output$evalUI <- renderUI({
   if (breeder()!="No Identification" & breederStatus()!="player"){
     list(
@@ -70,6 +70,11 @@ output$evalUI <- renderUI({
                                  div(
                                    uiOutput("evalUIAfsPlot")
                                  )
+                        ),
+                        tabPanel("Requests history",
+                                 div(
+                                     uiOutput("evalUIrequestHistory")
+                                 )
                         )
 
     ),
@@ -92,7 +97,7 @@ output$evalUI <- renderUI({
 
 
 
-## read uploaded file
+## read uploaded file ----
 readQryEval <- reactive({
 
   # no input fileI
@@ -123,7 +128,7 @@ dfPhenoEval <- eventReactive(input$requestEval,{
 
 
 
-
+## graph ----
 output$evalGraphT1 <- renderPlotly({
   dfPheno <- dfPhenoEval()
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
@@ -310,6 +315,7 @@ output$evalUIAfsPlot <- renderUI({
 
 })
 
+## AFs evaluation ----
 afsEval <- reactive({
 
 
@@ -388,7 +394,7 @@ output$evalGraphAFsScatter<- renderPlotly({
 })
 
 
-
+## pedigree ----
 output$evalUIpedigree <- renderUI({
   if (exists("dfPhenoEval")){
     breeders <- unique(dfPhenoEval()$breeder)
@@ -432,10 +438,38 @@ output$evalPlotPedigree <- renderPlot({
 })
 
 
+## requests history ----
+output$evalUIrequestHistory <- renderUI({
+    if (exists("dfPhenoEval")){
+        breeders <- unique(dfPhenoEval()$breeder)
+        breeders <- breeders[breeders!="control"]
+        list(
+            selectInput("historyBreeder","Breeder", choices=breeders),
+            dataTableOutput("historyTable")
+        )
+        
+    } else { p('no input')}
+    
+})
+
+output$historyTable <- renderDataTable({
+    outTable <- getBreederHistory(breeder=input$historyBreeder,
+                                  setup=setup)
+    DT::datatable(outTable,
+                  rownames = F,
+                  filter = list(position = 'top', clear = TRUE, plain = TRUE),
+                  options = list(pageLength = 25,
+                                 lengthMenu = list(c(10, 25, 50, -1),
+                                                   c(10, 25, 50, "All") ),
+                                 scrollX = T,
+                                 columns.searchable = T,
+                                 order = list(c(3),c("dsc"))
+                  ),
+                  class = c("compact row-border"))
+})
 
 
-
-
+## debug ----
 output$evalDebug <- renderPrint({
   print("---------")
   print(dfPhenoEval())
