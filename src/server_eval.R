@@ -71,6 +71,11 @@ output$evalUI <- renderUI({
                                    uiOutput("evalUIAfsPlot")
                                  )
                         ),
+                        tabPanel("Additive relationships",
+                                 div(
+                                     uiOutput("evalUIaddRelation")
+                                 )
+                        ),
                         tabPanel("Requests history",
                                  div(
                                      uiOutput("evalUIrequestHistory")
@@ -436,6 +441,35 @@ output$evalPlotPedigree <- renderPlot({
                vertex.size = 15,
                main = input$pedigreeBreeder)
 })
+
+
+
+
+## Additive relationships ----
+output$evalUIaddRelation <- renderUI({
+    if (exists("dfPhenoEval")){
+        breeders <- unique(dfPhenoEval()$breeder)
+        breeders <- breeders[breeders!="control"]
+        list(
+            selectInput("addRelBreeder","Breeder", choices=breeders),
+            tableOutput("addRelTable")
+        )
+        
+    } else { p('no input')}
+    
+})
+
+output$addRelTable <- renderTable({
+    calcAdditiveRelation(breeder=input$addRelBreeder,
+                         query = readQryEval(),
+                         setup=setup,
+                         constants = constants)
+    
+}, rownames = TRUE, spacing ="s", digits = 3)
+
+
+
+
 
 
 ## requests history ----

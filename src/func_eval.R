@@ -136,13 +136,15 @@ phenotype4Eval <- function (df, nRep=50){
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  Beta=p0$Beta,
                                  sigma2=p0$sigma2,
-                                 afs=afs0)
+                                 afs=afs0,
+                                 verbose = 0)
 
     phenosField$trait3 <- simulTrait3(dat=phenosField.df,
                                       X=X[levels(phenosField.df$ind),,drop=FALSE],
                                       qtn.id=p0$trait3$qtn.id,
                                       resist.genos=p0$trait3$resist.genos,
-                                      prob.resist.no.qtl=0)
+                                      prob.resist.no.qtl=0,
+                                      verbose = 0)
 
     phenosField.df$trait1.raw <- phenosField$Y[,1]
     phenosField.df$trait2 <- phenosField$Y[,2]
@@ -224,4 +226,49 @@ getBreederHistory <- function(breeder, setup) {
 }
 
 
+
+
+
+#' calcAdditiveRelation
+#' @description Get the additive relationship between individuals
+#' @param breeder breeder's name as a character string.
+#' @param query \code{data.frame} containing individuals list
+#' (\code{ind} column is required)
+#' @param setup game's setup.
+#' @param constants game's constants
+#' @param progressBar (optional) a \code{shiny} progress bar
+#'
+#' @return
+#' @export
+#'
+#' @examples
+calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar=NULL){
+    
+    query <- query[query$breeder==breeder,]
+    ## 1. load the haplotypes and convert to genotypes
+    X <- matrix(nrow = length(unique(query$ind)),
+                ncol = constants$nb.snps)
+    
+    for(i in 1:length(unique(query$ind))){
+        ind.id <- unique(query$ind)[i]
+        
+        if (!is.null(progressBar)){
+            progressBar$inc(amount = 1/length(unique(query$ind)),
+                            detail = paste0("Load haplotypes: ",paste0(i, "/", nrow(query), " ", ind.id)))
+        }
+
+        f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+        if(! file.exists(f))
+            stop(paste0(f, " doesn't exist"))
+        load(f)
+        
+        ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
+        X[i,] <- ind$genos
+        
+    }
+    rownames(X) <- unique(query$ind)
+    colnames(X) <- colnames(ind$genos)
+    
+    rutilstimflutre::estimGenRel(X=X, relationships="additive", method="vanraden1", verbose=0)
+}
 
