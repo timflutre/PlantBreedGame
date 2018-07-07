@@ -74,7 +74,7 @@ shinyUI(
 
                   tabItems(
                     source("src/ui_information.R", local=TRUE, encoding="UTF-8")$value,
-                    source("src/ui_id.R", local=TRUE, encoding="UTF-8")$value,
+                    source("src/ui_id_logPage.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_plant_material.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_pheno.R", local=TRUE, encoding="UTF-8")$value,
                     source("src/ui_geno.R", local=TRUE, encoding="UTF-8")$value,
