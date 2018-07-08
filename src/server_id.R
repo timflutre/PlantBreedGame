@@ -45,34 +45,84 @@ output$selectBreeder <- renderUI({
 
 
 ## log in ----
-goodPsw <- eventReactive(input$submitPSW,
-                         ignoreNULL=FALSE,{
+accessGranted <- eventReactive(input$submitPSW,
+                               ignoreNULL=FALSE,{
+   # The access is granted if this conditions are true:
+   # 1. the md5 sum of the given password match with the one in the data base
+   # 2. the size of "data" folder is under the maximum disk usage limit.
+   # If any condition is false, a javascript "alert" will show up explaining why
+   # it is not possible to log in.
+   #
+   # EXEPTION: the game master can log in even if the second condition is false.
+   # a javascript "alert" will show up to notice the server is full to him.
 
-  if (input$submitPSW==0){
-    return(FALSE)
-  } else{
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
-    tbl <- "breeders"
-    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
-    hashPsw <- dbGetQuery(conn=db, query)[,1]
-    dbDisconnect(db)
-    if (hashPsw==digest(input$psw, "md5", serialize = FALSE)){
-      removeUI("#logInDiv")
-      return (TRUE)
-    }else return(FALSE)
-  }
+                       
+   if (input$submitPSW==0){# no pswd given
+       return(FALSE)
+   }
+
+   # 1. check given password:
+   db <- dbConnect(SQLite(), dbname=setup$dbname)
+   tbl <- "breeders"
+   query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
+   hashPsw <- dbGetQuery(conn=db, query)[,1]
+   dbDisconnect(db)
+   if (hashPsw==digest(input$psw, "md5", serialize = FALSE)){
+       goodPswd <- TRUE
+   } else{
+       goodPswd <- FALSE
+       alert("Oops, wrong Password...")
+   }
+   
+   # 2. get breeder status:
+   db <- dbConnect(SQLite(), dbname=setup$dbname)
+   tbl <- "breeders"
+   query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
+   status <- dbGetQuery(conn=db, query)[,1]
+   dbDisconnect(db)
+   
+   # 3. check disk usage
+   if(goodPswd){
+       withProgress({
+           load("data/truth/maxDiskUsage.RData") # load the "maxDiskUsage" variable
+           allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
+           currentSize <- sum(file.info(paste0("data/",allDataFiles))$size)/10^6
+           if(currentSize < maxDiskUsage){
+               goodDiskUsage <-TRUE
+           }else if(status!="game master"){
+               goodDiskUsage <-FALSE
+               alert("Sorry, the game is currently not available.\nPlease contact your game master to figure out what to do.")
+           }else{
+               goodDiskUsage <-TRUE
+               alert(paste0("Warning ! The size of the \"data\" folder is exceed the specified limit\n",
+                            paste("Data folder:",round(currentSize,2),"Mo, Maximum size allowed:",maxDiskUsage,"Mo.\n"),
+                            "To preserve your server, palyers can't log in anymore. (But connected user can still play).\n",
+                            "If you want to continue your game, please raise the maximum disk usage limit. (see: admin tab -> disk usage)"))
+           }
+       },message = "Connecting...")
+   }else{
+       # the game master can always log in.
+       goodDiskUsage <- TRUE
+   }
+   
+   # 4. output
+   if (goodPswd & goodDiskUsage){
+       removeUI("#logInDiv")
+       return (TRUE)
+   }else return(FALSE)
+   
 })
 
 
 breeder <- reactive({
-  if (goodPsw()){
+  if (accessGranted()){
     input$breederName
   }else {"No Identification"}
 
 })
 
 breederStatus <- reactive({
-  if (goodPsw()){
+  if (accessGranted()){
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     tbl <- "breeders"
     query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
@@ -111,7 +161,7 @@ budget <- reactive({
 
 ## Call ui_id_loggedIn.R ----
 output$userAction <- renderUI({
-  if(goodPsw()){
+  if(accessGranted()){
       source("src/ui_id_loggedIn.R", local=TRUE, encoding="UTF-8")$value
   }
 })
