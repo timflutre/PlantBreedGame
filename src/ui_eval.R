@@ -19,7 +19,6 @@
 
 
 ## UI for "evaluation" part
-
 tabItem(tabName="eval",
         fluidRow(
           uiOutput("evalUI")

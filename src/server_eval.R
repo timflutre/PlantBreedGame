@@ -28,75 +28,12 @@ source("src/func_eval.R", local=TRUE, encoding="UTF-8")$value
 ## Main UI ----
 output$evalUI <- renderUI({
   if (breeder()!="No Identification" & breederStatus()!="player"){
-    list(
-    shinydashboard::box(width=12, title = "Choose an evaluation file:",
-                        div( id="eval_file",
-                             fileInput(inputId="file.eval",
-                                       label = NULL,
-                                       multiple=FALSE,
-                                       accept=c(".txt", ".tsv")),
-                             numericInput("nRep", "Choose the number of plot(s) per genotype:", 20, min = 1, max = 100),
-                             actionButton("requestEval", "Launch evaluation!")
-                        )
-    ),
-
-    shinydashboard::tabBox(width=12,  title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
-                        tabPanel("Trait 1",
-                                 div(
-                                   plotlyOutput("evalGraphT1", height = "100%",width="100%")
-                                 )
-                        ),
-                        tabPanel("Trait 2",
-                                 div(
-                                   plotlyOutput("evalGraphT2", height = "100%",width="100%")
-                                 )
-                        ),
-                        tabPanel("Trait 3",
-                                 div(
-                                   plotlyOutput("evalGraphT3", height = "100%",width="100%")
-                                 )
-                        ),
-                        tabPanel("Traits 1 vs 2",
-                                 div(
-                                   plotlyOutput("evalGraphT1vT2", height = "100%",width="100%")
-                                 )
-                        ),
-                        tabPanel("Pedigree",
-                                 div(
-                                   uiOutput("evalUIpedigree")
-                                 )
-                        ),
-                        tabPanel("AFs",
-                                 div(
-                                   uiOutput("evalUIAfsPlot")
-                                 )
-                        ),
-                        tabPanel("Additive relationships",
-                                 div(
-                                     uiOutput("evalUIaddRelation")
-                                 )
-                        ),
-                        tabPanel("Requests history",
-                                 div(
-                                     uiOutput("evalUIrequestHistory")
-                                 )
-                        )
-
-    ),
-    if (debugDisplay){
-      shinydashboard::box(width=12, title = "Debug",
-                          verbatimTextOutput("evalDebug"))
-    }
-    ) # close list
-
-
+    source("src/ui_eval_loggedIn.R", local=TRUE, encoding="UTF-8")$value
   }else{
     shinydashboard::box(width=12, title = "Content unavailable",
                                 div(p("Sorry, this is only accessible to the game master."))
     )
   }
-
-
 })
 
 
