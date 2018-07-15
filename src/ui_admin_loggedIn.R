@@ -186,7 +186,7 @@ list(
                      vertical-align: top;",
                      numericInput("admin_maxDiskUsage",
                                   label= "Maximum disk usage (in Mo)",
-                                  value= 10000,
+                                  value= 10,
                                   min = 2000)
                  ),
                  div(style="width: 30%;

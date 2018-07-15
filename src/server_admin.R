@@ -226,21 +226,31 @@ output$sizeDataFolder <- renderTable({
 
 
 observeEvent(input$updateMaxDiskUsage,{
-    # save maximum disk usage value in RData file
+    # save maximum disk usage value in the database
     # so that if the admin change the value, it will affect all connected users
     maxDiskUsage <- input$admin_maxDiskUsage
-    save(maxDiskUsage, file = "data/truth/maxDiskUsage.RData")
+    
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    query <- paste0("UPDATE constants SET value = '", maxDiskUsage,"' WHERE item = 'max.disk.usage'" )
+    dbExecute(conn=db, query)
+    dbDisconnect(db)
 })
 
 currentMaxDiskUsage <- reactive({
     input$admin_maxDiskUsage # take depedency
     input$updateMaxDiskUsage # take depedency
-    load("data/truth/maxDiskUsage.RData")
+    
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    tbl <- "breeders"
+    query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
+    maxDiskUsage <- dbGetQuery(conn=db, query)[,1]
+    dbDisconnect(db)
+
     maxDiskUsage
 })
 
 output$InfoCurrentMaxDiskUsage <- renderText({
-    paste("Current maximum disk usage:", currentMaxDiskUsage(), "Mo")
+    paste("Current maximum disk usage:", currentMaxDiskUsage(), "Go")
 })
 
 

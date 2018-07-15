@@ -84,9 +84,16 @@ accessGranted <- eventReactive(input$submitPSW,
    # 3. check disk usage
    if(goodPswd){
        withProgress({
-           load("data/truth/maxDiskUsage.RData") # load the "maxDiskUsage" variable
+           # get maxDiscUsage
+           db <- dbConnect(SQLite(), dbname=setup$dbname)
+           tbl <- "breeders"
+           query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
+           maxDiskUsage <- dbGetQuery(conn=db, query)[,1]
+           dbDisconnect(db)
+           
            allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
-           currentSize <- sum(file.info(paste0("data/",allDataFiles))$size)/10^6
+           currentSize <- sum(file.info(paste0("data/",allDataFiles))$size)/10^9
+
            if(currentSize < maxDiskUsage){
                goodDiskUsage <-TRUE
            }else if(status!="game master"){
@@ -95,7 +102,7 @@ accessGranted <- eventReactive(input$submitPSW,
            }else{
                goodDiskUsage <-TRUE
                alert(paste0("Warning ! The size of the \"data\" folder is exceed the specified limit\n",
-                            paste("Data folder:",round(currentSize,2),"Mo, Maximum size allowed:",maxDiskUsage,"Mo.\n"),
+                            paste("Data folder:",round(currentSize,2),"Go, Maximum size allowed:",maxDiskUsage,"Go.\n"),
                             "To preserve your server, palyers can't log in anymore. (But connected user can still play).\n",
                             "If you want to continue your game, please raise the maximum disk usage limit. (see: admin tab -> disk usage)"))
            }
