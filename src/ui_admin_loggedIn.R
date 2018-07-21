@@ -160,6 +160,44 @@ list(
     ),# end tabPanel "Add/Delete Breeders"
     
     
+    tabPanel("Manage constants",
+             # tabPanel to manage some game constants
+             
+             # see.year.effct
+             div(id="admin_seedYearEffect",
+                 style="margin: 0px 0px 40px 0px;",
+                 
+                 # input:
+                 div(id="admin_div_numInput_seedYearEfect",
+                     style="display: inline-block;
+                     vertical-align: top;",
+                     numericInput("admin_seedYearEfect", "seed.year.effect",
+                                  value = 4321,
+                                  min = 0,
+                                  max=NA,
+                                  step = 1)
+                 ),
+                 
+                 # button to request update:
+                 div(id="admin_div_button_seedYearEfect",
+                     style="display: inline-block;
+                     vertical-align: top;
+                     padding-top: 25px", # button align with numInput
+                     actionButton("admin_button_seedYearEfect", "update seed.year.effect")
+                 ),
+                 
+                 # current value:
+                 div(id="admin_currentSYE",
+                 "Current", code("seed.year.effect"),":", textOutput("admin_currentSYE", container=span)
+                 )
+             ) # end div "admin_seedYearEffect"
+             
+             
+    ), # end tabPanel "Manage constants"
+    
+    
+    
+    
     
     
     
@@ -198,7 +236,11 @@ list(
                  )
                  
                  
-    )
+             ) # end div "admin_diskU_input"
     )# end tabPanel "Disk usage"
+    
+    
+    
+    
     )# close tabBox
              ) # close list

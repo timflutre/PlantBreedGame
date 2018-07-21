@@ -171,7 +171,58 @@ observeEvent(input$deleteSession,{
 
 
 
+## Constant managment ----
 
+# 1. seed.year.effect:
+# get the current value
+output$admin_currentSYE <- renderText({
+    input$admin_button_seedYearEfect # take depedency
+    db <- DBI::dbConnect(RSQLite::SQLite(), dbname = setup$dbname)
+    query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
+    yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
+    DBI::dbDisconnect(db)
+    yearEffectSeed
+})
+
+# update new value
+observeEvent(input$admin_button_seedYearEfect,{
+    newSeed <- input$admin_seedYearEfect
+    
+    # check input value (must be a numeric)
+    checkOK=TRUE
+    if(is.na(newSeed)) checkOK=FALSE
+    
+    # update data base
+    checkDB <- 1
+    if(checkOK){
+        db <- DBI::dbConnect(RSQLite::SQLite(), dbname = setup$dbname)
+        query <- paste0("UPDATE constants SET value = ",
+                        newSeed," WHERE item=='seed.year.effect'")
+        checkDB <- DBI::dbExecute(db, query)
+        DBI::dbDisconnect(db)
+
+        
+    }
+    
+    # notification messages
+    if(checkOK & checkDB==1){
+        notifMessage <- paste("seed.year.effect updated.")
+        showNotification(notifMessage,
+                         duration = 2, closeButton = TRUE,
+                         type = "default")
+    }else if(!checkOK){# !checkOK
+        notifMessage <- paste("ERROR: Submitted value is not an integer.")
+        showNotification(notifMessage,
+                         duration = 2, closeButton = TRUE,
+                         type = "error")
+    }else { # checkOK & checkDB!=1
+        notifMessage <- paste("ERROR during SQL execution")
+        showNotification(notifMessage,
+                         duration = 2, closeButton = TRUE,
+                         type = "error")
+    }
+ 
+})
 
 
 
