@@ -93,8 +93,15 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   subset.snps[["ld"]] <- rownames(read.table(f))
 
   ## 1. Calculate year effect
-  yearEffectSeed <- 42 # should be a variable from game setup
+  # get the seed from database:
+  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = setup$dbname)
+  query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
+  yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
+  DBI::dbDisconnect(db)
+  
+  # set seed
   set.seed(yearEffectSeed+year) # seed depend of the year
+  # calculate year effect
   Alpha <- matrix(c(stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[1])),
                     stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[2]))),
                   nrow=1, ncol=T,
