@@ -1,3 +1,5 @@
+<!-- pandoc README.md -f commonmark -t html -s -o README.html -->
+
 # PlantSelBreedGame
 
 This directory contains the `PlantSelBreedGame` software implementing a **serious game** to teach **selective breeding** via the example of a fictitious annual **plant species** to students at the master level.
@@ -13,7 +15,15 @@ It is versioned using the [git](http://www.git-scm.com/) software, the central r
 
 ## Locally on your computer
 
-Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it), or by cloning the git repository:
+Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory):
+
+```
+wget https://github.com/timflutre/PlantSelBreedGame/archive/master.zip
+unzip master.zip
+mv PlantSelBreedGame-master PlantSelBreedGame
+```
+
+or by cloning the git repository:
 
 ```
 git clone git@github.com:timflutre/PlantSelBreedGame.git
@@ -35,22 +45,54 @@ Once all requested packages are installed, a web page should automatically open 
 
 First, you need to have a [Shiny server](https://www.rstudio.com/products/shiny/shiny-server/) installed and running, say, in `/srv/shiny-server`.
 We only tested with the open source version, but it should also work with the pro version.
-Then, you need to add an application to the server (let's call it `breeding` here) so that `/srv/shiny-server/breding` is an empty directory.
 For all this, have a look at the official [documentation](http://docs.rstudio.com/shiny-server/).
 
-Once your Shiny server is set up, go to the path of the `breeding` application and, inside, copy the content of our Shiny application, by downloading it as a ZIP archive (then unzip it), or by cloning the git repository (see explanations in the previous section).
+Second, you need to add an application to the server.
+Start by downloading, for instance in your home, our Shiny application as a ZIP archive or clone the git repository (see explanations in the previous section):
+
+```
+cd ~
+wget https://github.com/timflutre/PlantSelBreedGame/archive/master.zip
+unzip master.zip
+mv PlantSelBreedGame-master PlantSelBreedGame
+```
+
+Then, create a new directory for the application (let's call it `breeding-game` here):
+
+```
+mkdir /srv/shiny-server/breeding-game
+ ```
+
+and copy inside the content of our Shiny application you just downloaded:
+
+```
+cp -r ~/PlantSelBreedGame-master/* /srv/shiny-server/breeding-game
+```
 
 By default, the Shiny server runs as a unix user named `shiny`.
 You hence need to create a unix group, named for instance `breeding`, to which the `shiny` user can be added (the Shiny server may need to be restarted for this to be taken into account).
 
-Everything inside the directory of the `breeding` application should be readable and writable for users who are part of the `breeding` group.
-This is particularly the case for the data set (`data` directory, retrievable from the authors, see preceding section).
-Download the `data.zip` archive in your home on the server, unzip it, copy its content inside the directory of the `breeding` application, and set the read and write rights to the group `breeding`:
+Everything inside the `breeding-game` directory should be readable and writable for users who are part of the `breeding` group.
+This is particularly the case for the data set (`data` directory, retrievable from the authors, see previous section).
+Download the `data.zip` archive in your home on the server, copy it inside the `breeding-game` directory, unzip it, and set the read and write rights to the group `breeding`:
 
 ```
+cp ~/data.zip /srv/shiny-server/breeding-game
+cd /srv/shiny-server/breeding-game
+unzip data.zip
 chgrp -R breeding data
 chmod -R ug+rw,o-rwx data
 ```
+
+Now go to the URL of the `breeding-game` application made available by your Shiny server.
+If you encounter an error, look at the log, for instance:
+
+```
+less /var/log/shiny-server/breeding-game-shiny-20180129-100752-39427.log
+```
+
+Errors may be due to missing packages, otherwise report an issue (see below).
+Once all requested packages are installed, you should be able to start playing!
 
 
 # Citation
@@ -67,6 +109,11 @@ Flutre T, Diot J, David J. PlantSelBreedGame: a serious game to teach plant sele
 # Example
 
 You can discover an example online [here](http://www.agap-sunshine.inra.fr/breeding-game/).
+
+
+# Usage
+
+Once the application is installed and working, read carefully the game rules (tab `How to play?`) and choose the `Test` breeder as a start (tab `Breeder identification`).
 
 
 # Issues
