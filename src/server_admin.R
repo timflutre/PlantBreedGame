@@ -41,24 +41,24 @@ output$adminUI <- renderUI({
 ## Breeders managment ----
 # add new breeder:
 observeEvent(input$addNewBreeder,{
-    
+
     progressNewBreeder <- shiny::Progress$new(session, min=0, max=7)
     progressNewBreeder$set(value = 0,
                            message = "Adding breeder",
                            detail = "Initialisation...")
-    
+
     t <- try(addNewBreeder(input$newBreederName,
                            input$newBreederStatus,
                            input$newBreederPsw,
                            progressNewBreeder))
-    
+
     if (class(t)!="try-error"){
         progressNewBreeder$set(value = 7,
                                detail = "Done!")
     }else{progressNewBreeder$set(value = 1,
                                  detail = t)}
-    
-    
+
+
 })
 
 # delete breeder:
@@ -68,7 +68,7 @@ observeEvent(input$deleteBreeder,{
         progressDelBreeder$set(value = 0,
                                message = "Deleting breeder")
     }
-    
+
     if (input$delBreederName!="admin" & input$delBreederName!=""){
         deleteBreeder(input$delBreederName)
         progressDelBreeder$set(value = 1,
@@ -79,21 +79,21 @@ observeEvent(input$deleteBreeder,{
                                message = "Deleting breeder",
                                detail = "Sorry, admin can't be deleted.")
     }
-    
+
 })
 
 
 
 ## Sessions managment ----
 sessionsList <- eventReactive((input$addSession|input$deleteSession),ignoreNULL=FALSE,{
-    
+
     # get session table from the data base:
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     query <- paste0("SELECT * FROM sessions")
     res <- dbGetQuery(conn=db, query)
     dbDisconnect(db)
     return(res)
-    
+
 })
 
 output$sessionsTable <- renderTable({
@@ -107,21 +107,21 @@ observeEvent(input$addSession,{
                           format="%Y-%m-%d %H:%M")
     endDate <- strptime(paste0(input$endDate," ", input$endHour,":",input$endMin),
                         format="%Y-%m-%d %H:%M")
-    
+
     error <- 0
-    
+
     # check start date before end date
     if (startDate >= endDate){
         error <- error + 1
         showNotification("Error: Start date must be earlier than end date.", type = c("error"))
     }
-    
+
     # check overlaps
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     query <- "SELECT * FROM sessions"
     res <- dbGetQuery(conn=db, query)
     dbDisconnect(db)
-    
+
     overlapse <- apply(res, 1, function(session){
         sessionStart <- strptime(session["start"], format="%Y-%m-%d %H:%M")
         sessionEnd <- strptime(session["end"], format="%Y-%m-%d %H:%M")
@@ -130,19 +130,19 @@ observeEvent(input$addSession,{
             return(FALSE)
         } else return(TRUE)
     })
-    
+
     if (any(overlapse)){
         error <- error + 1
         showNotification("Error: Sessions must not be overlapped.", type = c("error"))
     }
-    
+
     #calculate id number:
     if( error == 0){
         if (nrow(sessionsList()) != 0){
             numId <- max(sessionsList()$num)+1
         }else numId <- 1
-        
-        
+
+
         # complete "sessions" table
         db <- dbConnect(SQLite(), dbname=setup$dbname)
         query <- paste0("INSERT INTO sessions", " VALUES",
@@ -156,7 +156,7 @@ observeEvent(input$addSession,{
 # delete session
 observeEvent(input$deleteSession,{
     if (input$delSession!=""){
-        
+
         # delete entry in sessions' table
         db <- dbConnect(SQLite(), dbname=setup$dbname)
         query <- paste0("DELETE FROM sessions",
@@ -164,9 +164,9 @@ observeEvent(input$deleteSession,{
         res <- dbExecute(conn=db, query)
         dbDisconnect(db)
         showNotification("Session removed",type = "message")
-        
+
     }
-    
+
 })
 
 
@@ -187,11 +187,11 @@ output$admin_currentSYE <- renderText({
 # update new value
 observeEvent(input$admin_button_seedYearEfect,{
     newSeed <- input$admin_seedYearEfect
-    
+
     # check input value (must be a numeric)
     checkOK=TRUE
     if(is.na(newSeed)) checkOK=FALSE
-    
+
     # update data base
     checkDB <- 1
     if(checkOK){
@@ -201,9 +201,9 @@ observeEvent(input$admin_button_seedYearEfect,{
         checkDB <- DBI::dbExecute(db, query)
         DBI::dbDisconnect(db)
 
-        
+
     }
-    
+
     # notification messages
     if(checkOK & checkDB==1){
         notifMessage <- paste("seed.year.effect updated.")
@@ -221,7 +221,7 @@ observeEvent(input$admin_button_seedYearEfect,{
                          duration = 2, closeButton = TRUE,
                          type = "error")
     }
- 
+
 })
 
 
@@ -237,7 +237,7 @@ output$sizeDataFolder <- renderTable({
             folderShared <- list.dirs(path = "data/shared", full.names = TRUE, recursive = TRUE)[-1]
             folderTruth <- list.dirs(path = "data/truth", full.names = TRUE, recursive = TRUE)[-1]
             subFolders <- c(folderShared,folderTruth)
-            
+
             # get size of each subfolders
             funApply <- function(folder){
                 files <- list.files(folder, all.files = TRUE, recursive = TRUE, full.names=T)
@@ -247,13 +247,13 @@ output$sizeDataFolder <- renderTable({
                                             col.names=c("size"))
             names(infoDataFolder) <- c("size")
             infoDataFolder$path <- subFolders
-            
+
             # clac size of "shared"
             infoDataFolder <- rbind(infoDataFolder,
                                     data.frame(path="data/shared",
                                                size=sum(infoDataFolder$size[infoDataFolder$path %in% folderShared]))
             )
-            
+
             # clac size of "truth"
             #   1.sum of all subfolders
             infoDataFolder <- rbind(infoDataFolder,
@@ -263,13 +263,13 @@ output$sizeDataFolder <- renderTable({
             #   2. sum of all initial collection
             sizeInitCol <- sum(file.info(list.files("data/truth", recursive = FALSE, full.names = TRUE))$size)
             infoDataFolder[infoDataFolder$path=="data/truth","size"] <- infoDataFolder[infoDataFolder$path=="data/truth","size"] + sizeInitCol
-            
+
             # get size of the database
             infoDataFolder <- rbind(infoDataFolder,
                                     data.frame(path="data/breeding-game.sqlite",
                                                size=file.info("data/breeding-game.sqlite")$size)
             )
-            
+
             # clac size of all "data" folder
             sizeData <- sum(infoDataFolder[infoDataFolder$path %in% c("data/shared",
                                                                       "data/truth",
@@ -279,17 +279,17 @@ output$sizeDataFolder <- renderTable({
                                     data.frame(path="data",
                                                size=sizeData)
             )
-            
+
             # order table
             infoDataFolder <- infoDataFolder[order(infoDataFolder$size, decreasing = T),]
-            
+
             # convert in Mo
             infoDataFolder$size <- infoDataFolder$size/10^6
             infoDataFolder <- rev(infoDataFolder)
-            
+
             # var names
             names(infoDataFolder) <- c("path", "size (Mo)")
-            
+
             return(infoDataFolder)
         }else return(NULL)
     },message = "Calculating... Please wait.")
@@ -300,7 +300,7 @@ observeEvent(input$updateMaxDiskUsage,{
     # save maximum disk usage value in the database
     # so that if the admin change the value, it will affect all connected users
     maxDiskUsage <- input$admin_maxDiskUsage
-    
+
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     query <- paste0("UPDATE constants SET value = '", maxDiskUsage,"' WHERE item = 'max.disk.usage'" )
     dbExecute(conn=db, query)
@@ -310,7 +310,7 @@ observeEvent(input$updateMaxDiskUsage,{
 currentMaxDiskUsage <- reactive({
     input$admin_maxDiskUsage # take depedency
     input$updateMaxDiskUsage # take depedency
-    
+
     db <- dbConnect(SQLite(), dbname=setup$dbname)
     tbl <- "breeders"
     query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
@@ -321,8 +321,5 @@ currentMaxDiskUsage <- reactive({
 })
 
 output$InfoCurrentMaxDiskUsage <- renderText({
-    paste("Current maximum disk usage:", currentMaxDiskUsage(), "Go")
+    paste("Current maximum disk usage:", currentMaxDiskUsage(), "Gb")
 })
-
-
-

@@ -56,7 +56,7 @@ accessGranted <- eventReactive(input$submitPSW,
    # EXEPTION: the game master can log in even if the second condition is false.
    # a javascript "alert" will show up to notice the server is full to him.
 
-                       
+
    if (input$submitPSW==0){# no pswd given
        return(FALSE)
    }
@@ -73,51 +73,53 @@ accessGranted <- eventReactive(input$submitPSW,
        goodPswd <- FALSE
        alert("Oops, wrong Password...")
    }
-   
+
    # 2. get breeder status:
    db <- dbConnect(SQLite(), dbname=setup$dbname)
    tbl <- "breeders"
    query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
    status <- dbGetQuery(conn=db, query)[,1]
    dbDisconnect(db)
-   
+
    # 3. check disk usage
    if(goodPswd){
        withProgress({
-           # get maxDiscUsage
+           # get maxDiskUsage
            db <- dbConnect(SQLite(), dbname=setup$dbname)
            tbl <- "breeders"
            query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
-           maxDiskUsage <- dbGetQuery(conn=db, query)[,1]
+           maxDiskUsage <- as.numeric(dbGetQuery(conn=db, query)[,1])
            dbDisconnect(db)
-           
-           allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
-           currentSize <- sum(file.info(paste0("data/",allDataFiles))$size)/10^9
+
+           allDataFiles <- list.files("data", all.files=TRUE, recursive=TRUE)
+           currentSize <- sum(file.info(paste0("data/", allDataFiles))$size) /
+             10^9 # in Gb
 
            if(currentSize < maxDiskUsage){
                goodDiskUsage <-TRUE
-           }else if(status!="game master"){
+           }else if(status != "game master"){
                goodDiskUsage <-FALSE
-               alert("Sorry, the game is currently not available.\nPlease contact your game master to figure out what to do.")
+               alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
            }else{
                goodDiskUsage <-TRUE
-               alert(paste0("Warning ! The size of the \"data\" folder is exceed the specified limit\n",
-                            paste("Data folder:",round(currentSize,2),"Go, Maximum size allowed:",maxDiskUsage,"Go.\n"),
-                            "To preserve your server, palyers can't log in anymore. (But connected user can still play).\n",
-                            "If you want to continue your game, please raise the maximum disk usage limit. (see: admin tab -> disk usage)"))
+               alert(paste0("Warning! The size of the \"data\" folder exceeds the specified limit\n",
+                            paste("of",round(currentSize,2),"Gb (maximum size allowed:",maxDiskUsage,"Gb).\n"),
+                            "To preserve your server, players can't log in anymore (but connected users can still play).\n",
+                            "If you want to resume the game, please raise the maximum disk usage limit.\n",
+                            "Go to the Admin tab, then \"Disk usage\", and raise the threshold."))
            }
        },message = "Connecting...")
    }else{
        # the game master can always log in.
        goodDiskUsage <- TRUE
    }
-   
+
    # 4. output
    if (goodPswd & goodDiskUsage){
        removeUI("#logInDiv")
        return (TRUE)
    }else return(FALSE)
-   
+
 })
 
 

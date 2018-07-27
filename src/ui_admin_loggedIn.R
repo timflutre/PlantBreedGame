@@ -214,10 +214,9 @@ list(
                  style="display: inline-block;
                  vertical-align:top;
                  width: 66%;",
-                 p("To prevent over disk usage on your server, you can specifiy here a maximum size for all game data allowed.",
+                 p("To prevent over disk usage on your server, you can specifiy here the maximum size for all game data.",
                    style="margin-top:20px;"),
-                 p("In case the size of all data exeed this maximum, players will not be allowed to connect any more.
-                   You will have to delete the haplotype of some breeders individuals."),
+                 p("In case the size of all data exceeds this threshold, players will not be allowed to connect any more, and you will have to delete haplotypes of some breeders."),
                  p(textOutput("InfoCurrentMaxDiskUsage")),
                  div(style="width: 50%;
                      display: inline-block;
@@ -225,7 +224,7 @@ list(
                      numericInput("admin_maxDiskUsage",
                                   label= "Maximum disk usage (in Gb)",
                                   value= 10,
-                                  min = 2000)
+                                  min = 2)
                  ),
                  div(style="width: 30%;
                      padding-top: 26px;
