@@ -30,7 +30,7 @@ list(
                                         h3("Current sessions:"),
                                         tableOutput("sessionsTable")
                                     ),
-                                    
+
                                     div(# add New session
                                         div(style="margin-bottom: 20px;",# inputs
                                             h3("Add a new session:"),
@@ -51,7 +51,7 @@ list(
                                                            )
                                                 )# end table 1
                                             ),# end div "start"
-                                            
+
                                             div(style="display: inline-block; vertical-align:top; width: 33%; min-width:300px;", #end
                                                 h4("End"),
                                                 tags$table(style = "width: 300px; border-collapse: collapse;", # start table 2
@@ -69,7 +69,7 @@ list(
                                                            )
                                                 )# end table 2
                                             ),# end div "end"
-                                            
+
                                             div(style="display: inline-block; vertical-align:top; width:33%; min-width:300px;", #year time
                                                 h4("Year time"),
                                                 tags$table(style = "border-collapse: collapse;", # start table 3
@@ -77,20 +77,20 @@ list(
                                                                    numericInput("yearTime", "Duration of one year (in minutes)", value=60, min=0, max=Inf, step=1)
                                                            )
                                                 )# end table 3
-                                                
+
                                             )# end div "year time"
                                         ),# end div inputs
-                                        
+
                                         div(style="display: inline-block; vertical-align:top; width:25%; margin-bottom: 50px; padding-left: 10px;", #button
                                             actionButton("addSession", "Add this new session")
-                                            
+
                                         )# end div "button"
-                                        
-                                        
+
+
                                     ),# end div "add New session"
-                                    
-                                    
-                                    
+
+
+
                                     div(style = "margin-bottom:100px;",# delete session
                                         h3("Delete sessions:"),
                                         tags$table(style = "width: 100%; border-collapse: collapse;",
@@ -106,12 +106,12 @@ list(
                                         )
                                     )# end div "delete session"
                            ),# end tabPanel sessions managment
-                           
-                           
-                           
-                           
-                           
-                           
+
+
+
+
+
+
                            tabPanel("Manage breeders",
                                     div(# add New breeders
                                         h3("Add a new breeder:"),
@@ -141,8 +141,8 @@ list(
                                                    )
                                         )# end tags$table
                                         ),# end div "add new breeder"
-                                    
-                                    
+
+
                                     div(# delete breeders
                                         h3("Delete a breeder:"),
                                         tags$table(style = "width: 100%; border-collapse: collapse;",
@@ -158,15 +158,15 @@ list(
                                         )
                                     )# end div "delete breeders"
     ),# end tabPanel "Add/Delete Breeders"
-    
-    
+
+
     tabPanel("Manage constants",
              # tabPanel to manage some game constants
-             
+
              # see.year.effct
              div(id="admin_seedYearEffect",
                  style="margin: 0px 0px 40px 0px;",
-                 
+
                  # input:
                  div(id="admin_div_numInput_seedYearEfect",
                      style="display: inline-block;
@@ -177,7 +177,7 @@ list(
                                   max=NA,
                                   step = 1)
                  ),
-                 
+
                  # button to request update:
                  div(id="admin_div_button_seedYearEfect",
                      style="display: inline-block;
@@ -185,22 +185,22 @@ list(
                      padding-top: 25px", # button align with numInput
                      actionButton("admin_button_seedYearEfect", "update seed.year.effect")
                  ),
-                 
+
                  # current value:
                  div(id="admin_currentSYE",
                  "Current", code("seed.year.effect"),":", textOutput("admin_currentSYE", container=span)
                  )
              ) # end div "admin_seedYearEffect"
-             
-             
+
+
     ), # end tabPanel "Manage constants"
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
     tabPanel("Disk usage",
              div(id="admin_diskU_data",
                  style="display: inline-block;
@@ -223,7 +223,7 @@ list(
                      display: inline-block;
                      vertical-align: top;",
                      numericInput("admin_maxDiskUsage",
-                                  label= "Maximum disk usage (in Mo)",
+                                  label= "Maximum disk usage (in Gb)",
                                   value= 10,
                                   min = 2000)
                  ),
@@ -234,13 +234,13 @@ list(
                      actionButton("updateMaxDiskUsage",
                                   label="Update")
                  )
-                 
-                 
+
+
              ) # end div "admin_diskU_input"
     )# end tabPanel "Disk usage"
-    
-    
-    
-    
+
+
+
+
     )# close tabBox
              ) # close list
