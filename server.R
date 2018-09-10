@@ -18,25 +18,8 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-## -------------------------------------------------------------------
-## packages
+source("src/dependencies.R")
 
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(RSQLite)
-library(MASS)
-library(digest)
-library(plotly)
-
-library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.158.2",
-                         as.character(packageVersion("rutilstimflutre")))
-          != 1)
-
-
-## -------------------------------------------------------------------
-## Shiny server
 
 shinyServer(function(input, output, session){
 
