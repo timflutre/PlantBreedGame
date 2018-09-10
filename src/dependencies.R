@@ -18,6 +18,9 @@
 ## <http://www.gnu.org/licenses/>.
 
 
+## required packages available on the CRAN
+## https://cran.r-project.org/
+## R> install.packages("<package_name>")
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -26,7 +29,9 @@ library(MASS)
 library(digest)
 library(plotly)
 
-library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
+## required packages NOT available on the CRAN
+## R> devtools::install_github("timflutre/rutilstimflutre")
+library(rutilstimflutre)
 stopifnot(compareVersion("0.158.2",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)

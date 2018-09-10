@@ -18,7 +18,7 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-source("src/dependencies.R")
+source("src/dependencies.R", local=TRUE, encoding="UTF-8")$value
 
 
 ## UI parameters
@@ -36,7 +36,7 @@ shinyUI(
                                  sidebarMenu(id="leftMenu",
                                              menuItem("How to play?", tabName="info",
                                                       icon=icon("leaf")),
-                                             menuItem("Breeder identification",
+                                             menuItem("Identification",
                                                       tabName="id",
                                                       icon=icon("user-circle")),
                                              menuItem("Request plant material",

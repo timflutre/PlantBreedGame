@@ -18,7 +18,7 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-source("src/dependencies.R")
+source("src/dependencies.R", local=TRUE, encoding="UTF-8")$value
 
 
 shinyServer(function(input, output, session){

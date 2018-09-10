@@ -32,7 +32,7 @@ tabItem(tabName="id",
                                     p("Breeders can have different statuses:"),
                                     tags$ul(
                                         tags$li(strong("Tester (such as 'test'):"), "to test this game without needing a password. Access to the \"Evaluation\" tab. Data files available without any time restriction."),
-                                        tags$li(strong("Game-master:"), "highest privileges. Access to the \"Admin\" and \"Evaluation\" tabs. Data files available without any time restriction."),
+                                        tags$li(strong("Game-master (such as 'admin'):"), "highest privileges. Access to the \"Admin\" and \"Evaluation\" tabs. Data files available without any time restriction."),
                                         tags$li(strong("Player:"), "when playing in a common session. Access neither to the \"Admin\" nor \"Evaluation\" tabs. Data files available under time restriction.")
                                     )
                                 ),

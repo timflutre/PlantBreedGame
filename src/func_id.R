@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantSelBreedGame.
@@ -18,21 +18,40 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-## function for the "id part"
+## functions for the "id part"
+
+getBreederList <- function(dbname){
+  db <- dbConnect(SQLite(), dbname=dbname)
+  tbl <- "breeders"
+  query <- paste0("SELECT name FROM ", tbl)
+  breederNames <- dbGetQuery(conn=db, query)[,1]
+  dbDisconnect(db)
+  return(breederNames)
+}
+
+getBreederStatus <- function(dbname, breeder.name){
+  db <- dbConnect(SQLite(), dbname=dbname)
+  tbl <- "breeders"
+  query <- paste0("SELECT status FROM ", tbl,
+                  " WHERE name = '", breeder.name, "'")
+  breeder.status <- dbGetQuery(conn=db, query)[,1]
+  dbDisconnect(db)
+  return(breeder.status)
+}
 
 getDataFileList <- function (type, breeder){
   # function to get the list of data file of the breeder
   # type (char) type of data (pheno or geno)
   # breeder (char) name of the breeder
-  
-  
+
+
   stopifnot(type =="pheno" || type =="geno"
             || type =="pltMat" || type =="request")
-  
-  
+
+
   dirPath <- paste0("data/shared/",breeder)
   dataFile <- list.files(dirPath)
-  
+
   ## Get the ids of the files
   matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_pheno"))
   if (type =="pheno"){
@@ -44,8 +63,8 @@ getDataFileList <- function (type, breeder){
   }else{
     matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Request"))
   }
-  
-  
+
+
   return(as.list(dataFile[matchId]))
 
 }
@@ -57,17 +76,17 @@ availToDwnld <- function(fileName, gameTime){
   # function to check if files are available to download
   # fileName (char) name of the file
   # gameTime ("POSIXlt") (given by getGameTime function)
-  
+
   stopifnot(is.character(fileName),
             fileName!="")
-  
+
 
   # get the date when the file was requested
   m <- regexpr("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)
   requestDate <- strptime(regmatches(fileName, m), format = "%Y-%m-%d")
-  
 
-  
+
+
   # calculate the available date
   if (grepl("phenos-field", fileName)){
     maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
@@ -75,7 +94,7 @@ availToDwnld <- function(fileName, gameTime){
     if (requestDate > maxDate){
       availDate <- seq(from=availDate, by="1 year", length.out=2)[2]
     }
-    
+
   }else if (grepl("phenos-patho", fileName)){
     availDate <- seq(from=requestDate, by=paste0(constants$duration.pheno.patho, " month"), length.out=2)[2]
   }else if (grepl("genos-single-snps", fileName)){
@@ -85,27 +104,12 @@ availToDwnld <- function(fileName, gameTime){
   }else if (grepl("genos-ld", fileName)){
     availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.ld, " month"), length.out=2)[2]
   }else(stop())
-  
+
   # results
   res <- list()
   res$isAvailable <- availDate <= gameTime
   res$availDate <- availDate
-  
+
   return(res)
-  
+
 }
-
-
-  
-
-  
-
-
-
-
-
-
-
-
-
-

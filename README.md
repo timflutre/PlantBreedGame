@@ -13,6 +13,10 @@ It is versioned using the [git](http://www.git-scm.com/) software, the central r
 
 # Installation
 
+## Dependencies
+
+Before using this game, you need R as well as various packages, listed in the file `src/dependencies.R`.
+
 ## Locally on your computer
 
 Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory):
@@ -39,7 +43,8 @@ setwd("path/to/PlantSelBreedGame")
 runApp()
 ```
 
-Once all requested packages are installed, a web page should automatically open in your default web browser, and you should be able to start playing!
+Once all requested packages are installed, a web page should automatically open in your default web browser, and you should be able to start playing.
+See the explanations below in the section "Usage".
 
 ## To set up your own server
 
@@ -92,7 +97,8 @@ less /var/log/shiny-server/breeding-game-shiny-20180129-100752-39427.log
 ```
 
 Errors may be due to missing packages, otherwise report an issue (see below).
-Once all requested packages are installed, you should be able to start playing!
+Once all requested packages are installed, you should be able to start playing.
+See the explanations below in the section "Usage".
 
 
 # Citation
@@ -113,7 +119,18 @@ You can discover an example online [here](http://www.agap-sunshine.inra.fr/breed
 
 # Usage
 
-Once the application is installed and working, read carefully the game rules (tab `How to play?`) and choose the `Test` breeder as a start (tab `Breeder identification`).
+Once the application is installed and working, read the game rules (tab `How to play?`) and start by downloading the initial data set.
+
+Before making any request, such as phenotyping, you need to log in (tab `Identification`).
+To get a sense of how the interface works, you can use the "test" breeder with the "tester" status which doesn't require any password and isn't subject to time restriction.
+Remember, for your selection to work, you need to analyze the initial data carefully.
+The `Theory` tab can be helpful.
+Enjoy!
+
+If you want to organize a real playing session, you need to create as many breeders as there are players or player teams.
+For this, you need to log in as the "admin" breeder with the "game-master" status.
+Initially, its password is set as `1234`, but this can (and should!) be changed via the tab `Identification`.
+This tab also allows a game master to create new breeders and sessions, among other things.
 
 
 # Issues

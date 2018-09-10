@@ -18,7 +18,6 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-
 ## server for "identification"
 
 ## Function
@@ -26,16 +25,9 @@ source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 
-
 ## get breeder list and create select input ----
 breederList <- reactive({
-  # get the breeders list
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  tbl <- "breeders"
-  query <- paste0("SELECT name FROM ", tbl)
-  breederNames <- dbGetQuery(conn=db, query)[,1]
-  dbDisconnect(db)
-  return(breederNames)
+  getBreederList(dbname=setup$dbname)
 })
 output$selectBreeder <- renderUI({
   selectInput("breederName", "Breeder", choices=as.list(breederList()))
@@ -49,37 +41,43 @@ accessGranted <- eventReactive(input$submitPSW,
                                ignoreNULL=FALSE,{
    # The access is granted if this conditions are true:
    # 1. the md5 sum of the given password match with the one in the data base
+   #    and doesn't correspond to the empty string;
    # 2. the size of "data" folder is under the maximum disk usage limit.
    # If any condition is false, a javascript "alert" will show up explaining why
    # it is not possible to log in.
    #
-   # EXEPTION: the game master can log in even if the second condition is false.
-   # a javascript "alert" will show up to notice the server is full to him.
-
+   # EXCEPTIONS:
+   # * The game master can log in even if the second condition is false,
+   # but the javascript "alert" will explain that the server is full.
+   # * A "tester" is the only status allowed to have an empty password.
 
    if (input$submitPSW==0){# no pswd given
        return(FALSE)
    }
 
-   # 1. check given password:
+   # 1. get breeder status
+   status <- getBreederStatus(setup$dbname, input$breederName)
+
+   # 2. check given password
    db <- dbConnect(SQLite(), dbname=setup$dbname)
    tbl <- "breeders"
    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
    hashPsw <- dbGetQuery(conn=db, query)[,1]
    dbDisconnect(db)
-   if (hashPsw==digest(input$psw, "md5", serialize = FALSE)){
-       goodPswd <- TRUE
+   if(status == "tester"){
+     goodPswd <- TRUE
    } else{
+     if(input$psw == ""){
        goodPswd <- FALSE
-       alert("Oops, wrong Password...")
+       alert("Error: don't use the empty string as password")
+     }
+     else if(hashPsw == digest(input$psw, "md5", serialize=FALSE)){
+       goodPswd <- TRUE
+     } else{
+       goodPswd <- FALSE
+       alert("Error: wrong password")
+     }
    }
-
-   # 2. get breeder status:
-   db <- dbConnect(SQLite(), dbname=setup$dbname)
-   tbl <- "breeders"
-   query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
-   status <- dbGetQuery(conn=db, query)[,1]
-   dbDisconnect(db)
 
    # 3. check disk usage
    if(goodPswd){
@@ -110,36 +108,31 @@ accessGranted <- eventReactive(input$submitPSW,
            }
        },message = "Connecting...")
    }else{
-       # the game master can always log in.
+       # the game master can always log in
        goodDiskUsage <- TRUE
    }
 
    # 4. output
    if (goodPswd & goodDiskUsage){
-       removeUI("#logInDiv")
-       return (TRUE)
-   }else return(FALSE)
-
+     removeUI("#logInDiv")
+     return (TRUE)
+   } else
+     return(FALSE)
 })
 
 
 breeder <- reactive({
   if (accessGranted()){
     input$breederName
-  }else {"No Identification"}
-
+  } else
+    "No Identification"
 })
 
 breederStatus <- reactive({
-  if (accessGranted()){
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
-    tbl <- "breeders"
-    query <- paste0("SELECT status FROM ", tbl, " WHERE name = '", input$breederName,"'")
-    status <- dbGetQuery(conn=db, query)[,1]
-    dbDisconnect(db)
-    return(status)
-  }else {return("No Identification")}
-
+  if(accessGranted()){
+    return(getBreederStatus(setup$dbname, input$breederName))
+  } else
+    return("No Identification")
 })
 
 budget <- reactive({

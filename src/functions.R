@@ -19,7 +19,7 @@
 
 ##' Get code version
 ##'
-##' Returns the code version and, possibnly, a link to the central GitHub repository.
+##' Returns the code version and, possibly, a link to the central GitHub repository.
 ##' @return list with two components, display and link, to be used as a(display, href=link)
 ##' @author Timothee Flutre
 ##' @export
@@ -236,7 +236,6 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
 ##' @author Timothee Flutre
 ##' @export
 countRequestedBreedTypes <- function(df){
-
   stopifnot(is.data.frame(df),
             ! is.null(colnames(df)))
 
@@ -244,23 +243,29 @@ countRequestedBreedTypes <- function(df){
 
   if("parent1" %in% colnames(df)){
     types <- stats::setNames(c(sum(df$parent1 != df$parent2 &
-                            ! is.na(df$parent2)),
-                        sum(df$parent1 == df$parent2 &
-                            ! is.na(df$parent2)),
-                        sum(is.na(df$parent2))),
-                      c("allofecundation", "autofecundation",
-                        "haplodiploidization"))
+                                   ! is.na(df$parent2)),
+                               sum(df$parent1 == df$parent2 &
+                                   ! is.na(df$parent2)),
+                               sum(is.na(df$parent2))),
+                             c("allofecundation",
+                               "autofecundation",
+                               "haplodiploidization"))
   } else if("ind" %in% colnames(df)){
-
-    types <- stats::setNames(c(sum(as.numeric(df$details[df$task == "pheno-field"])),
-                               sum(as.numeric(df$details[df$task == "pheno-patho"])),
+    types <- stats::setNames(c(sum(as.numeric(df$details[df$task ==
+                                                         "pheno-field"])),
+                               sum(as.numeric(df$details[df$task ==
+                                                         "pheno-patho"])),
                                sum(df$task == "geno" &
-                                     df$details == "hd"),
+                                   df$details == "hd"),
                                sum(df$task == "geno" &
-                                     df$details == "ld"),
+                                   df$details == "ld"),
                                sum(df$task == "geno" &
-                                     ! df$details %in% c("hd", "ld"))),
-                             c("pheno-field", "pheno-patho", "geno-hd", "geno-ld", "geno-single-snp"))
+                                   ! df$details %in% c("hd", "ld"))),
+                             c("pheno-field",
+                               "pheno-patho",
+                               "geno-hd",
+                               "geno-ld",
+                               "geno-single-snp"))
   }
 
   return(types)

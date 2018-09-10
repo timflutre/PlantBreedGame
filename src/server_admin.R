@@ -38,7 +38,7 @@ output$adminUI <- renderUI({
 
 
 
-## Breeders managment ----
+## Breeders management ----
 # add new breeder:
 observeEvent(input$addNewBreeder,{
 

@@ -18,29 +18,11 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-## -------------------------------------------------------------------
-## packages
-
-library(shiny)
-library(shinydashboard)
-library(DT)
-library(shinyjs)
-library(RSQLite)
-library(MASS)
-library(digest)
-library(plotly)
-
-library(rutilstimflutre) # https://github.com/timflutre/rutilstimflutre
-stopifnot(compareVersion("0.158.2",
-                         as.character(packageVersion("rutilstimflutre")))
-          != 1)
-
-## -------------------------------------------------------------------
-## functions
+source("src/dependencies.R", local=TRUE, encoding="UTF-8")$value
 
 source("src/functions.R", local=TRUE, encoding="UTF-8")$value
 source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
-
+source("src/func_id.R", local=TRUE, encoding="UTF-8")$value
 
 ## -------------------------------------------------------------------
 ## parameters
@@ -54,7 +36,6 @@ if(Sys.info()["sysname"] == "Windows"){
   Sys.setlocale("LC_TIME", "English")
 } else
   Sys.setlocale("LC_TIME", "en_US.UTF-8")
-
 
 ## -------------------------------------------------------------------
 ## variables
@@ -80,3 +61,7 @@ subset.snps[["ld"]] <- rownames(read.table(f))
 
 url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
 code.version <- getCodeVersion(url.repo)
+
+stopifnot(all(c("admin", "test") %in% getBreederList(setup$dbname)))
+stopifnot(all("game master" == getBreederStatus(setup$dbname, "admin"),
+              "tester" == getBreederStatus(setup$dbname, "test")))
