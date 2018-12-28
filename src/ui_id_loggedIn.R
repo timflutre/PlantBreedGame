@@ -56,7 +56,7 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
    ),
    
    tabPanel("My plant material",
-            dataTableOutput("myPltMatDT")
+            DT::dataTableOutput("myPltMatDT")
    ),
    
    tabPanel("Change my password",
