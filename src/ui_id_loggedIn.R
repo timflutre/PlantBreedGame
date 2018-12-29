@@ -51,14 +51,14 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                     uiOutput("UIdwnlRequest")
                 )
             )
-            
-            
+
+
    ),
-   
+
    tabPanel("My plant material",
-            DT::dataTableOutput("myPltMatDT")
+            dataTableOutput("myPltMatDT")
    ),
-   
+
    tabPanel("Change my password",
             div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;",
                 passwordInput("prevPsw", "Previous Password")
@@ -79,5 +79,5 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                 uiOutput("UIpswChanged")
             )
    )
-                   
+
 ) # end shinydashboard::tabBox

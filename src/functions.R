@@ -19,7 +19,7 @@
 
 ##' Get code version
 ##'
-##' Returns the code version and, possibly, a link to the central GitHub repository.
+##' Returns the code version of the local git repository from which the application is run, and, possibly, a link to the GitHub repository.
 ##' @return list with two components, display and link, to be used as a(display, href=link)
 ##' @author Timothee Flutre
 ##' @export
@@ -28,7 +28,11 @@ getCodeVersion <- function(url.repo=""){
 
   if(requireNamespace("git2r", quietly=TRUE)){
     if(git2r::in_repository()){
-      commit.sha <- git2r::commits()[[1]]@sha
+      git2r.version <- as.character(utils::packageVersion(pkg="git2r"))
+      if(utils::compareVersion(git2r.version, "0.22.1") == -1){
+        commit.sha <- git2r::commits()[[1]]@sha
+      } else
+        commit.sha <- git2r::commits()[[1]]$sha
       code.version$display <- substr(commit.sha, 1, 7)
       code.version$link <- paste0(url.repo, "/commit/", commit.sha)
     } else{
