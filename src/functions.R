@@ -45,6 +45,10 @@ getCodeVersion <- function(url.repo=""){
   return(code.version)
 }
 
+checkDbFile <- function(db.file){
+  stopifnot(file.exists(db.file),
+            file.access(db.file, mode=2) == 0)
+}
 
 ##' Simul breeding game
 ##'

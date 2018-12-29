@@ -42,6 +42,7 @@ if(Sys.info()["sysname"] == "Windows"){
 
 root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
+checkDbFile(setup$dbname)
 constants <- getBreedingGameConstants(setup$dbname)
 
 prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field,
