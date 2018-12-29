@@ -122,18 +122,20 @@ observeEvent(input$addSession,{
     res <- dbGetQuery(conn=db, query)
     dbDisconnect(db)
 
-    overlapse <- apply(res, 1, function(session){
+    if(nrow(res) > 0){
+      overlapse <- apply(res, 1, function(session){
         sessionStart <- strptime(session["start"], format="%Y-%m-%d %H:%M")
         sessionEnd <- strptime(session["end"], format="%Y-%m-%d %H:%M")
         if((startDate < sessionStart &  endDate <= sessionStart)
            | (startDate >= sessionEnd &  endDate > sessionEnd)){
-            return(FALSE)
+          return(FALSE)
         } else return(TRUE)
-    })
+      })
 
-    if (any(overlapse)){
+      if (any(overlapse)){
         error <- error + 1
         showNotification("Error: Sessions must not be overlapped.", type = c("error"))
+      }
     }
 
     #calculate id number:
