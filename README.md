@@ -8,42 +8,42 @@ It takes the form of a [Shiny](http://shiny.rstudio.com/) application, benefitin
 This software is available under a **free software** license, the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl.html) (version 3 and later); see the COPYING file.
 The copyright is owned by the [Institut National de la Recherche Agronomique](http://www.inra.fr/) (INRA) and [Montpellier SupAgro](http://www.supagro.fr/).
 
-It is versioned using the [git](http://www.git-scm.com/) software, the central repository being hosted [here](https://github.com/timflutre/PlantSelBreedGame) on GitHub, and the institutional repository being hosted [there](https://sourcesup.renater.fr/projects/PlantSelBreedGame/) on SourceSup.
+It is versioned using the [git](http://www.git-scm.com/) software, the central repository being hosted [here](https://github.com/timflutre/PlantSelBreedGame) on GitHub, and the institutional repository being hosted [there](https://sourcesup.renater.fr/projects/plantbreedgame/) on SourceSup.
 
 
 # Installation
 
 ## Dependencies
 
-Before using this game, you need R as well as various packages, listed in the file `src/dependencies.R`.
+Before using this game, you need to install R as well as various packages, listed in the file [`src/dependencies.R`](https://github.com/timflutre/PlantSelBreedGame/blob/master/src/dependencies.R).
+Then it should work on Unix-like operating systems (GNU/Linux, Mac OS) as well as on Microsoft Windows.
 
 ## Locally on your computer
 
-Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory):
+1) Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory).
 
+Here is how to do it in a terminal for Unix-like operating systems:
 ```
 wget https://github.com/timflutre/PlantSelBreedGame/archive/master.zip
 unzip master.zip
 mv PlantSelBreedGame-master PlantSelBreedGame
 ```
 
-or by cloning the git repository:
-
+The package can also be installed after cloning the git repository:
 ```
 git clone git@github.com:timflutre/PlantSelBreedGame.git
 ```
 
-Enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
+2) Then, enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
 
-Then, open an R session, and execute the following commands:
-
+3) Finally, open a R session, and execute the following commands:
 ```
 library(shiny)
 setwd("path/to/PlantSelBreedGame")
 runApp()
 ```
 
-Once all requested packages are installed, a web page should automatically open in your default web browser, and you should be able to start playing.
+A web page should automatically open in your default web browser, and you should be able to start playing.
 See the explanations below in the section "Usage".
 
 ## To set up your own server
@@ -119,7 +119,7 @@ You can discover an example online [here](http://www.agap-sunshine.inra.fr/breed
 
 # Usage
 
-Once the application is installed and working, read the game rules (tab `How to play?`) and start by downloading the initial data set.
+Once the application is installed and working, read the game rules (tab `How to play?`) and start by downloading the initial data set (all files listed at the bottom of the page).
 
 Before making any request, such as phenotyping, you need to log in (tab `Identification`).
 To get a sense of how the interface works, you can use the "test" breeder with the "tester" status which doesn't require any password and isn't subject to time restriction.
@@ -129,7 +129,7 @@ Enjoy!
 
 If you want to organize a real playing session, you need to create as many breeders as there are players or player teams.
 For this, you need to log in as the "admin" breeder with the "game-master" status.
-Initially, its password is set as `1234`, but this can (and should!) be changed via the tab `Identification`.
+Initially, its password is set to `1234`, but this can (and should!) be changed via the tab `Identification`.
 This tab also allows a game master to create new breeders and sessions, among other things.
 
 
