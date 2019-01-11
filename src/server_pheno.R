@@ -137,7 +137,7 @@ pheno_data <- eventReactive(input$requestPheno,{
                         detail = "Done")
       return(res)
     }else{
-      progressPheno$set(detail = "ERROR !")
+      progressPheno$set(detail=paste0("error in phenotype (", res, ")"))
       return("error")
     }
 

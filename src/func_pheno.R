@@ -35,11 +35,9 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
   db <- dbConnect(SQLite(), dbname=setup$dbname)
   query <- paste0("SELECT name FROM breeders")
   breederList <- (dbGetQuery(conn=db, query))
-  dbDisconnect(db)
   stopifnot(breeder %in% breederList$name)
   
   data.types <- countRequestedBreedTypes(inds.todo)
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
   
   
   ## calculate output file names:
@@ -94,17 +92,16 @@ phenotype <- function (breeder, inds.todo, gameTime, progressPheno=NULL, fileNam
 
   ## 1. Calculate year effect
   # get the seed from database:
-  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = setup$dbname)
   query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
   yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
-  DBI::dbDisconnect(db)
   
   # set seed
   set.seed(yearEffectSeed+year) # seed depend of the year
   # calculate year effect
-  Alpha <- matrix(c(stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[1])),
-                    stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[2]))),
-                  nrow=1, ncol=T,
+  alphas <- c(stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[1])),
+              stats::rnorm(n=1, mean=0, sd=sqrt(p0$sigma.alpha2[2])))
+  Alpha <- matrix(alphas,
+                  nrow=1, ncol=2,
                   dimnames=list(year, c("trait1","trait2")))
   set.seed(Sys.time()) # remove seed
 
