@@ -1,14 +1,15 @@
 <!-- pandoc README.md -f commonmark -t html -s -o README.html -->
 
-# PlantSelBreedGame
+# PlantBreedGame
 
-This directory contains the `PlantSelBreedGame` software implementing a **serious game** to teach **selective breeding** via the example of a fictitious annual **plant species** to students at the master level.
+`PlantBreedGame` is a software implementing a **serious game** to teach **selective breeding** via the example of a fictitious annual **plant species** to students at the master level.
 It takes the form of a [Shiny](http://shiny.rstudio.com/) application, benefiting from the [R](https://www.r-project.org/) programming language and software environment for statistical computing.
 
 This software is available under a **free software** license, the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl.html) (version 3 and later); see the COPYING file.
 The copyright is owned by the [Institut National de la Recherche Agronomique](http://www.inra.fr/) (INRA) and [Montpellier SupAgro](http://www.supagro.fr/).
 
 It is versioned using the [git](http://www.git-scm.com/) software, the central repository being hosted [here](https://github.com/timflutre/PlantSelBreedGame) on GitHub, and the institutional repository being hosted [there](https://sourcesup.renater.fr/projects/plantbreedgame/) on SourceSup.
+The `README` file is available at [https://sourcesup.renater.fr/plantbreedgame/](https://sourcesup.renater.fr/plantbreedgame/).
 
 
 # Installation
@@ -108,7 +109,7 @@ This repository is made available in the mean time for pedagogical reasons.
 As the authors invested time and effort in creating this package, please cite it as:
 
 ```
-Flutre T, Diot J, David J. PlantSelBreedGame: a serious game to teach plant selective breeding. 2018. https://github.com/timflutre/PlantSelBreedGame
+Flutre T, Diot J, David J. PlantBreedGame: a serious game to teach plant selective breeding. 2019. https://sourcesup.renater.fr/plantbreedgame/
 ```
 
 
