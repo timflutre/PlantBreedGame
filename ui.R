@@ -25,10 +25,10 @@ source("src/dependencies.R", local=TRUE, encoding="UTF-8")$value
 W_sideBar <- 300
 
 shinyUI(
-  dashboardPage(title="Breeding Game", skin="green",
+  dashboardPage(title="PlantBreedGame", skin="green",
 
                 # app title
-                dashboardHeader(title=tagList(shiny::icon("leaf", "fa-2x"), "\t Breeding Game"),
+                dashboardHeader(title=tagList(shiny::icon("leaf", "fa-2x"), "\t PlantBreedGame"),
                                 titleWidth=W_sideBar),
 
                 # dashboard sidebar items
