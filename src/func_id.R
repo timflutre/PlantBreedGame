@@ -88,14 +88,14 @@ availToDwnld <- function(fileName, gameTime){
 
 
   # calculate the available date
-  if (grepl("phenos-field", fileName)){
+  if (grepl("pheno-field", fileName)){
     maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
     availDate <- seq(from=maxDate, by=paste0(constants$duration.pheno.field, " month"), length.out=2)[2]
     if (requestDate > maxDate){
       availDate <- seq(from=availDate, by="1 year", length.out=2)[2]
     }
 
-  }else if (grepl("phenos-patho", fileName)){
+  }else if (grepl("pheno-patho", fileName)){
     availDate <- seq(from=requestDate, by=paste0(constants$duration.pheno.patho, " month"), length.out=2)[2]
   }else if (grepl("genos-single-snps", fileName)){
     availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.single, " month"), length.out=2)[2]
