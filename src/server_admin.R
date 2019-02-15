@@ -30,7 +30,7 @@ output$adminUI <- renderUI({
         source("src/ui_admin_loggedIn.R", local=TRUE, encoding="UTF-8")$value
     }else{
         shinydashboard::box(width=12, title = "Content unavailable",
-                            div(p("Sorry, this is only accessible to the game master."))
+                            div(p("Sorry, you need the 'game-master' status to access this."))
         )
     }
 })

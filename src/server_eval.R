@@ -31,7 +31,7 @@ output$evalUI <- renderUI({
     source("src/ui_eval_loggedIn.R", local=TRUE, encoding="UTF-8")$value
   }else{
     shinydashboard::box(width=12, title = "Content unavailable",
-                                div(p("Sorry, this is only accessible to the game master."))
+                                div(p("Sorry, you need the 'game-master' status or the 'tester' status to access this."))
     )
   }
 })
@@ -391,9 +391,9 @@ output$evalUIaddRelation <- renderUI({
             selectInput("addRelBreeder","Breeder", choices=breeders),
             tableOutput("addRelTable")
         )
-        
+
     } else { p('no input')}
-    
+
 })
 
 output$addRelTable <- renderTable({
@@ -401,7 +401,7 @@ output$addRelTable <- renderTable({
                          query = readQryEval(),
                          setup=setup,
                          constants = constants)
-    
+
 }, rownames = TRUE, spacing ="s", digits = 3)
 
 
@@ -418,9 +418,9 @@ output$evalUIrequestHistory <- renderUI({
             selectInput("historyBreeder","Breeder", choices=breeders),
             dataTableOutput("historyTable")
         )
-        
+
     } else { p('no input')}
-    
+
 })
 
 output$historyTable <- renderDataTable({

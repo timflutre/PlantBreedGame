@@ -28,7 +28,7 @@ source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 ## identification message
 output$idMessageGeno <- renderUI({
   if(breeder()=="No Identification"){
-    p("You need to identify yourself in order to make a request: click on the 'Breeder identification' tab.",
+    p("You need to identify yourself in order to make a request: click on the 'Identification' tab.",
       style="color:red;")
   }
 })

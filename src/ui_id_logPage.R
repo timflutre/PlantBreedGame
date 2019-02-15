@@ -29,13 +29,14 @@ tabItem(tabName="id",
           div( id = "logInDiv",
             shinydashboard::box(width=12, title = NULL,
                                 div(style="vertical-align: top; margin-top:10px; min-width: 20%;", id="id_5",
-                                    p("Breeders can have different statuses:"),
+                                    p("Depending on your status, you are granted with different permissions:"),
                                     tags$ul(
-                                        tags$li(strong("Tester (such as 'test'):"), "to test this game without needing a password. Access to the \"Evaluation\" tab. Data files available without any time restriction."),
-                                        tags$li(strong("Game-master (such as 'admin'):"), "highest privileges. Access to the \"Admin\" and \"Evaluation\" tabs. Data files available without any time restriction."),
-                                        tags$li(strong("Player:"), "when playing in a common session. Access neither to the \"Admin\" nor \"Evaluation\" tabs. Data files available under time restriction.")
+                                        tags$li(strong("game-master (such as breeder 'admin'):"), "has the highest privileges. Has access to the \"Admin\" and \"Evaluation\" tabs. Data files available without any time restriction."),
+                                        tags$li(strong("tester (such as breeder 'test'):"), "used to test the game without needing a password. Has access to the \"Evaluation\" tab. Data files available without any time restriction."),
+                                        tags$li(strong("player:"), "used when playing in a common session. Has access neither to the \"Admin\" nor \"Evaluation\" tabs. Data files available under time restriction.")
                                     )
-                                ),
+                                    ),
+                                br(),
                                 div(style="display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;", id="id_1",
                                     uiOutput("selectBreeder")
                                 ),

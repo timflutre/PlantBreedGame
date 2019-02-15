@@ -107,16 +107,18 @@ tabItem(
       p("Softwares:",
         " ", a("beanplot", href="https://cran.r-project.org/package=beanplot", target="_blank"),
         ", ", a("lme4", href="https://cran.r-project.org/package=lme4", target="_blank"),
+        ", ", a("MM4LMM", href="https://cran.r-project.org/package=MM4LMM", target="_blank"),
         ", ", a("SpATS", href="https://cran.r-project.org/package=SpATS", target="_blank"),
+        ", ", a("breedR", href="https://github.com/famuvie/breedR", target="blank_"),
         ", ", a("MuMIn", href="https://cran.r-project.org/package=MuMIn", target="_blank"),
         ", ", a("QTLRel", href="https://cran.r-project.org/package=QTLRel", target="blank_"),
         ", ", a("rrBLUP", href="https://cran.r-project.org/package=rrBLUP", target="blank_"),
         ", ", a("BGLR", href="https://cran.r-project.org/package=BGLR", target="blank_"),
+        ", ", a("glmnet", href="https://cran.r-project.org/package=glmnet", target="blank_"),
         ", ", a("varbvs", href="https://cran.r-project.org/package=varbvs", target="_blank"),
         ", ", a("mlmm.gwas", href="https://cran.r-project.org/package=mlmm.gwas", target="_blank"),
         ", ", a("cvTools", href="https://cran.r-project.org/package=cvTools", target="blank_"),
-        ", ", a("breedR", href="https://github.com/famuvie/breedR", target="blank_"),
-        ", ", a("rgs3", href="https://github.com/INRA/rgs3", target="blank_"))
+        ", ", a("caret", href="https://cran.r-project.org/package=caret", target="blank_"))
 
       )
 
