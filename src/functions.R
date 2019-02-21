@@ -137,8 +137,30 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
                 collapse=""))
   }
 
-
   df$parent2[df$parent2 == ""] <- NA
+
+  ## add the column "explanations" if necessary
+  if(! "explanations" %in% colnames(df)){
+    df$explanations <- NA
+
+    idx <- which(df$parent1 != df$parent2 &
+                 ! is.na(df$parent2))
+    if(length(idx) > 0)
+      df$explanations[idx] <- "allofecundation"
+
+    idx <- which(df$parent1 == df$parent2 &
+                 ! is.na(df$parent2))
+    if(length(idx) > 0)
+      df$explanations[idx] <- "autofecundation"
+
+    idx <- which(is.na(df$parent2))
+    if(length(idx) > 0)
+      df$explanations[idx] <- "haplodiploidization"
+
+    if(any(is.na(df$explanations))){
+      stop("for some individuals, can't deduce the breeding type.")
+    }
+  }
 
   invisible(df)
 }
