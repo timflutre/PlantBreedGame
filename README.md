@@ -8,7 +8,7 @@ It takes the form of a [Shiny](http://shiny.rstudio.com/) application, benefitin
 This software is available under a **free software** license, the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl.html) (version 3 and later); see the COPYING file.
 The copyright is owned by the [Institut National de la Recherche Agronomique](http://www.inra.fr/) (INRA) and [Montpellier SupAgro](http://www.supagro.fr/).
 
-It is versioned using the [git](http://www.git-scm.com/) software, the central repository being hosted [here](https://github.com/timflutre/PlantSelBreedGame) on GitHub, and the institutional repository being hosted [there](https://sourcesup.renater.fr/projects/plantbreedgame/) on SourceSup.
+It is versioned using the [git](http://www.git-scm.com/) software, the central repository being hosted [here](https://github.com/timflutre/PlantBreedGame) on GitHub, and the institutional repository being hosted [there](https://sourcesup.renater.fr/projects/plantbreedgame/) on SourceSup.
 The `README` file is available at [https://sourcesup.renater.fr/plantbreedgame/](https://sourcesup.renater.fr/plantbreedgame/).
 
 
@@ -16,31 +16,31 @@ The `README` file is available at [https://sourcesup.renater.fr/plantbreedgame/]
 
 ## Dependencies
 
-Before using this game, you need to install R as well as various packages, listed in the file [`src/dependencies.R`](https://github.com/timflutre/PlantSelBreedGame/blob/master/src/dependencies.R).
+Before using this game, you need to install R as well as various packages, listed in the file [`src/dependencies.R`](https://github.com/timflutre/PlantBreedGame/blob/master/src/dependencies.R).
 Then it should work on Unix-like operating systems (GNU/Linux, Mac OS) as well as on Microsoft Windows.
 
 ## Locally on your computer
 
-1) Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantSelBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory).
+1) Retrieve the Shiny application, by [downloading](https://github.com/timflutre/PlantBreedGame/archive/master.zip) it as a ZIP archive (then unzip it and rename the directory).
 
 Here is how to do it in a terminal for Unix-like operating systems:
 ```
-wget https://github.com/timflutre/PlantSelBreedGame/archive/master.zip
+wget https://github.com/timflutre/PlantBreedGame/archive/master.zip
 unzip master.zip
-mv PlantSelBreedGame-master PlantSelBreedGame
+mv PlantBreedGame-master PlantBreedGame
 ```
 
 The package can also be installed after cloning the git repository:
 ```
-git clone git@github.com:timflutre/PlantSelBreedGame.git
+git clone git@github.com:timflutre/PlantBreedGame.git
 ```
 
-2) Then, enter into the `PlantSelBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
+2) Then, enter into the `PlantBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
 
 3) Finally, open a R session, and execute the following commands:
 ```
 library(shiny)
-setwd("path/to/PlantSelBreedGame")
+setwd("path/to/PlantBreedGame")
 runApp()
 ```
 
@@ -58,9 +58,9 @@ Start by downloading, for instance in your home, our Shiny application as a ZIP 
 
 ```
 cd ~
-wget https://github.com/timflutre/PlantSelBreedGame/archive/master.zip
+wget https://github.com/timflutre/PlantBreedGame/archive/master.zip
 unzip master.zip
-mv PlantSelBreedGame-master PlantSelBreedGame
+mv PlantBreedGame-master PlantBreedGame
 ```
 
 Then, create a new directory for the application (let's call it `breeding-game` here):
@@ -72,7 +72,7 @@ mkdir /srv/shiny-server/breeding-game
 and copy inside the content of our Shiny application you just downloaded:
 
 ```
-cp -r ~/PlantSelBreedGame-master/* /srv/shiny-server/breeding-game
+cp -r ~/PlantBreedGame-master/* /srv/shiny-server/breeding-game
 ```
 
 By default, the Shiny server runs as a unix user named `shiny`.
@@ -136,7 +136,7 @@ This tab also allows a game master to create new breeders and sessions, among ot
 
 # Issues
 
-When encountering a problem with the package, you can report issues on GitHub directly ([here](https://github.com/timflutre/PlantSelBreedGame/issues)).
+When encountering a problem with the package, you can report issues on GitHub directly ([here](https://github.com/timflutre/PlantBreedGame/issues)).
 
 
 # Contributing

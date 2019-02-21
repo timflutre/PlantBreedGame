@@ -60,7 +60,7 @@ subset.snps[["hd"]] <- rownames(read.table(f))
 f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
 subset.snps[["ld"]] <- rownames(read.table(f))
 
-url.repo <- "https://github.com/timflutre/PlantSelBreedGame"
+url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
 
 stopifnot(all(c("admin", "test") %in% getBreederList(setup$dbname)))
