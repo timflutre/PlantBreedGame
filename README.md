@@ -35,7 +35,7 @@ The package can also be installed after cloning the git repository:
 git clone git@github.com:timflutre/PlantBreedGame.git
 ```
 
-2) Then, enter into the `PlantBreedGame` directory; inside, download the `data.zip` archive (example data set retrievable [from the authors](mailto:timothee.flutre@inra.fr)) and unzip it.
+2) Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/).
 
 3) Finally, open a R session, and execute the following commands:
 ```
@@ -109,7 +109,7 @@ This repository is made available in the mean time for pedagogical reasons.
 As the authors invested time and effort in creating this package, please cite it as:
 
 ```
-Flutre T, Diot J, David J. PlantBreedGame: a serious game to teach plant selective breeding. 2019. https://sourcesup.renater.fr/plantbreedgame/
+Flutre T, Diot J, David J. PlantBreedGame: A Serious Game Which Puts Students In The Breeder's Seat. 2019. https://sourcesup.renater.fr/plantbreedgame/
 ```
 
 
