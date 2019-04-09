@@ -297,7 +297,7 @@ Ascertain SNPs for the genotyping arrays (high and low density):
 ```{r ascertain_snps}
 nb.inds.denovo <- 20
 nb.snps.hd <- 10*10^3
-nb.snps.ld <- 5*10^3
+nb.snps.ld <- floor(nb.snps.hd / 3)
 subset.inds <- sort(sample(rownames(g0$genos), nb.inds.denovo))
 mafs.subset <- estimSnpMaf(g0$genos[subset.inds,])
 summary(mafs.subset)
@@ -1220,7 +1220,7 @@ query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('cost.geno.hd', '", 1, "')") # idem
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
-                " ('cost.geno.ld', '", 1/3, "')") # idem
+                " ('cost.geno.ld', '", 1/2, "')") # idem
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('cost.geno.single', '", 1/50, "')") # idem
