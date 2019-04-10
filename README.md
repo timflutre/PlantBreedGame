@@ -147,6 +147,11 @@ Flutre T, Diot J, David J. PlantBreedGame: A Serious Game Which Puts Students In
 ```
 
 
+# Acknowledgments
+
+Thanks to Philippe Brabant (AgroParisTech) and Jean-Luc Jannink (Cornell) for their feedbacks.
+
+
 # Issues
 
 When encountering a problem with the package, you can report issues on GitHub directly ([here](https://github.com/timflutre/PlantBreedGame/issues)).
