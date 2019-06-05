@@ -138,12 +138,10 @@ For this, you need to edit the setup file [`plantbreedgame_setup.Rmd`](https://g
 
 # Citation
 
-A scientific article is currently in preparation.
-This repository is made available in the mean time for pedagogical reasons.
-As the authors invested time and effort in creating this package, please cite it as:
+As the authors invested time and effort in creating this game, please cite the following [letter](https://dl.sciencesocieties.org/publications/cs/abstracts/0/0/cropsci2019.03.0183le) to the editor of Crop Science:
 
 ```
-Flutre T, Diot J, David J. PlantBreedGame: A Serious Game Which Puts Students In The Breeder's Seat. 2019. https://sourcesup.renater.fr/plantbreedgame/
+Flutre, T., Diot, J., and David, J. (2019). PlantBreedGame: A Serious Game that Puts Students in the Breeder’s Seat. Crop Science. DOI 10.2135/cropsci2019.03.0183le
 ```
 
 
