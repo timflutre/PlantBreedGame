@@ -23,6 +23,7 @@
 ## R> install.packages("<package_name>")
 library(shiny)
 library(shinydashboard)
+library(shinycssloaders)
 library(shinyjs)
 library(RSQLite)
 library(MASS)

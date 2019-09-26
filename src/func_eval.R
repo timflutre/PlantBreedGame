@@ -131,7 +131,7 @@ phenotype4Eval <- function (df, nRep=50){
 
     phenosField <- simulTraits12(dat=phenosField.df,
                                  mu=p0$mu,
-                                 sigma.alpha2=c(trait1 = 0, 
+                                 sigma.alpha2=c(trait1 = 0,
                                                 trait2 = 0),
                                  X=X[levels(phenosField.df$ind),,drop=FALSE],
                                  Beta=p0$Beta,
@@ -177,29 +177,29 @@ getAFs <- function(pop, breeder, progressAFS=NULL){
   X <- matrix(nrow = length(pop),
               ncol = constants$nb.snps)
   rownames(X) <- pop
-  
+
   for(i in 1:length(pop)){
 
     ind.id <- pop[i]
     indName <- paste0(c(breeder, ind.id),collapse="_")
-    
+
     if (!is.null(progressAFS)){
       progressAFS$set(value = i/length(pop),
                       detail= indName)
     }
-    
+
     # message(paste0(i, "/", length(pop), " ", ind.id))
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
     load(f)
-    
+
     ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
     rownames(ind$genos) <- indName
     X[i,] <- ind$genos
   }
   colnames(X) <- colnames(ind$genos)
-  
+
   return(estimSnpAf(X=X))
-  
+
 }
 
 
@@ -217,7 +217,7 @@ getBreederHistory <- function(breeder, setup) {
     query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder,"\'")
     res <- RSQLite::dbGetQuery(conn=db, query)
     dbDisconnect(db)
-    
+
     # manage variable class
     res$task <- as.factor(res$task)
     res$request_date <- as.Date(res$request_date)
@@ -243,15 +243,15 @@ getBreederHistory <- function(breeder, setup) {
 #'
 #' @examples
 calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar=NULL){
-    
+
     query <- query[query$breeder==breeder,]
     ## 1. load the haplotypes and convert to genotypes
     X <- matrix(nrow = length(unique(query$ind)),
                 ncol = constants$nb.snps)
-    
+
     for(i in 1:length(unique(query$ind))){
         ind.id <- unique(query$ind)[i]
-        
+
         if (!is.null(progressBar)){
             progressBar$inc(amount = 1/length(unique(query$ind)),
                             detail = paste0("Load haplotypes: ",paste0(i, "/", nrow(query), " ", ind.id)))
@@ -261,14 +261,14 @@ calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar=N
         if(! file.exists(f))
             stop(paste0(f, " doesn't exist"))
         load(f)
-        
+
         ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
         X[i,] <- ind$genos
-        
+
     }
     rownames(X) <- unique(query$ind)
     colnames(X) <- colnames(ind$genos)
-    
+
     rutilstimflutre::estimGenRel(X=X, relationships="additive", method="vanraden1", verbose=0)
 }
 
