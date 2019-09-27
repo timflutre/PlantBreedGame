@@ -236,10 +236,39 @@ list(
 
 
              ) # end div "admin_diskU_input"
-    )# end tabPanel "Disk usage"
+    ),# end tabPanel "Disk usage"
+
+
+
+#----- Game progress -----
+# This tab displays the progression of the players.
+    tabPanel("Game progress",
+             fluidRow(
+                 div(class = "col-sm-12 col-md-12 col-lg-12",
+
+                     selectInput(inputId = "admin_progressTrait",
+                                 label = "Trait",
+                                 choices = c("Trait 1", "Trait 2"),
+                                 selected = "Trait 1"),
+
+
+                     actionButton(inputId = "admin_progressButton",
+                                  label = "Refresh !",
+                                  icon = icon("refresh"),
+                                  style = "background-color: #00a65a;
+                                      color: #ffffff;")
+                 ),
+                 div(class = "col-sm-12 col-md-12 col-lg-6",
+                     plotlyOutput("admin_plotAllIndGameProgress") %>% withSpinner()
+                 ),
+                 div(class = "col-sm-12 col-md-12 col-lg-6",
+                     plotlyOutput("admin_plotMaxIndGameProgress") %>% withSpinner()
+                 )
+             )# end fluidRow
+    )# end tabPanel "Game progress"
 
 
 
 
     )# close tabBox
-             ) # close list
+) # close list
