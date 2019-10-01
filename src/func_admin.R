@@ -241,7 +241,6 @@ calcGeneration <- function(ped, inds){
   # get the id of the initial individuals of the population
   initInds <- unique(c(ped$parent1,ped$parent2))
   initInds <- initInds[!initInds %in% ped$child]
-  # initInds <- initInds[initInds!="NA"]
 
   # initialize dataframe individual/generation
   generation <- data.frame(parent1 = NA,
@@ -250,7 +249,7 @@ calcGeneration <- function(ped, inds){
                            gen = NA)
   generation$gen[generation$ind %in% initInds] <- 0
 
-  parents <- initInds[initInds!="NA"]
+  parents <- initInds[initInds != "NA"]
   while (any(is.na(generation$gen))){
 
     # get the list of all the child
@@ -258,9 +257,9 @@ calcGeneration <- function(ped, inds){
 
     # get generation of the parents
     par1 <- ped$parent1[ped$child %in% child]
-    genP1 <- generation$gen[generation$ind %in% par1]
+    genP1 <- sapply(par1, function(par){generation$gen[generation$ind == par]})
     par2 <- ped$parent2[ped$child %in% child]
-    genP2 <- generation$gen[generation$ind %in% par2]
+    genP2 <- sapply(par2, function(par){generation$gen[generation$ind == par]})
 
     generation$gen[generation$ind %in% child] <- pmax(genP1, genP2) + 1
     generation$parent1[generation$ind %in% child] <- par1
