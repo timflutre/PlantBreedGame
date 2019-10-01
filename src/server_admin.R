@@ -445,6 +445,7 @@ output$admin_plotAllIndGameProgress <- renderPlotly({
           x = ~jitter(gen),
           y = ~BV,
           color = ~breeder,
+          opacity = 0.75,
           hoverinfo = 'text',
           text = ~paste0(
             '<b>', ind, '</b>', # (in bold)
@@ -544,14 +545,8 @@ output$admin_boxPlotGameProgress <- renderPlotly({
           type = "box",
           x = ~gen,
           y = ~BV,
-          color = ~breeder,
-          hoverinfo = 'text',
-          text = ~paste0(
-            '<b>', ind, '</b>', # (in bold)
-            '\nparent1: ', parent1,
-            '\nparent2: ', parent2,
-            '\nBV trait1 = ', round(trait1,2),
-            '\nBV trait2 = ', round(trait2,2))
+          hoverinfo = "y",
+          color = ~breeder
   ) %>%
     layout(
       boxmode = "group",
