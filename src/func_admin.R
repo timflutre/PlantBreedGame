@@ -194,7 +194,8 @@ deleteBreeder <- function(breederName){
 
 
 
-getBV <- function(breeder, inds){
+calcBV <- function(breeder, inds, savedBV = NULL){
+
 
   # load SNP effects
   f <- paste0(setup$truth.dir, "/p0.RData")

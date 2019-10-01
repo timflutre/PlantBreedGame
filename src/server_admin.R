@@ -336,30 +336,33 @@ output$InfoCurrentMaxDiskUsage <- renderText({
 
 admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
 
-  ### GET BV of the initial individuals:
-  # load initial collection genotypes
-  f <- paste0(setup$truth.dir, "/coll.RData")
-  load(f)
-  # load SNP effects
-  f <- paste0(setup$truth.dir, "/p0.RData")
-  load(f)
+
+  # load breeding values data:
+  f <- paste0(setup$truth.dir, "/allBV.RData")
+  if (file.exists(f)) {
+    load(f)
+  } else {
+    ### GET BV of the initial individuals:
+    # load initial collection genotypes
+    f <- paste0(setup$truth.dir, "/coll.RData")
+    load(f)
+    # load SNP effects
+    f <- paste0(setup$truth.dir, "/p0.RData")
+    load(f)
 
 
-  # initialisation of the breeding values data with the initial collection
-  BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
-                       trait2 = coll$geno %*% p0$Beta[,2])
-  breedValuesDta <- data.frame(breeder = "Initial collection",
-                               parent1 = NA,
-                               parent2 = NA,
-                               ind = rownames(BVcoll),
-                               gen = 1,
-                               BVcoll)
-  iniMeanT1 <- mean(breedValuesDta$trait1)
-  iniMeanT2 <- mean(breedValuesDta$trait2)
-  rm(list = c("coll", "BVcoll")) # Free memory
+    # initialisation of the breeding values data with the initial collection
+    BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
+                         trait2 = coll$geno %*% p0$Beta[,2])
+    breedValuesDta <- data.frame(breeder = "Initial collection",
+                                 parent1 = NA,
+                                 parent2 = NA,
+                                 ind = rownames(BVcoll),
+                                 gen = 1,
+                                 BVcoll)
+    rm(list = c("coll", "BVcoll")) # Free memory
+  }
 
-
-  # browser()
 
   ### GET BV of the breeders's individuals:
   # get the list of the breeders (without "admin" and "test")
@@ -367,6 +370,12 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
   query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
   breeders <- as.character(dbGetQuery(conn = db, query)$name)
   dbDisconnect(db)
+
+
+  ### Remove deleted breeders from breedValuesDta
+  breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders,"Initial collection"),]
+
+  ### calculation
 
   # get list of all individuals with generation and BV
   breedValuesDta <- rbind(breedValuesDta,
@@ -379,14 +388,21 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
                                     allInds <- (dbGetQuery(conn = db, query))
                                     dbDisconnect(db)
 
-                                    # get breeding values
-                                    BV <- getBV(breeder,
-                                                allInds$child[!allInds$child %in% breedValuesDta$ind])
+                                    # get the new individuals
+                                    tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
+                                    inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
 
-                                    # get generation
+                                    if (length(inds) == 0) {
+                                      return()
+                                    }
+
+                                    # calc breeding values of new individuals
+                                    BV <- calcBV(breeder, inds)
+
+                                    # calc generation
                                     generation <- calcGeneration(allInds,
-                                                                 allInds$child[!allInds$child %in% breedValuesDta$ind])
-                                    # browser()
+                                                                 inds)
+
                                     cbind(breeder = breeder,
                                           generation,
                                           BV)
@@ -395,7 +411,15 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
                           ))
 
 
+  # save breeding values:
+  save(breedValuesDta,
+       file = paste0(setup$truth.dir, "/allBV.RData"))
+
+
+  # return centered BV:
   # center breeding values
+  iniMeanT1 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait1"])
+  iniMeanT2 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait2"])
   breedValuesDta$trait1 <- breedValuesDta$trait1 - iniMeanT1
   breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
 
@@ -502,7 +526,43 @@ output$admin_plotMaxIndGameProgress <- renderPlotly({
       )
     )
 
+})
 
 
+output$admin_boxPlotGameProgress <- renderPlotly({
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested trait
+  if (input$admin_progressTrait == "Trait 1") {
+    dta$BV <- dta$trait1
+  } else if (input$admin_progressTrait == "Trait 2") {
+    dta$BV <- dta$trait2
+  }
+
+  plot_ly(data = dta,
+          type = "box",
+          x = ~gen,
+          y = ~BV,
+          color = ~breeder,
+          hoverinfo = 'text',
+          text = ~paste0(
+            '<b>', ind, '</b>', # (in bold)
+            '\nparent1: ', parent1,
+            '\nparent2: ', parent2,
+            '\nBV trait1 = ', round(trait1,2),
+            '\nBV trait2 = ', round(trait2,2))
+  ) %>%
+    layout(
+      boxmode = "group",
+      title = paste0('All individuals (', input$admin_progressTrait,")"),
+      xaxis = list(
+        title = 'Generation',
+        dtick = 1
+      ),
+      yaxis = list(
+        title = 'Breedind values'
+      )
+    )
 
 })
