@@ -561,3 +561,43 @@ output$admin_boxPlotGameProgress <- renderPlotly({
     )
 
 })
+
+
+
+
+output$admin_T1T2GameProgress <- renderPlotly({
+
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested breeder
+  dta <- dta[dta$breeder %in% c(input$admin_T1T2Breeder,"Initial collection"),]
+
+  dta$gen <- as.character(dta$gen)
+
+  plot_ly(data = dta,
+          type = "scatter",
+          mode = "markers",
+          x = ~trait1,
+          y = ~trait2,
+          color = ~gen,
+          opacity = 0.75,
+          hoverinfo = 'text',
+          text = ~paste0(
+            '<b>', ind, '</b>', # (in bold)
+            '\nparent1: ', parent1,
+            '\nparent2: ', parent2,
+            '\nBV trait1 = ', round(trait1,2),
+            '\nBV trait2 = ', round(trait2,2))
+  ) %>%
+    layout(
+      title = paste0('Trait 1 vs Trait 2 (', input$admin_T1T2Breeder,")"),
+      xaxis = list(
+        title = 'Trait 1'
+      ),
+      yaxis = list(
+        title = 'Trait 2'
+      )
+    )
+
+})
