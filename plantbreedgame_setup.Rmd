@@ -375,7 +375,7 @@ Enhancement: arrange plots on a grid and return their coordinates
 
 Export genotypes for the players using high-density chip, but only for a subset of lines:
 ```{r export_geno}
-f <- paste0(init.dir, "/genos_subset-coll.txt.gz")
+f <- paste0(init.dir, "/Result_genos_subset-initialColl-hd.txt.gz")
 subset.years <- as.numeric(levels(p0.df$year)[
   (floor(0.5*nlevels(p0.df$year))):nlevels(p0.df$year)])
 subset.coll <- unique(as.character(p0.df$ind[p0.df$year %in% subset.years]))
@@ -843,7 +843,7 @@ file.info(f)$mtime
 
 Export "phenotype" data.frame for players:
 ```{r export_phenos}
-f <- paste0(init.dir, "/phenos_coll.txt.gz")
+f <- paste0(init.dir, "/Result_phenos_initialColl.txt.gz")
 write.table(x=p0.df[, -grep("raw", colnames(p0.df))],
             file=gzfile(f), quote=FALSE,
             sep="\t", row.names=FALSE, col.names=TRUE)
@@ -976,7 +976,7 @@ for(j in 1:nb.years.per.ctl){
 }
 regplot(phectls.df$trait1, phectls.df$trait2, xlab="phectls.df$trait1",
         ylab="phectls.df$trait2", las=1)
-fout <- paste0(init.dir, "/phenos_controls.txt.gz")
+fout <- paste0(init.dir, "/Result_phenos_controls.txt.gz")
 if(file.exists(fout))
   file.remove(fout)
 write.table(x=phectls.df, file=gzfile(fout), quote=FALSE,
