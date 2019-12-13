@@ -325,3 +325,279 @@ currentMaxDiskUsage <- reactive({
 output$InfoCurrentMaxDiskUsage <- renderText({
     paste("Current maximum disk usage:", currentMaxDiskUsage(), "Gb")
 })
+
+
+
+
+
+
+
+## Game progress ----
+
+admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
+
+
+  # load breeding values data:
+  f <- paste0(setup$truth.dir, "/allBV.RData")
+  if (file.exists(f)) {
+    load(f)
+  } else {
+    ### GET BV of the initial individuals:
+    # load initial collection genotypes
+    f <- paste0(setup$truth.dir, "/coll.RData")
+    load(f)
+    # load SNP effects
+    f <- paste0(setup$truth.dir, "/p0.RData")
+    load(f)
+
+
+    # initialisation of the breeding values data with the initial collection
+    BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
+                         trait2 = coll$geno %*% p0$Beta[,2])
+    breedValuesDta <- data.frame(breeder = "Initial collection",
+                                 parent1 = NA,
+                                 parent2 = NA,
+                                 ind = rownames(BVcoll),
+                                 gen = 1,
+                                 BVcoll)
+    rm(list = c("coll", "BVcoll")) # Free memory
+  }
+
+
+  ### GET BV of the breeders's individuals:
+  # get the list of the breeders (without "admin" and "test")
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
+  breeders <- as.character(dbGetQuery(conn = db, query)$name)
+  dbDisconnect(db)
+
+
+  ### Remove deleted breeders from breedValuesDta
+  breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders,"Initial collection"),]
+
+  ### calculation
+
+  # get list of all individuals with generation and BV
+  breedValuesDta <- rbind(breedValuesDta,
+                          do.call(rbind,
+                                  sapply(breeders, simplify = F, function(breeder){
+
+                                    # get list of individuals
+                                    db <- dbConnect(SQLite(), dbname = setup$dbname)
+                                    query <- paste0("SELECT * FROM plant_material_", breeder)
+                                    allInds <- (dbGetQuery(conn = db, query))
+                                    dbDisconnect(db)
+
+                                    # get the new individuals
+                                    tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
+                                    inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
+
+                                    if (length(inds) == 0) {
+                                      return()
+                                    }
+
+                                    # calc breeding values of new individuals
+                                    BV <- calcBV(breeder, inds)
+
+                                    # calc generation
+                                    generation <- calcGeneration(allInds,
+                                                                 inds)
+
+                                    cbind(breeder = breeder,
+                                          generation,
+                                          BV)
+
+                                  })
+                          ))
+
+
+  # save breeding values:
+  save(breedValuesDta,
+       file = paste0(setup$truth.dir, "/allBV.RData"))
+
+
+  # return centered BV:
+  # center breeding values
+  iniMeanT1 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait1"])
+  iniMeanT2 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait2"])
+  breedValuesDta$trait1 <- breedValuesDta$trait1 - iniMeanT1
+  breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
+
+  breedValuesDta
+
+})
+
+
+output$admin_plotAllIndGameProgress <- renderPlotly({
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested trait
+  if (input$admin_progressTrait == "Trait 1") {
+    dta$BV <- dta$trait1
+  } else if (input$admin_progressTrait == "Trait 2") {
+    dta$BV <- dta$trait2
+  }
+
+  plot_ly(data = dta,
+          type = "scatter",
+          mode = "markers",
+          x = ~jitter(gen),
+          y = ~BV,
+          color = ~breeder,
+          opacity = 0.75,
+          hoverinfo = 'text',
+          text = ~paste0(
+            '<b>', ind, '</b>', # (in bold)
+            '\nparent1: ', parent1,
+            '\nparent2: ', parent2,
+            '\nBV trait1 = ', round(trait1,2),
+            '\nBV trait2 = ', round(trait2,2))
+  ) %>%
+    layout(
+      title = paste0('All individuals (', input$admin_progressTrait,")"),
+      xaxis = list(
+        title = 'Generation',
+        dtick = 1
+      ),
+      yaxis = list(
+        title = 'Breedind values'
+      )
+  )
+
+})
+
+
+output$admin_plotMaxIndGameProgress <- renderPlotly({
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested trait
+  if (input$admin_progressTrait == "Trait 1") {
+    dta$BV <- dta$trait1
+  } else if (input$admin_progressTrait == "Trait 2") {
+    dta$BV <- dta$trait2
+  }
+
+
+  # get the best individuals per breeder per generation
+  bestBV <- NULL
+  for (breeder in unique(dta$breeder)) {
+    tmp1 <- dta[dta$breeder == breeder,]
+    for (gen in unique(tmp1$gen)) {
+      tmp2 <- tmp1[tmp1$gen == gen,]
+      bestBV <- rbind(bestBV,
+                      tmp2[tmp2$BV == max(tmp2$BV),])
+    }
+
+    # add initial collection ind to all breeders
+    if (breeder != "Initial collection") {
+      bestIni <- bestBV[bestBV$breeder == "Initial collection", ]
+      bestIni$breeder <- breeder
+      bestBV <- rbind(bestBV, bestIni)
+    }
+  }
+
+  # remove "Initial collection" breeder
+  bestBV <- bestBV[bestBV$breeder != "Initial collection",]
+
+
+  plot_ly(data = bestBV[order(bestBV$gen),],
+          type = "scatter",
+          mode = "lines+markers",
+          x = ~gen,
+          y = ~BV,
+          color = ~breeder,
+          hoverinfo = 'text',
+          text = ~paste0(
+            '<b>', ind, '</b>', # (in bold)
+            '\nparent1: ', parent1,
+            '\nparent2: ', parent2,
+            '\nBV trait1 = ', round(trait1,2),
+            '\nBV trait2 = ', round(trait2,2))
+  ) %>%
+    layout(
+      title = paste0('Best individuals (', input$admin_progressTrait, ")"),
+      xaxis = list(
+        title = 'Generation',
+        dtick = 1
+      ),
+      yaxis = list(
+        title = 'Breedind values'
+      )
+    )
+
+})
+
+
+output$admin_boxPlotGameProgress <- renderPlotly({
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested trait
+  if (input$admin_progressTrait == "Trait 1") {
+    dta$BV <- dta$trait1
+  } else if (input$admin_progressTrait == "Trait 2") {
+    dta$BV <- dta$trait2
+  }
+
+  plot_ly(data = dta,
+          type = "box",
+          x = ~gen,
+          y = ~BV,
+          hoverinfo = "y",
+          color = ~breeder
+  ) %>%
+    layout(
+      boxmode = "group",
+      title = paste0('All individuals (', input$admin_progressTrait,")"),
+      xaxis = list(
+        title = 'Generation',
+        dtick = 1
+      ),
+      yaxis = list(
+        title = 'Breedind values'
+      )
+    )
+
+})
+
+
+
+
+output$admin_T1T2GameProgress <- renderPlotly({
+
+
+  dta <- admin_gameProgressDta()
+
+  # extract BV of the requested breeder
+  dta <- dta[dta$breeder %in% c(input$admin_T1T2Breeder,"Initial collection"),]
+
+  dta$gen <- as.character(dta$gen)
+
+  plot_ly(data = dta,
+          type = "scatter",
+          mode = "markers",
+          x = ~trait1,
+          y = ~trait2,
+          color = ~gen,
+          opacity = 0.75,
+          hoverinfo = 'text',
+          text = ~paste0(
+            '<b>', ind, '</b>', # (in bold)
+            '\nparent1: ', parent1,
+            '\nparent2: ', parent2,
+            '\nBV trait1 = ', round(trait1,2),
+            '\nBV trait2 = ', round(trait2,2))
+  ) %>%
+    layout(
+      title = paste0('Trait 1 vs Trait 2 (', input$admin_T1T2Breeder,")"),
+      xaxis = list(
+        title = 'Trait 1'
+      ),
+      yaxis = list(
+        title = 'Trait 2'
+      )
+    )
+
+})

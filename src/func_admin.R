@@ -190,3 +190,87 @@ deleteBreeder <- function(breederName){
 
 
 }
+
+
+
+
+calcBV <- function(breeder, inds, savedBV = NULL){
+
+
+  # load SNP effects
+  f <- paste0(setup$truth.dir, "/p0.RData")
+  load(f)
+
+  X <- t(sapply(inds, function(ind.id){
+    indName <- paste0(c(breeder, ind.id),collapse="_")
+    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    if(! file.exists(f))
+      stop(paste0(f, " doesn't exist"))
+    load(f)
+
+    ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
+    rownames(ind$genos) <- indName
+    ind$genos
+  }))
+
+  BV <- X %*% p0$Beta
+  BV
+
+}
+
+
+
+calcGeneration <- function(ped, inds){
+
+  # checks
+  stopifnot(
+    is.data.frame(ped),
+    all(c("child", "parent1",
+          "parent2") %in% colnames(ped)),
+    all(!is.na(ped$parent1)),
+    all(!is.na(ped$child)),
+    all(!duplicated(ped$child)),
+    is.character(inds),
+    all(inds %in% ped$child)
+  )
+
+  # keep only columns "parent1", "parent2" and "child"
+  ped <- ped[, c("parent1", "parent2", "child")]
+
+
+  # get the id of the initial individuals of the population
+  initInds <- unique(c(ped$parent1,ped$parent2))
+  initInds <- initInds[!initInds %in% ped$child]
+
+  # initialize dataframe individual/generation
+  generation <- data.frame(parent1 = NA,
+                           parent2 = NA,
+                           ind = c(initInds, ped$child),
+                           gen = NA)
+  generation$gen[generation$ind %in% initInds] <- 0
+
+  parents <- initInds[initInds != "NA"]
+  while (any(is.na(generation$gen))){
+
+    # get the list of all the child
+    child <- ped$child[ped$parent1 %in% parents | ped$parent2 %in% parents]
+
+    # get generation of the parents
+    par1 <- ped$parent1[ped$child %in% child]
+    genP1 <- sapply(par1, function(par){generation$gen[generation$ind == par]})
+    par2 <- ped$parent2[ped$child %in% child]
+    genP2 <- sapply(par2, function(par){generation$gen[generation$ind == par]})
+
+    generation$gen[generation$ind %in% child] <- pmax(genP1, genP2) + 1
+    generation$parent1[generation$ind %in% child] <- par1
+    generation$parent2[generation$ind %in% child] <- par2
+
+    # preparation for next generation
+    parents <- child
+  }
+
+  generation <- generation[generation$ind != "NA",]
+
+
+  generation[generation$ind %in% inds,]
+}

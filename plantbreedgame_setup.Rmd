@@ -63,6 +63,8 @@ suppressPackageStartupMessages(library(rutilstimflutre)) # from GitHub
 stopifnot(compareVersion("0.170.0",
                          as.character(packageVersion("rutilstimflutre")))
           != 1)
+suppressPackageStartupMessages(library(scrm))    # from CRAN
+suppressPackageStartupMessages(library(GenomicRanges))# from bioconductor
 ```
 
 Set the seed:

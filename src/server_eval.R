@@ -250,8 +250,8 @@ output$evalUIAfsPlot <- renderUI({
     list(
       selectInput("afsBreeder","Breeder", choices=breeders),
       numericInput("propAFS", "Proportion of last individuals to take", 10, min = 1, max = 100),
-      plotlyOutput("evalGraphAFsHist", height = "100%",width="100%"),
-      plotlyOutput("evalGraphAFsScatter", height = "100%",width="100%"))
+      plotlyOutput("evalGraphAFsHist", height = "100%",width="100%") %>% withSpinner(),
+      plotlyOutput("evalGraphAFsScatter", height = "100%",width="100%") %>% withSpinner())
 
   } else { p('no input')}
 
@@ -363,7 +363,6 @@ genealogy <- reactive({
 
   # get submitted individuals
   inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreeBreeder]
-
   subsetPedigree(allInds, inds)
 })
 

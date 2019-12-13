@@ -67,7 +67,9 @@ shinyUI(
                 # dashboard body
                 dashboardBody(
                   ## javascript function
-                  tags$head(tags$script(src="busyServer.js")),
+                  tags$head(tags$script(src = "busyServer.js"),
+                            tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
+                            tags$link(href = "https://fonts.googleapis.com/css?family=Nunito", rel = "stylesheet")),
 
                   tabItems(
                       source("src/ui_information.R", local=TRUE,
