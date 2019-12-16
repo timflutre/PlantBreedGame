@@ -195,7 +195,13 @@ requestFiles <- reactive({
 output$dwnlPheno <- downloadHandler(
   filename=function () input$phenoFile, # lambda function
   content=function(file){
-    filePath <- paste0("data/shared/",breeder(), "/",input$phenoFile)
+    initFiles <- list.files("data/shared/initial_data/")
+    if (input$phenoFile %in% initFiles) {
+      folder <- "data/shared/initial_data"
+    } else {
+      folder <- paste0("data/shared/",breeder())
+    }
+    filePath <- paste0(folder, "/", input$phenoFile)
     write.table(read.table(filePath, header = T),
                 file=gzfile(file), quote=FALSE,
                 sep="\t", row.names=FALSE, col.names=TRUE)
@@ -205,7 +211,13 @@ output$dwnlPheno <- downloadHandler(
 output$dwnlGeno <- downloadHandler(
   filename=function () input$genoFile, # lambda function
   content=function(file){
-    filePath <- paste0("data/shared/",breeder(), "/",input$genoFile)
+    initFiles <- list.files("data/shared/initial_data/")
+    if (input$genoFile %in% initFiles) {
+      folder <- "data/shared/initial_data"
+    } else {
+      folder <- paste0("data/shared/",breeder())
+    }
+    filePath <- paste0(folder, "/", input$genoFile)
     write.table(read.table(filePath, header = T),
                 file=gzfile(file), quote=FALSE,
                 sep="\t", row.names=TRUE, col.names=TRUE)
@@ -215,7 +227,13 @@ output$dwnlGeno <- downloadHandler(
 output$dwnlPltMat <- downloadHandler(
   filename=function () input$pltMatFile, # lambda function
   content=function(file){
-    filePath <- paste0("data/shared/",breeder(), "/",input$pltMatFile)
+    initFiles <- list.files("data/shared/initial_data/")
+    if (input$pltMatFile %in% initFiles) {
+      folder <- "data/shared/initial_data"
+    } else {
+      folder <- paste0("data/shared/",breeder())
+    }
+    filePath <- paste0(folder, "/", input$pltMatFile)
     write.table(read.table(filePath, sep="\t", header = T),
                 file=file, quote=FALSE,
                 sep="\t", row.names=FALSE, col.names=TRUE)
@@ -226,7 +244,13 @@ output$dwnlPltMat <- downloadHandler(
 output$dwnlRequest <- downloadHandler(
   filename=function () input$requestFile, # lambda function
   content=function(file){
-    filePath <- paste0("data/shared/",breeder(), "/",input$requestFile)
+    initFiles <- list.files("data/shared/initial_data/")
+    if (input$requestFile %in% initFiles) {
+      folder <- "data/shared/initial_data"
+    } else {
+      folder <- paste0("data/shared/",breeder())
+    }
+    filePath <- paste0(folder, "/", input$requestFile)
     write.table(read.table(filePath, sep="\t", header = T),
                 file=file, quote=FALSE,
                 sep="\t", row.names=FALSE, col.names=TRUE)
