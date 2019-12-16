@@ -61,7 +61,7 @@ getDataFileList <- function(type, breeder){
   }else if (type == "pltMat"){
     matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="IndList_"))
   }else if (type == "request") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Request"))
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
   }
 
 
