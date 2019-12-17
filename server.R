@@ -37,6 +37,7 @@ shinyServer(function(input, output, session){
   source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_geno.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_stat.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_eval.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_theory.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_admin.R", local=TRUE, encoding="UTF-8")$value
