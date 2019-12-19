@@ -57,7 +57,52 @@ tabItem(tabName = "stat",
                            ),
                            
                            tabPanel("GWAS",
-                                    div(" GWAS to do")
+                                    tabsetPanel(
+                                      selected = 1,
+                                      type = "tabs",
+                                      # Data import
+                                      tabPanel(
+                                        "Data importation",
+                                        value = 1,
+                                        fluidRow(
+                                          div(class = "col-sm-12 col-md-12 col-lg-12",
+                                              
+                                              # Pheno data
+                                              div(class = "col-sm-12 col-md-6 col-lg-6",
+                                                  h4("Phenotipic data", style = "text-align: center;"),
+                                                  p("toto"),
+                                                  div(class = "col-sm-12 col-md-12 col-lg-12", style = "padding:0;",
+                                                      div(class = "col-sm-12 col-md-6 col-lg-6", style = "padding:0;",
+                                                          fileInput("gwas_phenoFile", "Phenotypic data file")
+                                                      ),
+                                                      div(class = "col-sm-12 col-md-6 col-lg-6",
+                                                          uiOutput("stat_gwasTraitUI")
+                                                      )
+                                                  ),
+                                                  h5("Summary:"),
+                                                  verbatimTextOutput("stat_sumPheno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")
+                                              ),
+                                              
+                                              # Geno data
+                                              div(class = "col-sm-12 col-md-6 col-lg-6",
+                                                  h4("Genotipic data", style = "text-align: center;"),
+                                                  p("tata"),
+                                                  fileInput("gwas_genoFile", "Genotypic data file"),
+                                                  h5("Summary:"),
+                                                  verbatimTextOutput("stat_sumGeno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")
+                                              ),
+                                              
+                                              # global summary
+                                              div(class = "col-sm-12 col-md-12 col-lg-12",
+                                                  verbatimTextOutput("stat_sumGlobal")
+                                              )
+                                          ),
+                                          div(class = "col-sm-12 col-md-12 col-lg-12", style = "text-align: center;",
+                                              uiOutput("stat_gwasCalcButtonUI")
+                                          )
+                                        )
+                                      )
+                                    )
                            ),
                            
                            tabPanel("Genomic Prediction",
