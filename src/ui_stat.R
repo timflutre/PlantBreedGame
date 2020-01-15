@@ -27,17 +27,17 @@ tabItem(tabName = "stat",
             "Shiny.addCustomMessageHandler(
                                     'resetValue',function(variableName){
                                     Shiny.onInputChange(variableName, null);});"
-          ), 
-          
-          
+          ),
+
+
           # 4 top box specifying:
           #  - breeder
           #  - Date
           #  - Budget
           #  - server status
           uiOutput("stat_UIbreederInfo"),
-          
-          
+
+
           # Information box
           shinydashboard::box(width = 12, title = "Statistical Toolbox",
             div(id = "stat_info1",
@@ -45,28 +45,37 @@ tabItem(tabName = "stat",
                 p("To do")
             )
           ),
-          
-          
-          
-          
-          
+
+
+
+
+
           # Main tab Box
     shinydashboard::tabBox(width = 12, title = "Statistical tools", id = "stat_tabset", side = "left", selected = "BLUP estimation",
+
+
+
+                           #### BLUP  ------------------------ ####
                            tabPanel("BLUP estimation",
                                     div("BLUP to do")
                            ),
-                           
+
+
+
+                           #### GWAS  ------------------------ ####
                            tabPanel("GWAS",
                                     tabsetPanel(
-                                      selected = 1,
+                                      id = "tabGWAS",
+                                      # selected = 1,
                                       type = "tabs",
-                                      # Data import
+
+                                      ##### Data import ####
                                       tabPanel(
                                         "Data importation",
                                         value = 1,
                                         fluidRow(
                                           div(class = "col-sm-12 col-md-12 col-lg-12",
-                                              
+
                                               # Pheno data
                                               div(class = "col-sm-12 col-md-6 col-lg-6",
                                                   h4("Phenotipic data", style = "text-align: center;"),
@@ -74,15 +83,12 @@ tabItem(tabName = "stat",
                                                   div(class = "col-sm-12 col-md-12 col-lg-12", style = "padding:0;",
                                                       div(class = "col-sm-12 col-md-6 col-lg-6", style = "padding:0;",
                                                           fileInput("gwas_phenoFile", "Phenotypic data file")
-                                                      ),
-                                                      div(class = "col-sm-12 col-md-6 col-lg-6",
-                                                          uiOutput("stat_gwasTraitUI")
                                                       )
                                                   ),
                                                   h5("Summary:"),
                                                   verbatimTextOutput("stat_sumPheno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")
                                               ),
-                                              
+
                                               # Geno data
                                               div(class = "col-sm-12 col-md-6 col-lg-6",
                                                   h4("Genotipic data", style = "text-align: center;"),
@@ -91,20 +97,54 @@ tabItem(tabName = "stat",
                                                   h5("Summary:"),
                                                   verbatimTextOutput("stat_sumGeno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")
                                               ),
-                                              
+
                                               # global summary
                                               div(class = "col-sm-12 col-md-12 col-lg-12",
                                                   verbatimTextOutput("stat_sumGlobal")
                                               )
                                           ),
                                           div(class = "col-sm-12 col-md-12 col-lg-12", style = "text-align: center;",
-                                              uiOutput("stat_gwasCalcButtonUI")
+                                              uiOutput("stat_gwasNextButtonUI")
+                                          )
+                                        )
+                                      ),
+
+
+
+
+                                      ##### Model parameters and outputs ####
+                                      tabPanel(
+                                        "Model parameters",
+                                        value = 2,
+                                        fluidRow(
+                                          div(class = "col-sm-12 col-md-4 col-lg-4",
+                                              h4("Variable to explain"),
+                                              uiOutput("stat_gwasVarUI"),
+
+                                              h4("Fixed effects"),
+                                              uiOutput("stat_gwasFixedUI"),
+
+                                              actionButton("stat_calcGwasButton", "Calculation",
+                                                           icon("play-circle"),
+                                                           style = "background-color:green; color: white;")
+                                          ),
+
+                                          div(class = "col-sm-12 col-md-8 col-lg-8",
+                                            plotlyOutput("gwas_plot") %>% withSpinner(type = 4)
                                           )
                                         )
                                       )
+
+
+
+
+
+
                                     )
                            ),
-                           
+
+
+                           #### Genomic Pred  ------------------------ ####
                            tabPanel("Genomic Prediction",
                                     div("GP to do")
                            )

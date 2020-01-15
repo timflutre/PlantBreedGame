@@ -31,6 +31,7 @@ library(digest)
 library(plotly)
 library(DT)
 library(igraph)
+library(rrBLUP)
 
 ## required packages NOT available on the CRAN
 ## R> devtools::install_github("timflutre/rutilstimflutre")
