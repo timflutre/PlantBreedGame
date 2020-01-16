@@ -105,4 +105,10 @@ body {
 /*  ---------- validation message ---------- */
 .shiny-output-error-validation {
         color: red;
-      }
+}
+
+
+/*  ---------- Tab content ---------- */
+.tab-content {
+    padding-top: 10px;
+}

@@ -80,11 +80,7 @@ tabItem(tabName = "stat",
                                               div(class = "col-sm-12 col-md-6 col-lg-6",
                                                   h4("Phenotipic data", style = "text-align: center;"),
                                                   p("toto"),
-                                                  div(class = "col-sm-12 col-md-12 col-lg-12", style = "padding:0;",
-                                                      div(class = "col-sm-12 col-md-6 col-lg-6", style = "padding:0;",
-                                                          fileInput("gwas_phenoFile", "Phenotypic data file")
-                                                      )
-                                                  ),
+                                                  fileInput("gwas_phenoFile", "Phenotypic data file"),
                                                   h5("Summary:"),
                                                   verbatimTextOutput("stat_sumPheno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")
                                               ),
@@ -114,19 +110,34 @@ tabItem(tabName = "stat",
 
                                       ##### Model parameters and outputs ####
                                       tabPanel(
-                                        "Model parameters",
+                                        "Model parameters and results",
                                         value = 2,
                                         fluidRow(
                                           div(class = "col-sm-12 col-md-4 col-lg-4",
-                                              h4("Variable to explain"),
-                                              uiOutput("stat_gwasVarUI"),
+                                              div(class = "col-sm-12 col-md-12 col-lg-12",
+                                                  div(class = "col-sm-12 col-md-12 col-lg-9",
+                                                      # h4("Variable to explain"),
+                                                      uiOutput("stat_gwasVarUI"),
 
-                                              h4("Fixed effects"),
-                                              uiOutput("stat_gwasFixedUI"),
+                                                      # h4("Fixed effects"),
+                                                      uiOutput("stat_gwasFixedUI")
+                                                  ),
+                                                  div(class = "col-sm-12 col-md-12 col-lg-3",
+                                                      div(style = "min-width: 80px;",
+                                                          numericInput("stat_gwasAlpha",
+                                                                       label = "\\(\\alpha\\)",
+                                                                       value = 0.05,
+                                                                       min = 1e-9,
+                                                                       max = 1,
+                                                                       step = 0.01))
+                                                  )
+                                              ),
+                                              div(class = "col-sm-12 col-md-12 col-lg-12",
+                                                  actionButton("stat_calcGwasButton", "Calculation",
+                                                               icon("play-circle"),
+                                                               style = "background-color:green; color: white;")
+                                              )
 
-                                              actionButton("stat_calcGwasButton", "Calculation",
-                                                           icon("play-circle"),
-                                                           style = "background-color:green; color: white;")
                                           ),
 
                                           div(class = "col-sm-12 col-md-8 col-lg-8",

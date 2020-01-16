@@ -341,6 +341,8 @@ output$gwas_plot <- renderPlotly({
     offset <- offset + max(mod[mod$chr == chr,"pos"])
   }
 
+  alpha <- max(input$stat_gwasAlpha, 1e-12)
+
   # browser()
 
   plot_ly(data =  group_by(mod, chr),
@@ -377,12 +379,12 @@ output$gwas_plot <- renderPlotly({
         line = list(color = "red"),
         x0 = min(mod$plotPos),
         x1 = max(mod$plotPos),
-        y0 = -log10(0.05/nrow(mod)),
-        y1 = -log10(0.05/nrow(mod)))
+        y0 = -log10(alpha/nrow(mod)),
+        y1 = -log10(alpha/nrow(mod)))
     ) %>%
     add_annotations(x = 1,
-                    y = -log10(0.05/nrow(mod)),
-                    text = paste("Bonferroni\n\U03B1 =", 0.05),
+                    y = -log10(alpha/nrow(mod)),
+                    text = paste("Bonferroni\n\U03B1 =", alpha),
                     xref = "paper",
                     yref = "y",
                     xanchor = "left",
