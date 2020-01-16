@@ -59,18 +59,21 @@ stat_checkPhenoDta <- reactive({
     return(out)
   }
 
-  msg <- ""
+  msg <- "ERROR: "
 
   if (!"ind" %in% colnames(dta)) {
-    msg <- c('ERROR:\nphenotypic file must contain a "ind" colunm')
+      msg <- paste(msg, 'phenotypic file must contain a "ind" colunm.', sep = "\n")
   }
   if (!any(c("trait1", "trait2", "trait3") %in% colnames(dta))) {
-    msg <- paste0(msg, '\nphenotypic file must contain "trait1" or "trait2" or "trait3" colunms')
+    msg <- paste(msg, 'phenotypic file must contain "trait1" or "trait2" or "trait3" colunms.', sep = "\n")
+  }
+  if (nrow(dta) > constants$max.gwas.obs) {
+    msg <- paste(msg, paste('The file contains more than', constants$max.gwas.obs, 'observations.'), sep = "\n")
   }
 
   out <- list()
   out$msg <- msg
-  if (identical(msg, "")) {
+  if (identical(msg, "ERROR: ")) {
     out$v <- TRUE
   } else out$v <- FALSE
 

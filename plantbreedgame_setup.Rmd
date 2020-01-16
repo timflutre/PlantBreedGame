@@ -1232,6 +1232,18 @@ query <- paste0("INSERT INTO ", tbl, " VALUES",
 res <- dbExecute(conn=db, query)
 ```
 
+### Statistical toolbox
+
+Fill the table with the constants used by the statistical toolbox.
+
+```{r table_constants_fill_stat}
+query <- paste0("INSERT INTO ", tbl, " VALUES",
+                " ('max.gwas.obs', '", 300, "')")
+res <- dbExecute(conn=db, query)
+```
+
+
+
 ## Log
 
 Create the table for logging:
