@@ -54,7 +54,7 @@ stat_checkPhenoDta <- reactive({
   # quick return if no file are loaded
   if (is.null(dta)) {
     out <- list()
-    out$msg <- 'No file imported'
+    out$msg <- 'No phenotypic data file imported'
     out$v <- FALSE
     return(out)
   }
@@ -68,6 +68,7 @@ stat_checkPhenoDta <- reactive({
     msg <- paste(msg, 'phenotypic file must contain "trait1" or "trait2" or "trait3" colunms.', sep = "\n")
   }
   if (nrow(dta) > constants$max.gwas.obs) {
+    # to limit computation time on the server.
     msg <- paste(msg, paste('The file contains more than', constants$max.gwas.obs, 'observations.'), sep = "\n")
   }
 
@@ -99,7 +100,7 @@ stat_checkGenoDta <- reactive({
   # quick return if no file are loaded
   if (is.null(dta)) {
     out <- list()
-    out$msg <- 'No file imported'
+    out$msg <- 'No genotypic data file imported'
     out$v <- FALSE
     return(out)
   }
@@ -107,10 +108,9 @@ stat_checkGenoDta <- reactive({
 
   msg <- "ERROR: "
   if (!is.numeric(dta)) {
-    msg <- paste(msg, 'genotypic marker data must be numeric values.')
-  }
-  if (!all(dta %in% c(0,1,2))) {
-    msg <- paste(msg, 'genotypic marker data must be encoded in allel dose (0, 1, 2)')
+    msg <- paste(msg, 'genotypic marker data must be numeric values.', sep = "\n")
+  } else if (!all(dta %in% c(0,1,2))) {
+    msg <- paste(msg, 'genotypic marker data must be encoded in allel dose (0, 1, 2)', sep = "\n")
   }
 
   out <- list()
@@ -271,7 +271,61 @@ output$stat_gwasFixedUI <- renderUI({
   }
 })
 
+#### Calc button  ####
+output$stat_gwasCalcButtonUI <- renderUI({
 
+  msg <- ""
+  style <- "background-color:green; color: white;"
+  disabled <- FALSE
+  if (!stat_checkPhenoDta()$v) {
+    msg <- paste(msg, stat_checkPhenoDta()$msg, sep = "<br>")
+    style <- "background-color:red; color: white;"
+    disabled <- TRUE
+  }
+  if (!stat_checkGenoDta()$v) {
+    msg <- paste(msg, stat_checkGenoDta()$msg, sep = "<br>")
+    style <- "background-color:red; color: white;"
+    disabled <- TRUE
+  }
+  # browser()
+  if (stat_checkGenoDta()$v & stat_checkPhenoDta()$v) {
+    dtaPheno <- gwasPhenoDta()
+    dtaGeno <- gwasGenoDta()
+
+    phenoInds <- unique(dtaPheno$ind)
+    genoInds <- unique(row.names(dtaGeno))
+    nCom <- sum(phenoInds %in% genoInds)
+    if (nCom == 0) {
+      msg <- paste(msg, "There is no common individuals between phenotype an genotype datasets.", sep = "<br>")
+      style <- "background-color:red; color: white;"
+      disabled <- TRUE
+    }
+  }
+  if (breeder() == "No Identification") {
+    msg <- paste(msg, "You need to identify yourself in order to fit the model.", sep = "<br>")
+    style <- "background-color:red; color: white;"
+    disabled <- TRUE
+  }
+
+  msg <- gsub("\n", "<br>", msg)
+
+  button <- actionButton("stat_calcGwasButton", "Calculation",
+                         icon("play-circle"),
+                         style = style)
+
+  # disable button
+  if (disabled) {
+    button$attribs$disabled <- ""
+  }
+
+  div(
+    button,
+    p(style = "color:red;", HTML(msg))
+
+  )
+
+
+})
 
 #### Model fitting ####
 modelGWAS <- eventReactive(input$stat_calcGwasButton, {

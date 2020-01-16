@@ -141,9 +141,10 @@ tabItem(tabName = "stat",
                                                   )
                                               ),
                                               div(class = "col-sm-12 col-md-12 col-lg-12",
-                                                  actionButton("stat_calcGwasButton", "Calculation",
-                                                               icon("play-circle"),
-                                                               style = "background-color:green; color: white;")
+                                                  # actionButton("stat_calcGwasButton", "Calculation",
+                                                  #              icon("play-circle"),
+                                                  #              style = "background-color:green; color: white;")
+                                                  uiOutput("stat_gwasCalcButtonUI")
                                               )
 
                                           ),
