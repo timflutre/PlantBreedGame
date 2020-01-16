@@ -78,7 +78,7 @@ tabItem(tabName = "stat",
 
                                               # Pheno data
                                               div(class = "col-sm-12 col-md-6 col-lg-6",
-                                                  h4("Phenotipic data", style = "text-align: center;"),
+                                                  h4("Phenotypic data", style = "text-align: center;"),
                                                   p(tags$ul(
                                                     tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding"),br(),"or a file directly downloaded from the app (in", code(".txt.gz"), "format)."),
                                                     tags$li("The file must contain a", code("ind"), "colunm and at least one column between", code("trait1"), ",", code("trait2"), "or", code("trait3"), "."),
@@ -91,8 +91,12 @@ tabItem(tabName = "stat",
 
                                               # Geno data
                                               div(class = "col-sm-12 col-md-6 col-lg-6",
-                                                  h4("Genotipic data", style = "text-align: center;"),
-                                                  p("tata"),
+                                                  h4("Genotypic data", style = "text-align: center;"),
+                                                  p(tags$ul(
+                                                    tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding"),br(),"or a file directly downloaded from the app (in", code(".txt.gz"), "format)."),
+                                                    tags$li("The first line must be the names of the markers and the first columns must be the names of the individuals."),
+                                                    tags$li("Only common individuals with the phenotypic data will be considered.")
+                                                  )),
                                                   fileInput("gwas_genoFile", "Genotypic data file"),
                                                   h5("Summary:"),
                                                   verbatimTextOutput("stat_sumGeno") %>% withSpinner(type = 4, size = 0.5, proxy.height = "50px")

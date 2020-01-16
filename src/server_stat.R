@@ -104,14 +104,18 @@ stat_checkGenoDta <- reactive({
     return(out)
   }
 
-  msg <- ""
+
+  msg <- "ERROR: "
   if (!is.numeric(dta)) {
-    msg <- c('ERROR:\ngenotypic marker data must be numeric values')
+    msg <- paste(msg, 'genotypic marker data must be numeric values.')
+  }
+  if (!all(dta %in% c(0,1,2))) {
+    msg <- paste(msg, 'genotypic marker data must be encoded in allel dose (0, 1, 2)')
   }
 
   out <- list()
   out$msg <- msg
-  if (identical(msg, "")) {
+  if (identical(msg, "ERROR: ")) {
     out$v <- TRUE
   } else out$v <- FALSE
 
