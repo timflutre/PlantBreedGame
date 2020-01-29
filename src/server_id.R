@@ -202,9 +202,7 @@ output$dwnlPheno <- downloadHandler(
       folder <- paste0("data/shared/",breeder())
     }
     filePath <- paste0(folder, "/", input$phenoFile)
-    write.table(read.table(filePath, header = T),
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=FALSE, col.names=TRUE)
+    file.copy(filePath, file)
   }
 )
 
@@ -218,9 +216,7 @@ output$dwnlGeno <- downloadHandler(
       folder <- paste0("data/shared/",breeder())
     }
     filePath <- paste0(folder, "/", input$genoFile)
-    write.table(read.table(filePath, header = T),
-                file=gzfile(file), quote=FALSE,
-                sep="\t", row.names=TRUE, col.names=TRUE)
+    file.copy(filePath, file)
   }
 )
 
@@ -234,9 +230,7 @@ output$dwnlPltMat <- downloadHandler(
       folder <- paste0("data/shared/",breeder())
     }
     filePath <- paste0(folder, "/", input$pltMatFile)
-    write.table(read.table(filePath, sep="\t", header = T),
-                file=file, quote=FALSE,
-                sep="\t", row.names=FALSE, col.names=TRUE)
+    file.copy(filePath, file)
   }
 )
 
@@ -251,9 +245,7 @@ output$dwnlRequest <- downloadHandler(
       folder <- paste0("data/shared/",breeder())
     }
     filePath <- paste0(folder, "/", input$requestFile)
-    write.table(read.table(filePath, sep="\t", header = T),
-                file=file, quote=FALSE,
-                sep="\t", row.names=FALSE, col.names=TRUE)
+    file.copy(filePath, file)
   }
 )
 
