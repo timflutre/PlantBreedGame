@@ -39,29 +39,29 @@ getBreederStatus <- function(dbname, breeder.name){
   return(breeder.status)
 }
 
-getDataFileList <- function (type, breeder){
+getDataFileList <- function(type, breeder){
   # function to get the list of data file of the breeder
   # type (char) type of data (pheno or geno)
   # breeder (char) name of the breeder
 
 
-  stopifnot(type =="pheno" || type =="geno"
-            || type =="pltMat" || type =="request")
+  stopifnot(type %in% c("pheno", "geno", "pltMat", "request"))
 
-
-  dirPath <- paste0("data/shared/",breeder)
+  
+  dirPath <- paste0("data/shared/", breeder)
   dataFile <- list.files(dirPath)
-
+  dataFile <- c(dataFile, list.files("data/shared/initial_data/"))
+  
   ## Get the ids of the files
   matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_pheno"))
-  if (type =="pheno"){
+  if (type == "pheno"){
     matchId <- which(matchId)
-  }else if (type =="geno") {
+  }else if (type == "geno") {
     matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_geno"))
-  }else if (type =="pltMat"){
+  }else if (type == "pltMat"){
     matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="IndList_"))
-  }else{
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Request"))
+  }else if (type == "request") {
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
   }
 
 
@@ -79,6 +79,15 @@ availToDwnld <- function(fileName, gameTime){
 
   stopifnot(is.character(fileName),
             fileName!="")
+  
+  # quick Return
+  initFiles <- list.files("data/shared/initial_data/")
+  if (fileName %in% initFiles) {
+    res <- list()
+    res$isAvailable <- TRUE
+    res$availDate <- NULL
+    return(res)
+  }
 
 
   # get the date when the file was requested

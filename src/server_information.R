@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantBreedGame.
@@ -26,14 +26,7 @@ output$dwnlIniData <- downloadHandler(
   filename=function () input$iniDataFile, # lambda function
   content=function(file){
     filePath <- paste0("data/shared/initial_data/",input$iniDataFile)
-    # get the extention of the file:
-    ext <- rev(strsplit(input$iniDataFile, split=".", fixed = TRUE)[[1]])[1]
-    lines <- as.character(readLines(paste0("data/shared/initial_data/",input$iniDataFile)))
-    if (ext=="gz"){
-      writeLines(lines,con=gzfile(file))
-    }else {
-      writeLines(lines,con=file)
-    }
+    file.copy(filePath, file)
   }
 )
 
@@ -45,7 +38,7 @@ output$infoDebug <- renderPrint({
   print("----")
   print(input$iniDataFile)
   print(class(input$iniDataFile))
-  
+
 })
 
 

@@ -46,7 +46,15 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                     uiOutput("UIdwnlPltMat")
                 ),
                 div(
-                    h3("My requests:"),
+                    h3("Other:"),
+                    p("You can download here:",
+                      tags$ul(
+                         tags$li("SNP coordinates of the HD and LD chips"),
+                         tags$li("List of controls"),
+                         tags$li("Examples of requests files"),
+                         tags$li("List of your requests")
+                         )
+                      ),
                     selectInput("requestFile", "", choices=requestFiles(),width="75%"),
                     uiOutput("UIdwnlRequest")
                 )
