@@ -51,7 +51,7 @@ Load the packages:
 suppressPackageStartupMessages(library(parallel))
 nb.cores <- 1
 if(Sys.info()["sysname"] != "Windows")
-  nb.cores <- detectCores() - 1
+  nb.cores <- max(detectCores() - 1, 1)
 suppressPackageStartupMessages(library(DBI))     # from CRAN
 suppressPackageStartupMessages(library(RSQLite)) # from CRAN
 stopifnot(compareVersion("2.0",
