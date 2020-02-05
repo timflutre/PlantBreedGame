@@ -270,7 +270,7 @@ list(
                  div(class = "col-sm-12 col-md-12 col-lg-6",
                      selectInput("admin_T1T2Breeder",
                                  label = "Breeder",
-                                 choices = setup$breeders),
+                                 choices = getBreederList(dbname=setup$dbname)),
                      plotlyOutput("admin_T1T2GameProgress") %>% withSpinner()
                  )
 
