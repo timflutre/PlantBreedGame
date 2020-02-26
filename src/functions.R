@@ -216,11 +216,17 @@ readCheckBreedDataFile <- function (f = NULL, df = NULL, max.nb.plots = 300, sub
   if (! all(!grepl("[^[:alnum:]._-]",df$ind))){
     stop("Some individuals's ids are not good.")
   }
-  if(!(all(!is.na(df$task)) | all(df$task %in% c("pheno-field", "pheno-patho", "geno"))) ){
-    stop("Requested tasks must be one of : \"pheno-field\", \"pheno-patho\", \"geno\"")
+
+  if (any(is.na(df$task))) {
+    stop("There are missing values in \"task\" column")
   }
-
-
+  if (any(! df$task %in% c("pheno-field", "pheno-patho", "geno"))) {
+    id <- which(! df$task %in% c("pheno-field", "pheno-patho", "geno"))[1]
+    stop(paste0("Requested tasks must be one of : \"pheno-field\", \"pheno-patho\", \"geno\".\n"),
+         "First line with wrong value is line ", id, ": \"", df$task[id], "\".\n",
+         "Please be carefull to invisible characters (like spaces for example)."
+    )
+  }
 
   if ("pheno-field" %in% df$task) {
     tmp <- suppressWarnings(as.numeric(df$details[df$task == "pheno-field"]))
