@@ -194,14 +194,23 @@ deleteBreeder <- function(breederName){
 
 
 
-calcBV <- function(breeder, inds, savedBV = NULL){
+calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
 
+  if (!is.null(progress)) {
+    n <- length(inds)
+    i <- 1
+  }
 
   # load SNP effects
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
 
   X <- t(sapply(inds, function(ind.id){
+    if (!is.null(progress)) {
+      progress$set(detail = paste0("BV calculation for breeder: ", breeder,
+                                   " - ", i, "/", n))
+      i <<- i + 1
+    }
     indName <- paste0(c(breeder, ind.id),collapse="_")
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
     if(! file.exists(f))

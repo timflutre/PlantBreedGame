@@ -337,11 +337,19 @@ output$InfoCurrentMaxDiskUsage <- renderText({
 admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
 
 
+
+  progressPheno <- shiny::Progress$new(session, min=0, max=4)
+  progressPheno$set(value = 0,
+                    message = "Game progress calculation:",
+                    detail = "Initialisation...")
+
   # load breeding values data:
   f <- paste0(setup$truth.dir, "/allBV.RData")
   if (file.exists(f)) {
+    progressPheno$set(value = 0, detail = "Load BV...")
     load(f)
   } else {
+    progressPheno$set(value = 0, detail = "BV calculation for initial collection...")
     ### GET BV of the initial individuals:
     # load initial collection genotypes
     f <- paste0(setup$truth.dir, "/coll.RData")
@@ -363,7 +371,7 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
     rm(list = c("coll", "BVcoll")) # Free memory
   }
 
-
+  progressPheno$set(value = 1, detail = "BV calculation for new individuals...")
   ### GET BV of the breeders's individuals:
   # get the list of the breeders (without "admin" and "test")
   db <- dbConnect(SQLite(), dbname = setup$dbname)
@@ -397,7 +405,7 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
                                     }
 
                                     # calc breeding values of new individuals
-                                    BV <- calcBV(breeder, inds)
+                                    BV <- calcBV(breeder, inds, progress = progressPheno)
 
                                     # calc generation
                                     generation <- calcGeneration(allInds,
@@ -412,6 +420,7 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
 
 
   # save breeding values:
+  progressPheno$set(value = 3, detail = "Save breeding values...")
   save(breedValuesDta,
        file = paste0(setup$truth.dir, "/allBV.RData"))
 
@@ -423,6 +432,7 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
   breedValuesDta$trait1 <- breedValuesDta$trait1 - iniMeanT1
   breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
 
+  progressPheno$set(value = 4, detail = "Done !")
   breedValuesDta
 
 })
