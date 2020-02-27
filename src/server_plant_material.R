@@ -49,8 +49,12 @@ readQryPlmat <- reactive({
   # read input file
   maxHD <- ifelse(breederStatus()!="player",
                   Inf,constants$max.nb.haplodiplos)
+  maxReq <- ifelse(breederStatus()!="player",
+                  Inf,constants$max.nb.pltmatReq)
 
-  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath, max.nb.hd=maxHD))
+  test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath,
+                                            max.nb=maxReq,
+                                            max.nb.hd=maxHD))
 
   # check file
   if (!is.data.frame(test)){

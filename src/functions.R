@@ -90,15 +90,19 @@ makeDfPhenos <- function(ind.ids, nb.plots.per.ind, year, pathogen){
 ##' It should have 3 columns named \code{parent1}, \code{parent2} and \code{child}.
 ##' @param f path to the input file (columns should be separated by a tabulation)
 ##' @param df data.frame (if the file was already read)
+##' @param max.nb maximum number of requests in a single file
 ##' @param max.nb.hd maximum number of haplodiploidization to request in a single file
 ##' @return invisible data.frame
 ##' @author Timothee Flutre
 ##' @seealso \code{\link{makeExamplePlantFile}}
 ##' @export
-readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
-  stopifnot(! is.null(f) || ! is.null(df),
+readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb, max.nb.hd){
+  stopifnot(!is.null(f) || !is.null(df),
+            is.numeric(max.nb),
             is.numeric(max.nb.hd),
+            length(max.nb) == 1,
             length(max.nb.hd) == 1,
+            max.nb > 0,
             max.nb.hd > 0)
 
   if(is.null(df)){
@@ -136,6 +140,14 @@ readCheckBreedPlantFile <- function(f=NULL, df=NULL, max.nb.hd){
     stop(paste0("Sorry, you can not request more than ",max.nb.hd," haplo-diploidisations",
                 collapse=""))
   }
+
+  if (nrow(df) > max.nb) {
+    stop(paste0("Too many lines in your request. The maximum is: ", max.nb,
+                ".\nYour request have ", nrow(df), " lines.\n",
+                "Please split your request in several files."))
+  }
+
+
 
   df$parent2[df$parent2 == ""] <- NA
 

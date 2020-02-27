@@ -1138,7 +1138,9 @@ query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('nb.genotyped.coll', '", length(subset.coll), "')")
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
-                " ('max.nb.haplodiplos', '", 700, "')")
+                " ('max.nb.haplodiplos', '", 300, "')")
+query <- paste0("INSERT INTO ", tbl, " VALUES",
+                " ('max.nb.pltmatReq', '", 300, "')")
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('max.nb.inds', '", 1000, "')")
