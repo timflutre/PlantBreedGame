@@ -1139,6 +1139,7 @@ query <- paste0("INSERT INTO ", tbl, " VALUES",
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('max.nb.haplodiplos', '", 300, "')")
+res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('max.nb.pltmatReq', '", 300, "')")
 res <- dbExecute(conn=db, query)
