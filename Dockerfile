@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
   curl
 
 # check package repository
-RUN if [ $(curl -s -o /dev/null -w "%{http_code}" https://cran.microsoft.com/snapshot/2020-03-17/) = "400" ] ; then echo "OK: R pkg repository server accessible." ; else echo "ERROR: R pkg repository server not accessible. status = $(curl -s -o /dev/null -w "%{http_code}" https://cran.microsoft.com/snapshot/2020-03-17/)" ; fi
+RUN if [ $(curl -s -o /dev/null -w "%{http_code}" https://cran.microsoft.com/snapshot/2020-03-17/) = "200" ] ; then echo "OK: R pkg repository server accessible." ; else echo "ERROR: R pkg repository server not accessible. status = $(curl -s -o /dev/null -w "%{http_code}" https://cran.microsoft.com/snapshot/2020-03-17/)" ; fi
 RUN touch ~/.Rprofile
 RUN echo "options(repos = c(CRAN = 'https://cran.microsoft.com/snapshot/2020-03-17/'))" >> ~/.Rprofile
 
