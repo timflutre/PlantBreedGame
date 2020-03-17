@@ -50,8 +50,16 @@ Load the packages:
 ```{r load_pkg}
 suppressPackageStartupMessages(library(parallel))
 nb.cores <- 1
-if(Sys.info()["sysname"] != "Windows")
-  nb.cores <- max(detectCores() - 1, 1)
+if (Sys.info()["sysname"] != "Windows") {
+  nb.cores <- 1
+  
+  ## NOTE: To be faster one can uncomment the code below but the code will be reproductible only if the same number of cores is used.
+  # freeMem <- as.numeric(system("awk '/MemFree/ {print $2}' /proc/meminfo", intern = T))
+  # maxCore <- max(floor(freeMem / (5 * 10^6)), 1)
+  # availCore <- max(detectCores() - 1, 1)
+  # nb.cores <- min(availCore, maxCore)
+  
+}
 suppressPackageStartupMessages(library(DBI))     # from CRAN
 suppressPackageStartupMessages(library(RSQLite)) # from CRAN
 stopifnot(compareVersion("2.0",
