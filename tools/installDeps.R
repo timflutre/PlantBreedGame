@@ -1,4 +1,5 @@
 # script to install all apps dependencies
+print(options("repos"))
 
 # Dep from CRAN
 install.packages(
