@@ -139,7 +139,7 @@ This method is for people who want persistant game progress, a manual access to 
 In order to access to the `data` folder of the game, we must first extract this folder from the image:
 
 ```sh
-docker run -d --rm --name plantbreedgame juliendiot/plantbreedgame
+docker run -d --rm --name plantbreedgame --user shiny juliendiot/plantbreedgame
 docker cp plantbreedgame:/srv/shiny-server/PlantBreedGame/data /host/path/to/appData
 docker stop plantbreedgame
 chgrp docker -R /host/path/to/appData
