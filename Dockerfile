@@ -37,7 +37,8 @@ RUN rm ~/.Rprofile
 
 RUN R -e "rmarkdown::render('/srv/shiny-server/PlantBreedGame/plantbreedgame_setup.Rmd')"
 
+RUN chown shiny.shiny srv/shiny-server/PlantBreedGame/data
 RUN chown shiny.shiny srv/shiny-server/PlantBreedGame/data/*
-RUN chmod 644 srv/shiny-server/PlantBreedGame/data/breeding-game.sqlite
+RUN chmod 664 srv/shiny-server/PlantBreedGame/data/breeding-game.sqlite
 
 USER shiny

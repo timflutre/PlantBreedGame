@@ -142,9 +142,9 @@ In order to access to the `data` folder of the game, we must first extract this 
 docker run -d --rm --name plantbreedgame juliendiot/plantbreedgame
 docker cp plantbreedgame:/srv/shiny-server/PlantBreedGame/data /host/path/to/appData
 docker stop plantbreedgame
-chgrp docker -R /host/path/to/appData
-chmod 774 /host/path/to/appData
-chmod 664 /host/path/to/appData/breeding-game.sqlite
+chgrp docker -R /host/path/to/appData/data
+chmod 774 /host/path/to/appData/data
+chmod 664 /host/path/to/appData/data/breeding-game.sqlite
 ```
 
 Then we must create a folder for the logs:
