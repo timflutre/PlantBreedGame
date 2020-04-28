@@ -177,7 +177,7 @@ To access to the a bash console from inside the container use:
 docker exec -u 0 -it plantbreedgame bash
 ```
 
-### customn build
+### custom build
 
 If you want to use specific game parameters (define in the file `plantbreedgame_setup.Rmd`) you can build your own docker image:
 
