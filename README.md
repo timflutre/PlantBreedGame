@@ -125,7 +125,7 @@ A docker image of this application is available on Docker Hub: [juliendiot/plant
 The simplest way to deploy the application on a server using docker is with this command:
 
 ```sh
-docker run -d --rm --name plantbreedgame --user shiny -p 80:3838 juliendiot/plantbreedgame
+docker run -d --rm --name plantbreedgame -p 80:3838 juliendiot/plantbreedgame
 ```
 
 The application is then accessible on the host machine on port `80` at the path `/PlantBreedGame`, for example: `localhost:80/PlantBreedGame` on your personal computer.
@@ -139,7 +139,7 @@ This method is for people who want persistant game progress, a manual access to 
 In order to access to the `data` folder of the game, we must first extract this folder from the image:
 
 ```sh
-docker run -d --rm --name plantbreedgame --user shiny juliendiot/plantbreedgame
+docker run -d --rm --name plantbreedgame juliendiot/plantbreedgame
 docker cp plantbreedgame:/srv/shiny-server/PlantBreedGame/data /host/path/to/appData
 docker stop plantbreedgame
 chgrp docker -R /host/path/to/appData
@@ -157,7 +157,7 @@ chgrp docker /host/path/to/log
 We can now mount these folders on a new running the container :
 
 ```sh
-docker run -d --rm --name plantbreedgame --user shiny -p 80:3838 \
+docker run -d --rm --name plantbreedgame -p 80:3838 \
     -v /host/path/to/appData:/srv/shiny-server/PlantBreedGame/data \
     -v /host/path/to/log:/var/log/shiny-server/ \
     juliendiot/plantbreedgame
