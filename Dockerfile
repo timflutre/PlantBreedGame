@@ -23,13 +23,22 @@ COPY ./ /srv/shiny-server/PlantBreedGame
 #   git
 # RUN git clone --depth=1 https://github.com/timflutre/PlantBreedGame.git
 # RUN mv /PlantBreedGame /srv/shiny-server/PlantBreedGame
+RUN chown shiny.shiny srv/shiny-server/PlantBreedGame
+
 
 # install packages dependencies
 RUN Rscript /srv/shiny-server/PlantBreedGame/tools/installDeps.R
 RUN rm ~/.Rprofile
 
+
+
+
 # build data folder
+
 RUN R -e "rmarkdown::render('/srv/shiny-server/PlantBreedGame/plantbreedgame_setup.Rmd')"
 
+RUN chown shiny.shiny srv/shiny-server/PlantBreedGame/data
 RUN chown shiny.shiny srv/shiny-server/PlantBreedGame/data/*
-RUN chmod 644 srv/shiny-server/PlantBreedGame/data/breeding-game.sqlite
+RUN chmod 664 srv/shiny-server/PlantBreedGame/data/breeding-game.sqlite
+
+USER shiny

@@ -22,7 +22,7 @@ tabItem(tabName="about",
 
     fluidRow(
         shinydashboard::box(width=12, title=NULL,
-            div(id="about_1",
+            column(12, id="about_1",
             h3("Context"),
             p("This is the ", code("PlantBreedGame"), " software implementing a serious game to teach selective breeding via the example of a fictitious annual plant species to students at the master level."),
 
@@ -52,8 +52,16 @@ tabItem(tabName="about",
             br(),
             br()
             ),
-        column(5, offset=0, img(src="logo_INRA.png", height=70, width=70*2.43)),
-        column(3, offset=0, img(src="logo_SUPAGRO.jpg", height=70, width=70*2.38))
+            column(5, offset=0, img(src="logo_INRA.png", height=70, width=70*2.43)),
+            column(3, offset=0, img(src="logo_SUPAGRO.jpg", height=70, width=70*2.38)),
+
+            column(12, id="about_3",
+                   br(),
+                   br(),
+                   br(),
+                   br(),
+                   h3("Session information"),
+                   verbatimTextOutput("about_sessionInfo"))
         )
     )
 

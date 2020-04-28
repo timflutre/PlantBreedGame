@@ -28,6 +28,7 @@ source("src/func_id.R", local=TRUE, encoding="UTF-8")$value
 ## parameters
 
 options(warn=-1) # don't show warnings
+options(stringsAsFactors = TRUE) # R-4.0.0 compatibility
 debugDisplay <- FALSE # display debug
 
 mycolors <- c("#00aedb", "#a200ff", "#f47835", "#d41243", "#8ec127")
