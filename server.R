@@ -40,4 +40,5 @@ shinyServer(function(input, output, session){
   source("src/server_eval.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_theory.R", local=TRUE, encoding="UTF-8")$value
   source("src/server_admin.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server_about.R", local=TRUE, encoding="UTF-8")$value
 })
