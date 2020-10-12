@@ -111,7 +111,7 @@ for(breeder in breeders){
   truth.breeder.dir <- paste0(truth.dir, "/", breeder)
   if(! dir.exists(truth.breeder.dir))
     dir.create(truth.breeder.dir)
-  breeder.dirs[[breeder]] <- paste0(shared.dir, "/", breeder)
+  breeder.dirs[breeder] <- paste0(shared.dir, "/", breeder)
   if(! dir.exists(breeder.dirs[breeder]))
     dir.create(breeder.dirs[breeder])
 }
