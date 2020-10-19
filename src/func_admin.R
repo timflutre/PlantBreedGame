@@ -23,8 +23,10 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
   ## this function create a new breeder
   ## breederName (char) name of the new breeder
 
-  if(grepl("[ ]", breederName)){
-    stop("Breeder's name must not contain spaces")
+
+  if (!grepl("^[a-zA-Z0-9\\_]+$", breederName, perl = TRUE)) {
+    # only alpha numeric and character "_"
+    stop("Breeder's name should contain only alpha-numeric characters and special character : _  ")
   }
   if(status != "tester" & psw == ""){
     stop(paste0("a breeder with another status than tester",
