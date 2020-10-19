@@ -301,14 +301,16 @@ myPltMat <- reactive({
     # disconnect db
     dbDisconnect(db)
     res$avail_from <- strftime(res$avail_from, format= "%Y-%m-%d")
-    DT::datatable(res,options = list(lengthMenu = c(10, 20, 50),
-                                     pageLength = 10,
-                                     searchDelay = 500))
-
+    res
   }
 })
 
-output$myPltMatDT <- DT::renderDataTable(myPltMat())
+output$myPltMatDT <- DT::renderDataTable({
+  DT::datatable(myPltMat(),
+                options = list(lengthMenu = c(10, 20, 50),
+                               pageLength = 10,
+                               searchDelay = 500))
+})
 
 
 
@@ -349,7 +351,7 @@ output$UIpswChanged <- renderUI({
 
 
 
-## Breeder information :
+## Breeder information ----
 output$breederBoxID <- renderValueBox({
   valueBox(
     value = breeder(),
@@ -401,16 +403,129 @@ output$UIbreederInfoID <- renderUI({
 
 
 
+## Final Individuals submission ----
+
+# add new inds for submission
+observeEvent(input$id_submitInds, priority = 10,{
+  # load data
+  evalDta <- read.table("data/shared/Evaluation.txt",
+                        header = T, sep = "\t")
+  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
+  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
+  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
+  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
+  subIndsDta
+
+  if (is.null(input$id_evalInds)) {
+    return(subIndsDta)
+  }
+
+  # load input
+  inds <- input$id_evalInds
+  nSubmitted <- nrow(subIndsDta)
+
+
+  # checks
+  if (any(inds %in% subIndsDta$Individual)) {
+    alert(paste("individuals:",
+                paste0(inds[inds %in% subIndsDta$Individual],
+                       collapse = ", "),
+                "have already been submitted.")
+    )
+    inds <- inds[!inds %in% subIndsDta$Individual]
+
+    if (length(inds) == 0) {
+      return(subIndsDta)
+    }
+  }
+
+  if (length(inds) > constants$maxEvalInds - nSubmitted) {
+    alert(paste("Sorry, you have already submitted", nSubmitted, "individuals, on a total of", constants$maxEvalInds, ". You can only submit", constants$maxEvalInds - nSubmitted, "more individuals."))
+    return(subIndsDta)
+  }
+
+  if (length(inds) > constants$maxEvalInds) {
+    alert(paste("Sorry, you can submit a maximum of ", constants$maxEvalInds, "individuals"))
+    return(subIndsDta)
+  }
+
+  # add submitted individuals
+  submitDta <- data.frame(breeder = breeder(),
+                          ind = inds)
+  write.table(submitDta, file = "data/shared/Evaluation.txt",
+              append = TRUE,
+              quote = FALSE, sep = "\t",
+              row.names = FALSE, col.names = FALSE)
+
+  # reset input
+  reset("id_evalInds", asis = FALSE)
+
+})
 
 
 
 
+# delete inds for submission
+observeEvent(input$id_delSubmitInds, priority = 11,{
+  # load data
+  evalDta <- read.table("data/shared/Evaluation.txt",
+                        header = T, sep = "\t")
+  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
+  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
+  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
+  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
+  delInds <- subIndsDta[input$submittedIndsDT_rows_selected, "Individual"]
+
+  delLines <- which(evalDta$breeder == breeder() & evalDta$ind %in% delInds)
+  # delete lines
+  evalDta <- evalDta[-delLines,]
+
+  write.table(evalDta, file = "data/shared/Evaluation.txt",
+              append = FALSE,
+              quote = FALSE, sep = "\t",
+              row.names = FALSE, col.names = TRUE)
+
+})
 
 
-# DEBUG
+submittedInds <- eventReactive(
+  (input$id_submitInds|input$id_delSubmitInds),
+  ignoreNULL = FALSE, {
+
+    evalDta <- read.table("data/shared/Evaluation.txt",
+                          header = T, sep = "\t")
+    subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
+    subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
+    colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
+    subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
+    subIndsDta
+
+
+  })
+
+
+
+output$submittedIndsDT <- renderDataTable({
+  DT::datatable(submittedInds(),
+                filter = c("none"),
+                style = "bootstrap4",
+                options = list(lengthMenu = c(),
+                               pageLength = c(),
+                               searchDelay = c(),
+                               sDom  = '<"top">rt<"bottom">')
+  )
+})
+
+
+
+
+# DEBUG ----
 
 output$IdDebug <- renderPrint({
   print("----")
   print(input$phenoFile)
   print(input$genoFile)
 })
+
+
+

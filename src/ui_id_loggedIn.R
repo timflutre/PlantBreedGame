@@ -86,6 +86,38 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
             div(style="vertical-align: top;   min-width: 20%;", id="id_4",
                 uiOutput("UIpswChanged")
             )
+   ),
+
+
+
+   tabPanel("Register final individuals",
+            div(style="display: inline-block; vertical-align:top; width: 40%;",
+                div(
+                   h3("Individuals submission:"),
+                   p("You can specify here the individuals you want to submit for the final evaluation."),
+                   p("A maximum of ",
+                     strong(constants$maxEvalInds, " individuals"),
+                     "can be registered."
+                   )
+                ),
+                div(
+                   selectInput("id_evalInds", "Select your best individuals:",
+                               choices = myPltMat()$child,
+                               multiple = TRUE),
+                   actionButton("id_submitInds", "Submit")
+                )
+            ),
+
+
+            div(style="display: inline-block; vertical-align:top; width: 50%;",
+                div(
+                   h4("Your submitted individuals:"),
+                   dataTableOutput("submittedIndsDT"),
+                   p("Click on the individuals to delete them."),
+                   actionButton("id_delSubmitInds", "Delete")
+                )
+            ),
+
    )
 
 ) # end shinydashboard::tabBox

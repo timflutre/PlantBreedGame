@@ -45,6 +45,10 @@ root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
 checkDbFile(setup$dbname)
 constants <- getBreedingGameConstants(setup$dbname)
+if (is.null(constants$maxEvalInds)) {
+  constants$maxEvalInds <- 5
+}
+
 
 prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field,
                "autofecundation"=constants$cost.autof*constants$cost.pheno.field,
@@ -67,3 +71,4 @@ code.version <- getCodeVersion(url.repo)
 stopifnot(all(c("admin", "test") %in% getBreederList(setup$dbname)))
 stopifnot(all("game master" == getBreederStatus(setup$dbname, "admin"),
               "tester" == getBreederStatus(setup$dbname, "test")))
+
