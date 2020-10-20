@@ -101,10 +101,12 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                    )
                 ),
                 div(
-                   selectInput("id_evalInds", "Select your best individuals:",
+                   selectInput("id_evalInds",
+                               HTML("Select your best individuals<sup>*</sup>:"),
                                choices = myPltMat()$child,
                                multiple = TRUE),
-                   actionButton("id_submitInds", "Submit")
+                   actionButton("id_submitInds", "Submit"),
+                   p(tags$sup("*"), "The drop-down menu is limited to 1000 propositions. Write the name of your individuals to find them.")
                 )
             ),
 
