@@ -1214,8 +1214,9 @@ res <- dbExecute(conn=db, query)
 
 Fill the table with the constants specifying the costs:
 ```{r table_constants_fill_costs}
+cost.pheno.field <- 50
 query <- paste0("INSERT INTO ", tbl, " VALUES",
-                " ('cost.pheno.field', '", 50, "')") # in Mendels
+                " ('cost.pheno.field', '", cost.pheno.field, "')") # in Mendels
 res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('cost.pheno.patho', '", 1/10, "')") # compare to one plot
@@ -1241,6 +1242,10 @@ res <- dbExecute(conn=db, query)
 query <- paste0("INSERT INTO ", tbl, " VALUES",
                 " ('cost.register', '", 4, "')") # idem
 res <- dbExecute(conn=db, query)
+
+query <- paste0("INSERT INTO ", tbl, " VALUES",
+                " ('initialBudget', '", cost.pheno.field * nb.plots * 10 * 1.3, "')") # idem
+res <- dbExecute(conn = db, query)
 ```
 
 ## Log
