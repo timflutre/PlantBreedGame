@@ -467,6 +467,12 @@ observeEvent(input$id_submitInds, priority = 10,{
 
 # delete inds for submission
 observeEvent(input$id_delSubmitInds, priority = 11,{
+
+
+  if (is.null(input$submittedIndsDT_rows_selected)) {
+    return(NULL)
+  }
+
   # load data
   evalDta <- read.table("data/shared/Evaluation.txt",
                         header = T, sep = "\t")
@@ -509,10 +515,7 @@ output$submittedIndsDT <- renderDataTable({
   DT::datatable(submittedInds(),
                 filter = c("none"),
                 style = "bootstrap4",
-                options = list(lengthMenu = c(),
-                               pageLength = c(),
-                               searchDelay = c(),
-                               sDom  = '<"top">rt<"bottom">')
+                options = list(sDom  = '<"top">rt<"bottom">')
   )
 })
 
