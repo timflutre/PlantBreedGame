@@ -40,25 +40,30 @@ output$evalUI <- renderUI({
 
 
 ## read uploaded file ----
+evalRawFile <- reactiveFileReader(500, session, "data/shared/Evaluation.txt",
+                                  read.table, header = T, sep = "\t",stringsAsFactors = FALSE)
 readQryEval <- reactive({
 
-  # no input fileI
-  if(is.null(input$file.eval)){
-    return(NULL)
-  }
-
   # read input file
-  df <- try(readCheckEvalFile(input$file.eval$datapath))
+  df <- evalRawFile()
 
-  if (is.data.frame(df)){
-    # add controls in the data.frame
-    df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names="ind")
-    df.controls$breeder <- rep("control", length(df.controls))
-    df <- rbind(df, df.controls)
-    return(df)
+  # add controls in the data.frame
+  df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names="ind")
+  df.controls$breeder <- rep("control", length(df.controls))
+  df <- rbind(df, df.controls)
+  df <- df[order(df$breeder),]
+  df
 
-  }else {return("error - wrong file format")}
+})
 
+
+
+output$evalFileDT <- renderDataTable({
+  DT::datatable(readQryEval(),
+                filter = c("none"),
+                style = "bootstrap4",
+                options = list(pageLength = 5,
+                               sDom  = '<"top">rt<"bottom">p'))
 })
 
 
