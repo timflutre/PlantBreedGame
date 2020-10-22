@@ -26,6 +26,8 @@ if(R.v.maj < 2 || (R.v.maj == 2 && R.v.min.1 < 15))
 
 suppressPackageStartupMessages(library(knitr))
 opts_chunk$set(echo=TRUE, warning=TRUE, message=TRUE, cache=FALSE, fig.align="center")
+
+options(stringsAsFactors = TRUE) # R-4.0.0 compatibility
 ```
 
 
@@ -78,7 +80,7 @@ suppressPackageStartupMessages(library(GenomicRanges))# from bioconductor
 Set the seed:
 ```{r}
 RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
-set.seed(1859) # better to change it from one game session to the next
+set.seed(1993) # better to change it from one game session to the next
 ```
 
 Set up directories:
