@@ -64,7 +64,7 @@ readQryEval <- reactive({
 
 dfPhenoEval <- eventReactive(input$requestEval,{
   dfPheno <- phenotype4Eval(readQryEval(), nRep=input$nRep)
-  dfPheno$breeder <- sapply(as.character(dfPheno$ind), FUN = function(x){strsplit(x,split = "_")[[1]][1]})
+  dfPheno$breeder <- sapply(as.character(dfPheno$ind), FUN = function(x){strsplit(x,split = "\\*")[[1]][1]})
   return(dfPheno)
 })
 
