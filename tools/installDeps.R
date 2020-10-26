@@ -18,7 +18,9 @@ install.packages(
     "shinycssloaders",
     "shinydashboard",
     "shinyjs",
-    "rmarkdown"
+    "rmarkdown",
+    "lubridate",
+    "vistime"
   )
 )
 

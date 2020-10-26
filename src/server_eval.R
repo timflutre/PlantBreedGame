@@ -414,28 +414,111 @@ output$evalUIrequestHistory <- renderUI({
         breeders <- unique(dfPhenoEval()$breeder)
         breeders <- breeders[breeders!="control"]
         list(
-            selectInput("historyBreeder","Breeder", choices=breeders),
-            dataTableOutput("historyTable")
+            selectInput("historyBreeder","Breeder", choices=c(breeders, "--- All Breeders ---")),
+            # dataTableOutput("historyTable")
+            plotlyOutput("historyTable")
         )
 
     } else { p('no input')}
 
 })
 
-output$historyTable <- renderDataTable({
-    outTable <- getBreederHistory(breeder=input$historyBreeder,
-                                  setup=setup)
-    DT::datatable(outTable,
-                  rownames = F,
-                  filter = list(position = 'top', clear = TRUE, plain = TRUE),
-                  options = list(pageLength = 25,
-                                 lengthMenu = list(c(10, 25, 50, -1),
-                                                   c(10, 25, 50, "All") ),
-                                 scrollX = T,
-                                 columns.searchable = T,
-                                 order = list(c(3),c("dsc"))
-                  ),
-                  class = c("compact row-border"))
+breederHistory <- reactive({
+  breeders <- unique(dfPhenoEval()$breeder)
+  breeders <- breeders[breeders!="control"]
+
+  breedHist <- lapply(breeders, function(b){
+    getBreederHistory(breeder=b,
+                      setup=setup)
+  })
+  names(breedHist) <- breeders
+  breedHist
+})
+
+
+# output$historyTable <- renderDataTable({
+output$historyTable <- renderPlotly({
+  # browser()
+  if (input$historyBreeder != "--- All Breeders ---") {
+    dta <- breederHistory()[[input$historyBreeder]]
+    optY <- FALSE
+    lw <- 25
+  } else {
+    dta <- do.call(rbind, breederHistory())
+    optY <- FALSE #TRUE
+    lw <- 15
+  }
+
+  names(dta) <- c("group", "task", "quantity", "start")
+  dta$content <- paste(dta$task, "quantity:", dta$quantity)
+  dta$duration <- 0
+  dta$color <- NA
+
+  colorGenoHD <- "#2c82e6"
+  colorGenoLD <- "#42cbf5"
+  colorGenoSin <- "#42cbf5"
+  colorAllof <- "#47db25"
+  colorAutof <- "#47db25"
+  colorHaplo <- "#47db25"
+  colorPhenoF <- "#ed8b3b"
+  colorPhenoP <- "#ed9e5c"
+
+  dta$duration[dta$task == "geno-hd"] <- constants$duration.geno.hd
+  dta$color[dta$task == "geno-hd"] <- colorGenoHD
+
+  dta$duration[dta$task == "geno-ld"] <- constants$duration.geno.ld
+  dta$color[dta$task == "geno-ld"] <- colorGenoLD
+
+  dta$duration[dta$task == "geno-single-snp"] <- constants$duration.geno.single
+  dta$color[dta$task == "geno-single-snp"] <- colorGenoSin
+
+  dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
+  dta$color[dta$task == "allofecundation"] <- colorAllof
+
+  dta$duration[dta$task == "autofecundation"] <- constants$duration.autof
+  dta$color[dta$task == "autofecundation"] <- colorAutof
+
+  dta$duration[dta$task == "haplodiploidization"] <- constants$duration.haplodiplo
+  dta$color[dta$task == "haplodiploidization"] <- colorHaplo
+
+  dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
+  dta$color[dta$task == "allofecundation"] <- colorAllof
+
+  dta$duration[dta$task == "pheno-field"] <- constants$duration.pheno.field
+  dta$color[dta$task == "pheno-field"] <- colorPhenoF
+
+  dta$duration[dta$task == "pheno-patho"] <- constants$duration.pheno.patho
+  dta$color[dta$task == "pheno-patho"] <- colorPhenoP
+
+  dta$end <- dta$start + months(dta$duration)
+
+
+  vistime(
+    dta,
+    col.event = "task",
+    col.start = "start",
+    col.end = "end",
+    col.group = "group",
+    col.color = "color",
+    # col.fontcolor = "fontcolor",
+    col.tooltip = "content",
+    optimize_y = optY,
+    linewidth = lw
+  )
+
+
+    # outTable <- breederHistory()[[input$historyBreeder]]
+    # DT::datatable(outTable,
+    #               rownames = F,
+    #               filter = list(position = 'top', clear = TRUE, plain = TRUE),
+    #               options = list(pageLength = 25,
+    #                              lengthMenu = list(c(10, 25, 50, -1),
+    #                                                c(10, 25, 50, "All") ),
+    #                              scrollX = T,
+    #                              columns.searchable = T,
+    #                              order = list(c(3),c("dsc"))
+    #               ),
+    #               class = c("compact row-border"))
 })
 
 
