@@ -206,8 +206,7 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
   # load SNP effects
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
-
-  X <- t(sapply(inds, function(ind.id){
+  BV <- t(sapply(inds, function(ind.id){
     if (!is.null(progress)) {
       progress$set(detail = paste0("BV calculation for breeder: ", breeder,
                                    " - ", i, "/", n))
@@ -221,10 +220,10 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
 
     ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
     rownames(ind$genos) <- indName
-    ind$genos
+
+    ind$genos %*% p0$Beta
   }))
 
-  BV <- X %*% p0$Beta
   BV
 
 }

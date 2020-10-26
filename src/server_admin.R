@@ -387,37 +387,39 @@ admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
   ### calculation
 
   # get list of all individuals with generation and BV
-  breedValuesDta <- rbind(breedValuesDta,
-                          do.call(rbind,
-                                  sapply(breeders, simplify = F, function(breeder){
+  breedValuesDta <- rbind(
+    breedValuesDta,
+    do.call(rbind,
+            sapply(breeders, simplify = F, function(breeder){
 
-                                    # get list of individuals
-                                    db <- dbConnect(SQLite(), dbname = setup$dbname)
-                                    query <- paste0("SELECT * FROM plant_material_", breeder)
-                                    allInds <- (dbGetQuery(conn = db, query))
-                                    dbDisconnect(db)
+              # get list of individuals
+              db <- dbConnect(SQLite(), dbname = setup$dbname)
+              query <- paste0("SELECT * FROM plant_material_", breeder)
+              allInds <- (dbGetQuery(conn = db, query))
+              dbDisconnect(db)
 
-                                    # get the new individuals
-                                    tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
-                                    inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
+              # get the new individuals
+              tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
+              inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
 
-                                    if (length(inds) == 0) {
-                                      return()
-                                    }
+              if (length(inds) == 0) {
+                return()
+              }
 
-                                    # calc breeding values of new individuals
-                                    BV <- calcBV(breeder, inds, progress = progressPheno)
+              # calc breeding values of new individuals
+              BV <- calcBV(breeder, inds, progress = progressPheno)
+              colnames(BV) <- c("trait1", "trait2")
 
-                                    # calc generation
-                                    generation <- calcGeneration(allInds,
-                                                                 inds)
+              # calc generation
+              generation <- calcGeneration(allInds,
+                                           inds)
 
-                                    cbind(breeder = breeder,
-                                          generation,
-                                          BV)
+              cbind(breeder = breeder,
+                    generation,
+                    BV)
 
-                                  })
-                          ))
+            })
+    ))
 
 
   # save breeding values:
