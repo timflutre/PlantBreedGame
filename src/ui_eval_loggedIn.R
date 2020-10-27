@@ -24,16 +24,27 @@
 ############################
 
 list(
-    shinydashboard::box(width=12, title = "Choose an evaluation file:",
-        div( id="eval_file",
-             fileInput(inputId="file.eval",
-                       label = NULL,
-                       multiple=FALSE,
-                       accept=c(".txt", ".tsv")),
-             numericInput("nRep", "Choose the number of plot(s) per genotype:", 20, min = 1, max = 100),
-             actionButton("requestEval", "Launch evaluation!")
-        )
+    # shinydashboard::box(width=12, title = "Choose an evaluation file:",
+    #     div( id="eval_file",
+    #          fileInput(inputId="file.eval",
+    #                    label = NULL,
+    #                    multiple=FALSE,
+    #                    accept=c(".txt", ".tsv")),
+    #          numericInput("nRep", "Choose the number of plot(s) per genotype:", 20, min = 1, max = 100),
+    #          actionButton("requestEval", "Launch evaluation!")
+    #     )
+    # ),
+    shinydashboard::box(width=12, title = "Evaluation:",
+                        div( id="eval_file",
+                             h4("Submitted individuals:"),
+                             dataTableOutput("evalFileDT"),
+                             numericInput("nRep", "Choose the number of plot(s) per genotype:", 20, min = 1, max = 100),
+                             actionButton("requestEval", "Launch evaluation!")
+                        )
     ),
+
+
+
 
     shinydashboard::tabBox(width=12,  title = "Graphs", id = "eval_graphs", side="left", selected = "Trait 1",
        tabPanel("Trait 1",

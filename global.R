@@ -45,6 +45,10 @@ root.dir <- "data"
 setup <- getBreedingGameSetup(root.dir)
 checkDbFile(setup$dbname)
 constants <- getBreedingGameConstants(setup$dbname)
+if (is.null(constants$maxEvalInds)) {
+  constants$maxEvalInds <- 5
+}
+
 
 prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field,
                "autofecundation"=constants$cost.autof*constants$cost.pheno.field,
@@ -53,7 +57,8 @@ prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field
                "pheno-patho"=constants$cost.pheno.patho*constants$cost.pheno.field,
                "geno-hd"=constants$cost.geno.hd*constants$cost.pheno.field,
                "geno-ld"=round(constants$cost.geno.ld*constants$cost.pheno.field,2),
-               "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field)
+               "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field,
+               "register" = constants$cost.register * constants$cost.pheno.field)
 
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
@@ -67,3 +72,4 @@ code.version <- getCodeVersion(url.repo)
 stopifnot(all(c("admin", "test") %in% getBreederList(setup$dbname)))
 stopifnot(all("game master" == getBreederStatus(setup$dbname, "admin"),
               "tester" == getBreederStatus(setup$dbname, "test")))
+

@@ -1250,6 +1250,17 @@ query <- paste0("INSERT INTO ", tbl, " VALUES",
 res <- dbExecute(conn = db, query)
 ```
 
+### Other
+
+Fill the table with other constants necessary for the game:
+```{r}
+# maximum number individuals for evaluation
+query <- paste0("INSERT INTO ", tbl, " VALUES",
+                " ('maxEvalInds', '", 5, "')")
+res <- dbExecute(conn=db, query)
+```
+
+
 ## Log
 
 Create the table for logging:
@@ -1412,24 +1423,17 @@ Make an example of an "data" file:
 (data.examples <- makeExampleDataFile(init.dir))
 ```
 
-Make an example of an "evaluation" file:
-```{r ex_eval}
-dat <- data.frame(breeder=c("test", "test"),
-                  ind=c("Coll0040", "Coll0007"))
-f <- paste0(init.dir, "/example_evaluation.txt")
-cat("# columns 'breeder' and 'ind' are compulsory\n",
-    file=f, append=FALSE)
-cat("# the 'breeder' column should contain players' names which already exist in the game\n",
-    file=f, append=TRUE)
-cat("# the 'ind' column should contain plant material identifiers which already exist in the game\n",
-    file=f, append=TRUE)
-cat("# use write.table(x=dat, file=\"eval.txt\", quote=FALSE, sep=\"\\t\", row.names=FALSE, col.names=TRUE)\n", 
-    file=f, append=TRUE)
-cat("# lines starting with '#' will be ignored\n",
-    file=f, append=TRUE)
-suppressWarnings(write.table(x=dat, file=f, append=TRUE, quote=FALSE,
-                             sep="\t", row.names=FALSE, col.names=TRUE))
+
+## Evaluation file
+```{r}
+dat <- data.frame(breeder = character(),
+                  ind = character())
+f <- "data/shared/Evaluation.txt"
+suppressWarnings(write.table(x = dat, file = f,
+                             quote = FALSE, sep = "\t",
+                             row.names = FALSE, col.names = TRUE))
 ```
+
 
 
 # Export ZIP archive

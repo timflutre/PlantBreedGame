@@ -185,11 +185,17 @@ deleteBreeder <- function(breederName){
   res <- dbExecute(conn=db, query)
 
   # delete entry in log table
-
-
   dbDisconnect(db)
 
 
+  # delete entry in Evaluation file:
+  evalDta <- read.table("data/shared/Evaluation.txt",
+                        header = T, sep = "\t")
+  evalDta <- evalDta[evalDta$breeder != breederName, ]
+  write.table(evalDta, file = "data/shared/Evaluation.txt",
+              append = FALSE,
+              quote = FALSE, sep = "\t",
+              row.names = FALSE, col.names = TRUE)
 
 }
 
