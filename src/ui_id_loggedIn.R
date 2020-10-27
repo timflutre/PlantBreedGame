@@ -98,7 +98,8 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                    p("A maximum of ",
                      strong(constants$maxEvalInds, " individuals"),
                      "can be registered."
-                   )
+                   ),
+                   p("The registration fee is ", strong(format(constants$cost.register * constants$cost.pheno.field, digits=2), " Mendels"),"per genotype. No refund are possible, thank-you for your understanding.")
                 ),
                 div(
                    selectInput("id_evalInds",

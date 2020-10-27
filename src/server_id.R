@@ -138,6 +138,7 @@ breederStatus <- reactive({
 budget <- reactive({
   input$leftMenu
   input$requestGeno
+  input$id_submitInds
   if (breeder()!="No Identification"){
 
     db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -373,6 +374,8 @@ output$dateBoxID <- renderValueBox({
 
 
 output$budgetBoxID <- renderValueBox({
+
+  x <- input$id_submitInds
   valueBox(
     value = budget(),
     subtitle = "Budget",
@@ -380,6 +383,7 @@ output$budgetBoxID <- renderValueBox({
     color = "yellow"
   )
 })
+outputOptions(output, "budgetBoxID", priority = 9)
 
 output$serverIndicID <- renderValueBox({
   ## this bow will be modified by some javascript
@@ -452,6 +456,17 @@ observeEvent(input$id_submitInds, priority = 10,{
   # add submitted individuals
   submitDta <- data.frame(breeder = breeder(),
                           ind = inds)
+
+  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
+                  " VALUES ('", breeder(),
+                  "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
+                  "', 'register', '",
+                  nrow(submitDta), "')")
+  res <- dbGetQuery(db, query)
+  dbDisconnect(db)
+  b <- budget()
+
   write.table(submitDta, file = "data/shared/Evaluation.txt",
               append = TRUE,
               quote = FALSE, sep = "\t",
