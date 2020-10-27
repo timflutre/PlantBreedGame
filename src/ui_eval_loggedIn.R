@@ -75,6 +75,13 @@ list(
                 div(
                     uiOutput("evalUIrequestHistory")
                 )
+       ),
+       tabPanel("Download Report",
+                p("By clicking on the button below you can download",
+                  "a complete HTML report about this game session."),
+                p("(The first report generation can take a bit of time.)"),
+                downloadButton("elvalReport")
+
        )
 
     ),
