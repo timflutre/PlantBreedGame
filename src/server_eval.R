@@ -40,38 +40,43 @@ output$evalUI <- renderUI({
 
 
 ## read uploaded file ----
+evalRawFile <- reactiveFileReader(500, session, "data/shared/Evaluation.txt",
+                                  read.table, header = T, sep = "\t",stringsAsFactors = FALSE)
 readQryEval <- reactive({
 
-  # no input fileI
-  if(is.null(input$file.eval)){
-    return(NULL)
-  }
-
   # read input file
-  df <- try(readCheckEvalFile(input$file.eval$datapath))
+  df <- evalRawFile()
 
-  if (is.data.frame(df)){
-    # add controls in the data.frame
-    df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names="ind")
-    df.controls$breeder <- rep("control", length(df.controls))
-    df <- rbind(df, df.controls)
-    return(df)
+  # add controls in the data.frame
+  df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names="ind")
+  df.controls$breeder <- rep("control", length(df.controls))
+  df <- rbind(df, df.controls)
+  df <- df[order(df$breeder),]
+  df
 
-  }else {return("error - wrong file format")}
+})
 
+
+
+output$evalFileDT <- renderDataTable({
+  DT::datatable(readQryEval(),
+                filter = c("none"),
+                style = "bootstrap4",
+                options = list(pageLength = 5,
+                               sDom  = '<"top">rt<"bottom">p'))
 })
 
 
 dfPhenoEval <- eventReactive(input$requestEval,{
   dfPheno <- phenotype4Eval(readQryEval(), nRep=input$nRep)
-  dfPheno$breeder <- sapply(as.character(dfPheno$ind), FUN = function(x){strsplit(x,split = "_")[[1]][1]})
+  dfPheno$breeder <- sapply(as.character(dfPheno$ind), FUN = function(x){strsplit(x,split = "\\*")[[1]][1]})
   return(dfPheno)
 })
 
 
 
 ## graph ----
-output$evalGraphT1 <- renderPlotly({
+evalGraphT1 <- reactive({
   dfPheno <- dfPhenoEval()
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
@@ -95,23 +100,26 @@ output$evalGraphT1 <- renderPlotly({
                x= ~ind,
                color = ~breeder,
                colors = mycolors) %>%
-      layout(title = "Phenotypic values of trait 1",
-             xaxis = list(title = "",
-                          categoryorder = "array",
-                          categoryarray = breederOrder
-                          ),
-             yaxis = list(title = ""),
-             autosize = T,
-             margin = m) %>%
-      add_lines(data=NULL,
-                type='scatter',
-                y=target,
-                mode='lines',
-                color = "Target")
-
-
+    layout(title = "Phenotypic values of trait 1",
+           xaxis = list(title = "",
+                        categoryorder = "array",
+                        categoryarray = breederOrder
+           ),
+           yaxis = list(title = ""),
+           autosize = T,
+           margin = m) %>%
+    add_lines(data=NULL,
+              type='scatter',
+              y=target,
+              mode='lines',
+              color = "Target")
+  p
 })
-output$evalGraphT2 <- renderPlotly({
+output$evalGraphT1 <- renderPlotly({
+  evalGraphT1()
+})
+
+evalGraphT2 <- reactive({
   dfPheno <- dfPhenoEval()
   breederOrder <- c(unique(as.character(dfPheno$ind[dfPheno$breeder=="control"])),
                     unique(as.character(dfPheno$ind[dfPheno$breeder!="control"])))
@@ -146,14 +154,14 @@ output$evalGraphT2 <- renderPlotly({
            yaxis = list(title = ""),
            autosize = T,
            margin = m)
-
-
+})
+output$evalGraphT2 <- renderPlotly({
+  evalGraphT2()
 })
 
 
 
-
-output$evalGraphT3 <- renderPlotly({
+evalGraphT3 <- reactive({
   dfPhenoPatho <- dfPhenoEval()
   dfPhenoPatho <- dfPhenoPatho[(as.numeric(dfPhenoPatho$plot) %% input$nRep) == 1,]
 
@@ -184,13 +192,14 @@ output$evalGraphT3 <- renderPlotly({
            yaxis = list(title = ""),
            autosize = T,
            margin = m)
-
+})
+output$evalGraphT3 <- renderPlotly({
+  evalGraphT3()
 })
 
 
 
-
-output$evalGraphT1vT2<- renderPlotly({
+evalGraphT1vT2 <- reactive({
   dfPheno <- dfPhenoEval()
   dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1,]
 
@@ -236,7 +245,9 @@ output$evalGraphT1vT2<- renderPlotly({
     layout(title = "Genotypic values of traits 1 vs 2",
            xaxis = list(title = "GA 1"),
            yaxis = list(title = "GA 2"))
-
+})
+output$evalGraphT1vT2 <- renderPlotly({
+  evalGraphT1vT2()
 })
 
 
@@ -354,23 +365,30 @@ output$evalUIpedigree <- renderUI({
 
 
 genealogy <- reactive({
+  breeders <- unique(dfPhenoEval()$breeder)
+  breeders <- breeders[breeders!="control"]
 
-  # extract all individuals
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  query <- paste0("SELECT * FROM plant_material_",input$pedigreeBreeder)
-  allInds <- (dbGetQuery(conn=db, query))
-  dbDisconnect(db)
+  gene <- lapply(breeders, function(b) {
+    # extract all individuals
+    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    query <- paste0("SELECT * FROM plant_material_", b)
+    allInds <- (dbGetQuery(conn=db, query))
+    dbDisconnect(db)
 
-  # get submitted individuals
-  inds <- readQryEval()$ind[readQryEval()$breeder==input$pedigreeBreeder]
-  subsetPedigree(allInds, inds)
+    # get submitted individuals
+    inds <- readQryEval()$ind[readQryEval()$breeder==b]
+    subsetPedigree(allInds, inds)
+  })
+  names(gene) <- breeders
+  gene
 })
 
+
 output$evalPlotPedigree <- renderPlot({
-  plotPedigree(genealogy()$child,
-               genealogy()$parent1,
-               genealogy()$parent2,
-               genealogy()$generation,
+  plotPedigree(genealogy()[[input$pedigreeBreeder]]$child,
+               genealogy()[[input$pedigreeBreeder]]$parent1,
+               genealogy()[[input$pedigreeBreeder]]$parent2,
+               genealogy()[[input$pedigreeBreeder]]$generation,
                edge.col.mother = "black",
                edge.col.father = "black",
                vertex.label.color = "darkgreen",
@@ -414,29 +432,150 @@ output$evalUIrequestHistory <- renderUI({
         breeders <- unique(dfPhenoEval()$breeder)
         breeders <- breeders[breeders!="control"]
         list(
-            selectInput("historyBreeder","Breeder", choices=breeders),
-            dataTableOutput("historyTable")
+            selectInput("historyBreeder","Breeder", choices=c(breeders, "--- All Breeders ---")),
+            # dataTableOutput("historyTable")
+            plotlyOutput("historyTable")
         )
 
     } else { p('no input')}
 
 })
 
-output$historyTable <- renderDataTable({
-    outTable <- getBreederHistory(breeder=input$historyBreeder,
-                                  setup=setup)
-    DT::datatable(outTable,
-                  rownames = F,
-                  filter = list(position = 'top', clear = TRUE, plain = TRUE),
-                  options = list(pageLength = 25,
-                                 lengthMenu = list(c(10, 25, 50, -1),
-                                                   c(10, 25, 50, "All") ),
-                                 scrollX = T,
-                                 columns.searchable = T,
-                                 order = list(c(3),c("dsc"))
-                  ),
-                  class = c("compact row-border"))
+breederHistory <- reactive({
+  breeders <- unique(dfPhenoEval()$breeder)
+  breeders <- breeders[breeders!="control"]
+
+  breedHist <- lapply(breeders, function(b){
+    getBreederHistory(breeder=b,
+                      setup=setup)
+  })
+  names(breedHist) <- breeders
+  breedHist
 })
+
+breederHistoryTimeLines <- reactive({
+
+  p <- list()
+
+  for (breeder in c("--- All Breeders ---", names(breederHistory()))) {
+    if (breeder != "--- All Breeders ---") {
+      dta <- breederHistory()[[breeder]]
+      optY <- FALSE
+      lw <- 25
+    } else {
+      dta <- do.call(rbind, breederHistory())
+      optY <- FALSE #TRUE
+      lw <- 15
+    }
+
+    names(dta) <- c("group", "task", "quantity", "start")
+    dta$content <- paste(dta$task, "quantity:", dta$quantity)
+    dta$duration <- 0
+    dta$color <- NA
+
+    colorGenoHD <- "#2c82e6"
+    colorGenoLD <- "#42cbf5"
+    colorGenoSin <- "#42cbf5"
+    colorAllof <- "#47db25"
+    colorAutof <- "#47db25"
+    colorHaplo <- "#47db25"
+    colorPhenoF <- "#ed8b3b"
+    colorPhenoP <- "#ed9e5c"
+
+    dta$duration[dta$task == "geno-hd"] <- constants$duration.geno.hd
+    dta$color[dta$task == "geno-hd"] <- colorGenoHD
+
+    dta$duration[dta$task == "geno-ld"] <- constants$duration.geno.ld
+    dta$color[dta$task == "geno-ld"] <- colorGenoLD
+
+    dta$duration[dta$task == "geno-single-snp"] <- constants$duration.geno.single
+    dta$color[dta$task == "geno-single-snp"] <- colorGenoSin
+
+    dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
+    dta$color[dta$task == "allofecundation"] <- colorAllof
+
+    dta$duration[dta$task == "autofecundation"] <- constants$duration.autof
+    dta$color[dta$task == "autofecundation"] <- colorAutof
+
+    dta$duration[dta$task == "haplodiploidization"] <- constants$duration.haplodiplo
+    dta$color[dta$task == "haplodiploidization"] <- colorHaplo
+
+    dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
+    dta$color[dta$task == "allofecundation"] <- colorAllof
+
+    dta$duration[dta$task == "pheno-field"] <- constants$duration.pheno.field
+    dta$color[dta$task == "pheno-field"] <- colorPhenoF
+
+    dta$duration[dta$task == "pheno-patho"] <- constants$duration.pheno.patho
+    dta$color[dta$task == "pheno-patho"] <- colorPhenoP
+
+    dta$end <- dta$start + months(dta$duration)
+
+
+    p[[breeder]] <- vistime(dta,
+                            col.event = "task",
+                            col.start = "start",
+                            col.end = "end",
+                            col.group = "group",
+                            col.color = "color",
+                            # col.fontcolor = "fontcolor",
+                            col.tooltip = "content",
+                            optimize_y = optY,
+                            linewidth = lw
+    )
+  }
+
+  p
+
+})
+output$historyTable <- renderPlotly({
+  breederHistoryTimeLines()[[input$historyBreeder]]
+})
+
+
+## Download Report ----
+output$elvalReport <- downloadHandler(
+
+  filename = function(){
+    paste0("PlantBreedGame_report_",  format(Sys.time(), "%F_%H-%M-%S"), ".html")
+  },
+
+  content = function(file) {
+    if (is.null(readQryEval())) {
+      alert("Please run an evaluation before downloading the report.s")
+      return(NULL)
+    }
+    # start progresse bar:
+    progBar <- shiny::Progress$new(session, min = 0, max = 20)
+    progBar$set(value = 0,
+                message = "Report initialization",
+                detail = "")
+
+    allBV <- calcGameProgress(progBar)
+
+    # parameters to pass to Rmd document
+    params <- list(progressBar = progBar,
+                   evalT1 = evalGraphT1(),
+                   evalT2 = evalGraphT2(),
+                   evalT3 = evalGraphT3(),
+                   evalT1T2 = evalGraphT1vT2(),
+                   genealogy = genealogy(),
+                   breederHistoryTimeLines = breederHistoryTimeLines(),
+                   BVdta = allBV,
+                   selInds = readQryEval())
+    # execute the R-markdown with given parameters
+    rmarkdown::render("./src/evalReport.Rmd",
+                      output_file = file,
+                      params = params,
+                      envir = new.env(parent = globalenv()),
+                      encoding = "UTF-8"
+    )
+
+    progBar$close() # close progress bar
+
+
+  }
+)
 
 
 ## debug ----

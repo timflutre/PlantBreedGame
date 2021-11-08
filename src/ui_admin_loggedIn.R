@@ -123,7 +123,7 @@ list(
                                         tags$table(style = "width: 100%; border-collapse: collapse;",
                                                    tags$tr(
                                                        tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-                                                               textInput("newBreederName", "Breeder's name", placeholder="spaces forbidden",
+                                                               textInput("newBreederName", "Breeder's name", placeholder = "Only a-z, A-Z, 0-9 and '_' are allowed",
                                                                          width="100%")
                                                        ),
                                                        tags$td(style = "width: 25%; vertical-align: bottom; padding: 10px;",

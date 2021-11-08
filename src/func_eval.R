@@ -92,7 +92,7 @@ phenotype4Eval <- function (df, nRep=50){
     inds.todo <- df$ind[df$breeder==breeder]
     for(i in 1:length(inds.todo)){
       ind.id <- inds.todo[i]
-      indName <- paste0(c(breeder, ind.id),collapse="_")
+      indName <- paste0(c(breeder, ind.id), collapse="*")
       if(ind.id %in% rownames(X))
         next
       # message(paste0(i, "/", length(inds.todo), " ", ind.id))

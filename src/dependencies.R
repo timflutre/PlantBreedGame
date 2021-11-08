@@ -31,6 +31,8 @@ library(digest)
 library(plotly)
 library(DT)
 library(igraph)
+library(lubridate)
+library(vistime)
 
 ## required packages NOT available on the CRAN
 ## R> devtools::install_github("timflutre/rutilstimflutre")

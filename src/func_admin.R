@@ -23,8 +23,10 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
   ## this function create a new breeder
   ## breederName (char) name of the new breeder
 
-  if(grepl("[ ]", breederName)){
-    stop("Breeder's name must not contain spaces")
+
+  if (!grepl("^[a-zA-Z0-9\\_]+$", breederName, perl = TRUE)) {
+    # only alpha numeric and character "_"
+    stop("Breeder's name should contain only alpha-numeric characters and special character : _  ")
   }
   if(status != "tester" & psw == ""){
     stop(paste0("a breeder with another status than tester",
@@ -183,11 +185,17 @@ deleteBreeder <- function(breederName){
   res <- dbExecute(conn=db, query)
 
   # delete entry in log table
-
-
   dbDisconnect(db)
 
 
+  # delete entry in Evaluation file:
+  evalDta <- read.table("data/shared/Evaluation.txt",
+                        header = T, sep = "\t")
+  evalDta <- evalDta[evalDta$breeder != breederName, ]
+  write.table(evalDta, file = "data/shared/Evaluation.txt",
+              append = FALSE,
+              quote = FALSE, sep = "\t",
+              row.names = FALSE, col.names = TRUE)
 
 }
 
@@ -204,8 +212,7 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
   # load SNP effects
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
-
-  X <- t(sapply(inds, function(ind.id){
+  BV <- t(sapply(inds, function(ind.id){
     if (!is.null(progress)) {
       progress$set(detail = paste0("BV calculation for breeder: ", breeder,
                                    " - ", i, "/", n))
@@ -219,11 +226,123 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
 
     ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
     rownames(ind$genos) <- indName
-    ind$genos
+
+    ind$genos %*% p0$Beta
   }))
 
-  BV <- X %*% p0$Beta
   BV
+
+}
+
+calcGameProgress <- function(progBar = NULL){
+
+  if (!is.null(progBar)) {
+    if (is.null(progBar$getValue())) {
+      progBar$set(value = 0)
+    }
+    progBar$set(value = progBar$getValue() + 1,
+                      message = "Game progress calculation:",
+                      detail = "Initialisation...")
+  } else {
+    progBar <- list()
+    progBar$set <- function(...){invisible(NULL)}
+    progBar$getValue <- function(...){invisible(NULL)}
+  }
+
+
+  # load breeding values data:
+  f <- paste0(setup$truth.dir, "/allBV.RData")
+  if (file.exists(f)) {
+    progBar$set(detail = "Load BV...")
+    load(f)
+  } else {
+    progBar$set(detail = "BV calculation for initial collection...")
+    ### GET BV of the initial individuals:
+    # load initial collection genotypes
+    f <- paste0(setup$truth.dir, "/coll.RData")
+    load(f)
+    # load SNP effects
+    f <- paste0(setup$truth.dir, "/p0.RData")
+    load(f)
+
+
+    # initialisation of the breeding values data with the initial collection
+    BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
+                         trait2 = coll$geno %*% p0$Beta[,2])
+    breedValuesDta <- data.frame(breeder = "Initial collection",
+                                 parent1 = NA,
+                                 parent2 = NA,
+                                 ind = rownames(BVcoll),
+                                 gen = 1,
+                                 BVcoll)
+    rm(list = c("coll", "BVcoll")) # Free memory
+  }
+
+  progBar$set(value = progBar$getValue() + 1, detail = "BV calculation for new individuals...")
+  ### GET BV of the breeders's individuals:
+  # get the list of the breeders (without "admin" and "test")
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
+  breeders <- as.character(dbGetQuery(conn = db, query)$name)
+  dbDisconnect(db)
+
+
+  ### Remove deleted breeders from breedValuesDta
+  breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders,"Initial collection"),]
+
+  ### calculation
+
+  # get list of all individuals with generation and BV
+  breedValuesDta <- rbind(
+    breedValuesDta,
+    do.call(rbind,
+            sapply(breeders, simplify = F, function(breeder){
+
+              # get list of individuals
+              db <- dbConnect(SQLite(), dbname = setup$dbname)
+              query <- paste0("SELECT * FROM plant_material_", breeder)
+              allInds <- (dbGetQuery(conn = db, query))
+              dbDisconnect(db)
+
+              # get the new individuals
+              tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
+              inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
+
+              if (length(inds) == 0) {
+                return()
+              }
+
+              # calc breeding values of new individuals
+              BV <- calcBV(breeder, inds, progress = progBar)
+              colnames(BV) <- c("trait1", "trait2")
+
+              # calc generation
+              generation <- calcGeneration(allInds,
+                                           inds)
+
+              cbind(breeder = breeder,
+                    generation,
+                    BV)
+
+            })
+    ))
+
+
+  # save breeding values:
+  progBar$set(value = progBar$getValue() + 1, detail = "Save breeding values...")
+  save(breedValuesDta,
+       file = paste0(setup$truth.dir, "/allBV.RData"))
+
+
+  # return centered BV:
+  # center breeding values
+  iniMeanT1 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait1"])
+  iniMeanT2 <- mean(breedValuesDta[breedValuesDta$breeder == "Initial collection", "trait2"])
+  breedValuesDta$trait1 <- breedValuesDta$trait1 - iniMeanT1
+  breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
+
+  progBar$set(value = progBar$getValue() + 1, detail = "Done !")
+  breedValuesDta
 
 }
 
