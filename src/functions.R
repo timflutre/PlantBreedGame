@@ -72,7 +72,7 @@ makeDfPhenos <- function(ind.ids, nb.plots.per.ind, year, pathogen){
                     stringsAsFactors=FALSE)
   tmp <- tmp[order(tmp$ind.id),]
 
-  df <- data.frame(ind=rep(tmp$ind.id, tmp$nb.plots),
+  df <- data.frame(ind=as.factor(rep(tmp$ind.id, tmp$nb.plots)),
                    year=as.factor(rep(year, sum(tmp$nb.plots))),
                    plot=as.factor(1:sum(tmp$nb.plots)),
                    pathogen=pathogen,
