@@ -75,6 +75,8 @@ stopifnot(compareVersion("0.170.0",
           != 1)
 suppressPackageStartupMessages(library(scrm))    # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges))# from bioconductor
+
+source("src/functions.R")
 ```
 
 Set the seed:
@@ -86,11 +88,6 @@ set.seed(1993) # better to change it from one game session to the next
 Set up directories:
 ```{r setup_dir}
 root.dir <- file.path(getwd(), "data")
-if(Sys.info()["user"] == "tflutre"){
-  root.dir <- "~/src/plantbreedgame/data"
-} else if(Sys.info()["user"] == "Julien DIOT"){
-  root.dir <- "~/breeding-game/setup/data"
-}
 root.dir <- path.expand(root.dir)
 if(! dir.exists(root.dir))
   dir.create(root.dir)
