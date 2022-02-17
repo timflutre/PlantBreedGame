@@ -158,7 +158,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
 
 deleteBreeder <- function(breederName){
 
-  if(breederName=="admin"){
+  if (breederName == "admin") {
     stop("admin can't be deleted.")
   }
 
@@ -171,22 +171,20 @@ deleteBreeder <- function(breederName){
 
 
   ## clean dataBase
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-
   # delete plant_material_oldBreeder
-  tbl <- paste0("plant_material_", breederName)
-  query <- paste0("DROP TABLE ", tbl)
-  res <- dbExecute(conn=db, query)
-
+  tbl_pltMat <- paste0("plant_material_", breederName)
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  allTbls <- dbListTables(conn = db)
+  if (tbl_pltMat %in% allTbls) {
+    # raise error if table do not exist
+    res <- dbExecute(conn = db, paste0("DROP TABLE ", tbl_pltMat))
+  }
   # delete entry in breeders' table
-  tbl <- "breeders"
-  query <- paste0("DELETE FROM ", tbl,
-                  " WHERE name = '",breederName,"'")
-  res <- dbExecute(conn=db, query)
-
+  res <- dbExecute(conn = db,
+                   paste0("DELETE FROM breeders ",
+                          "WHERE name = '", breederName, "'"))
   # delete entry in log table
   dbDisconnect(db)
-
 
   # delete entry in Evaluation file:
   evalDta <- read.table("data/shared/Evaluation.txt",
@@ -241,12 +239,16 @@ calcGameProgress <- function(progBar = NULL){
       progBar$set(value = 0)
     }
     progBar$set(value = progBar$getValue() + 1,
-                      message = "Game progress calculation:",
-                      detail = "Initialisation...")
+                message = "Game progress calculation:",
+                detail = "Initialisation...")
   } else {
     progBar <- list()
-    progBar$set <- function(...){invisible(NULL)}
-    progBar$getValue <- function(...){invisible(NULL)}
+    progBar$set <- function(...) {
+      invisible(NULL)
+    }
+    progBar$getValue <- function(...) {
+      invisible(NULL)
+    }
   }
 
 
@@ -254,17 +256,16 @@ calcGameProgress <- function(progBar = NULL){
   f <- paste0(setup$truth.dir, "/allBV.RData")
   if (file.exists(f)) {
     progBar$set(detail = "Load BV...")
-    load(f)
+    load(f) # load `breedValuesDta` variable
   } else {
-    progBar$set(detail = "BV calculation for initial collection...")
     ### GET BV of the initial individuals:
+    progBar$set(detail = "BV calculation for initial collection...")
     # load initial collection genotypes
     f <- paste0(setup$truth.dir, "/coll.RData")
-    load(f)
+    load(f) # load `coll` variable
     # load SNP effects
     f <- paste0(setup$truth.dir, "/p0.RData")
-    load(f)
-
+    load(f) # load `p0` variable
 
     # initialisation of the breeding values data with the initial collection
     BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
@@ -278,8 +279,8 @@ calcGameProgress <- function(progBar = NULL){
     rm(list = c("coll", "BVcoll")) # Free memory
   }
 
-  progBar$set(value = progBar$getValue() + 1, detail = "BV calculation for new individuals...")
   ### GET BV of the breeders's individuals:
+  progBar$set(value = progBar$getValue() + 1, detail = "BV calculation for new individuals...")
   # get the list of the breeders (without "admin" and "test")
   db <- dbConnect(SQLite(), dbname = setup$dbname)
   query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
@@ -290,19 +291,30 @@ calcGameProgress <- function(progBar = NULL){
   ### Remove deleted breeders from breedValuesDta
   breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders,"Initial collection"),]
 
-  ### calculation
+  ### Get all database tables (to avoid query to missing tables).
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  allTbls <- dbListTables(conn = db)
+  dbDisconnect(db)
 
+  ### calculation
   # get list of all individuals with generation and BV
   breedValuesDta <- rbind(
     breedValuesDta,
     do.call(rbind,
             sapply(breeders, simplify = F, function(breeder){
+              progBar$set(detail = paste0("BV calculation for breeder: ",
+                                          breeder))
 
               # get list of individuals
-              db <- dbConnect(SQLite(), dbname = setup$dbname)
-              query <- paste0("SELECT * FROM plant_material_", breeder)
-              allInds <- (dbGetQuery(conn = db, query))
-              dbDisconnect(db)
+              tbl_pltMat <- paste0("plant_material_", breeder)
+              if (tbl_pltMat %in% allTbls) {
+                db <- dbConnect(SQLite(), dbname = setup$dbname)
+                query <- paste0("SELECT * FROM ", tbl_pltMat)
+                allInds <- (dbGetQuery(conn = db, query))
+                dbDisconnect(db)
+              } else {
+                return()
+              }
 
               # get the new individuals
               tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]

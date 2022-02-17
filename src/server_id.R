@@ -84,7 +84,7 @@ accessGranted <- eventReactive(input$submitPSW,
            dbDisconnect(db)
 
            allDataFiles <- list.files("data", all.files=TRUE, recursive=TRUE)
-           currentSize <- sum(file.info(paste0("data/", allDataFiles))$size) /
+           currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
              10^9 # in Gb
 
            if(currentSize < maxDiskUsage){
@@ -106,8 +106,29 @@ accessGranted <- eventReactive(input$submitPSW,
        goodDiskUsage <- TRUE
    }
 
-   # 4. output
-   if (goodPswd & goodDiskUsage){
+   # 4. check db (in case of "corrupted" data-base)
+   if (goodPswd) {
+     db <- dbConnect(SQLite(), dbname = setup$dbname)
+     allTbls <- dbListTables(conn = db)
+     dbDisconnect(db)
+     tbl_pltMat <- paste0("plant_material_", input$breederName)
+     if (!tbl_pltMat %in% allTbls) {
+       alert(paste("Sorry, our data-base have corrupted information",
+                   "regarding your account, and you will not be able to play",
+                   "the game anymore. Please ask a game master to delete your",
+                   "account, and create a new one for you.\n",
+                   "If you are a game master, you can connect, but please",
+                   "be aware that some game features will not work."))
+       if (status != "game master") {
+         # do not allow access if user is not "game master"
+         return(FALSE)
+       }
+     }
+   }
+
+
+   # 5. output
+   if (goodPswd && goodDiskUsage) {
      removeUI("#logInDiv")
      return(TRUE)
    } else
