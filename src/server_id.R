@@ -51,7 +51,7 @@ accessGranted <- eventReactive(input$submitPSW,
    # but the javascript "alert" will explain that the server is full.
    # * A "tester" is the only status allowed to have an empty password.
 
-   if (input$submitPSW==0){# no pswd given
+   if (input$submitPSW == 0) {# button not pressed
        return(FALSE)
    }
 
@@ -59,28 +59,22 @@ accessGranted <- eventReactive(input$submitPSW,
    status <- getBreederStatus(setup$dbname, input$breederName)
 
    # 2. check given password
-   db <- dbConnect(SQLite(), dbname=setup$dbname)
+   db <- dbConnect(SQLite(), dbname = setup$dbname)
    tbl <- "breeders"
    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
-   hashPsw <- dbGetQuery(conn=db, query)[,1]
+   hashPsw <- dbGetQuery(conn = db, query)[,1]
    dbDisconnect(db)
-   if(status == "tester"){
+
+   if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
      goodPswd <- TRUE
    } else{
-     if(input$psw == ""){
-       goodPswd <- FALSE
-       alert("Error: don't use the empty string as password")
-     }
-     else if(hashPsw == digest(input$psw, "md5", serialize=FALSE)){
-       goodPswd <- TRUE
-     } else{
-       goodPswd <- FALSE
-       alert("Error: wrong password")
-     }
+     goodPswd <- FALSE
+     alert("Error: wrong password")
    }
 
    # 3. check disk usage
-   if(goodPswd){
+   goodDiskUsage <- FALSE
+   if (goodPswd && status != "game master") {
        withProgress({
            # get maxDiskUsage
            db <- dbConnect(SQLite(), dbname=setup$dbname)
@@ -107,7 +101,7 @@ accessGranted <- eventReactive(input$submitPSW,
                             "Go to the Admin tab, then \"Disk usage\", and raise the threshold."))
            }
        },message = "Connecting...")
-   }else{
+   } else if (goodPswd && status == "game master") {
        # the game master can always log in
        goodDiskUsage <- TRUE
    }
@@ -115,7 +109,7 @@ accessGranted <- eventReactive(input$submitPSW,
    # 4. output
    if (goodPswd & goodDiskUsage){
      removeUI("#logInDiv")
-     return (TRUE)
+     return(TRUE)
    } else
      return(FALSE)
 })
