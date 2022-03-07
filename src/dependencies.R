@@ -33,6 +33,7 @@ library(DT)
 library(igraph)
 library(lubridate)
 library(vistime)
+library(tidyr)
 
 ## required packages NOT available on the CRAN
 ## R> devtools::install_github("timflutre/rutilstimflutre")

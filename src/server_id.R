@@ -195,7 +195,9 @@ phenoFiles <- reactive({
 })
 genoFiles <- reactive({
   input$leftMenu
-  choices=getDataFileList(type="geno", breeder=breeder())
+  choices = tools::file_path_sans_ext(
+    getDataFileList(type = "geno", breeder = breeder()),
+    compression = TRUE)
 })
 pltMatFiles <- reactive({
   input$leftMenu
@@ -223,16 +225,38 @@ output$dwnlPheno <- downloadHandler(
 )
 
 output$dwnlGeno <- downloadHandler(
-  filename=function () input$genoFile, # lambda function
-  content=function(file){
+  filename = function () paste0(input$genoFile, '.txt.gz'), # lambda function
+  content = function(file) {
+    gFile <- paste0(input$genoFile, '.txt.gz')
     initFiles <- list.files("data/shared/initial_data/")
-    if (input$genoFile %in% initFiles) {
+    if (gFile  %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
-      folder <- paste0("data/shared/",breeder())
+      folder <- paste0("data/shared/", breeder())
     }
-    filePath <- paste0(folder, "/", input$genoFile)
+    filePath <- paste0(folder, "/", gFile)
     file.copy(filePath, file)
+  }
+)
+
+output$dwnlGeno_vcf <- downloadHandler(
+  filename = function () paste0(input$genoFile, '.vcf.gz'), # lambda function
+  content = function(file) {
+    gFile_txt <- paste0(input$genoFile, '.txt.gz')
+    initFiles <- list.files("data/shared/initial_data/")
+    if (gFile_txt  %in% initFiles) {
+      folder <- "data/shared/initial_data"
+    } else {
+      folder <- paste0("data/shared/", breeder())
+    }
+    gFile_txt <- paste0(folder, "/", gFile_txt)
+    progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
+    progressVcf$set(value = 0,
+                    message = "Create VCF File:",
+                    detail = "Initialisation...")
+    txt2Vcf(gFile_txt, file, progressVcf)
+    progressVcf$set(value = 5,
+                    detail = "DONE!")
   }
 )
 
@@ -281,11 +305,13 @@ output$UIdwnlPheno <- renderUI({
 
 output$UIdwnlGeno <- renderUI({
   if (input$genoFile!=""){
-    if (breederStatus()=="player" && !availToDwnld(input$genoFile,currentGTime())$isAvailable ){
+    genoFile <- paste0(input$genoFile, '.txt.gz')
+    if (breederStatus() == "player" && !availToDwnld(genoFile,currentGTime())$isAvailable ) {
       p(paste0("Sorry, your data are not available yet. Delivery date: ",
-               availToDwnld(input$genoFile,currentGTime())$availDate))
-    }else{
-           downloadButton("dwnlGeno", "Download your file")
+               availToDwnld(genoFile, currentGTime())$availDate))
+    } else{
+           div(downloadButton("dwnlGeno", "Download as `txt.gz`"),
+               downloadButton("dwnlGeno_vcf", "Download as `vcf.gz`"))
 
     }
   }else p("No file selected.")
