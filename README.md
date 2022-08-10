@@ -45,7 +45,13 @@ The package can also be installed after cloning the git repository:
 git clone git@github.com:timflutre/PlantBreedGame.git
 ```
 
-2. Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/) to simulate the initial data set. It also creates all the necessary files and database for the game to function, and initiate the game with two players, "test" (no password) and "admin" (password `1234`).
+2. Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/) to simulate the initial data set, for example with the command:
+
+```sh
+R -e "rmarkdown::render('plantbreedgame_setup.Rmd')"
+```
+
+ It also creates all the necessary files and database for the game to function, and initiate the game with two players, "test" (no password) and "admin" (password `1234`).
 
 3. Finally, open a R session, and execute the following commands:
 
@@ -86,6 +92,12 @@ and copy inside the content of our Shiny application you just downloaded:
 
 ```
 cp -r ~/PlantBreedGame-master/* /srv/shiny-server/breeding-game
+```
+
+Generate the game data with:
+
+```sh
+R -e "rmarkdown::render('/srv/shiny-server/breeding-game/plantbreedgame_setup.Rmd')"
 ```
 
 By default, the Shiny server runs as a unix user named `shiny`.
