@@ -366,7 +366,8 @@ output$admin_plotAllIndGameProgress <- renderPlotly({
             '\nparent1: ', parent1,
             '\nparent2: ', parent2,
             '\nBV trait1 = ', round(trait1,2),
-            '\nBV trait2 = ', round(trait2,2))
+            '\nBV trait2 = ', round(trait2,2),
+            '\nBV trait1 x trait2 = ', round(t1t2, 2))
   ) %>%
     layout(
       title = paste0('All individuals (', input$admin_progressTrait,")"),
@@ -428,7 +429,8 @@ output$admin_plotMaxIndGameProgress <- renderPlotly({
             '\nparent1: ', parent1,
             '\nparent2: ', parent2,
             '\nBV trait1 = ', round(trait1,2),
-            '\nBV trait2 = ', round(trait2,2))
+            '\nBV trait2 = ', round(trait2,2),
+            '\nBV trait1 x trait2 = ', round(t1t2, 2))
   ) %>%
     layout(
       title = paste0('Best individuals (', input$admin_progressTrait, ")"),
@@ -502,7 +504,8 @@ output$admin_T1T2GameProgress <- renderPlotly({
             '\nparent1: ', parent1,
             '\nparent2: ', parent2,
             '\nBV trait1 = ', round(trait1,2),
-            '\nBV trait2 = ', round(trait2,2))
+            '\nBV trait2 = ', round(trait2,2),
+            '\nBV trait1 x trait2 = ', round(t1t2, 2))
   ) %>%
     layout(
       title = paste0('Trait 1 vs Trait 2 (', input$admin_T1T2Breeder,")"),

@@ -353,6 +353,11 @@ calcGameProgress <- function(progBar = NULL){
   breedValuesDta$trait1 <- breedValuesDta$trait1 - iniMeanT1
   breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
 
+  # add intercept
+  breedValuesDta$trait1 <- breedValuesDta$trait1 + p0$mu['trait1']
+  breedValuesDta$trait2 <- breedValuesDta$trait2 + p0$mu['trait2']
+  breedValuesDta$t1t2 <- breedValuesDta$trait1 * breedValuesDta$trait2
+
   progBar$set(value = progBar$getValue() + 1, detail = "Done !")
   breedValuesDta
 
