@@ -208,6 +208,13 @@ evalGraphT1vT2 <- reactive({
   load(f)
   dfInitColl <- data.frame(GAT1=p0$G.A[,1], GAT2=p0$G.A[,2], ind=names(p0$G.A[,2]))
 
+  # add intercept to GVs
+  dfPheno$GAT1 <- dfPheno$GAT1 + p0$mu['trait1']
+  dfPheno$GAT2 <- dfPheno$GAT2 + p0$mu['trait2']
+  dfInitColl$GAT1 <- dfInitColl$GAT1 + p0$mu['trait1']
+  dfInitColl$GAT2 <- dfInitColl$GAT2 + p0$mu['trait2']
+
+
   # linear regretion
   linMod <- lm(GAT2 ~ GAT1, data=dfInitColl)
 
@@ -242,7 +249,7 @@ evalGraphT1vT2 <- reactive({
                 color=~breeder,
                 text=~ind,
                 inherit=FALSE) %>%
-    layout(title = "Genotypic values of traits 1 vs 2",
+    layout(title = "Genotypic values (+intercept) of traits 1 vs 2 ",
            xaxis = list(title = "GA 1"),
            yaxis = list(title = "GA 2"))
 })
