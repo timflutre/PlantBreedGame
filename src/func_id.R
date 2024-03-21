@@ -47,11 +47,11 @@ getDataFileList <- function(type, breeder){
 
   stopifnot(type %in% c("pheno", "geno", "pltMat", "request"))
 
-  
+
   dirPath <- paste0("data/shared/", breeder)
   dataFile <- list.files(dirPath)
   dataFile <- c(dataFile, list.files("data/shared/initial_data/"))
-  
+
   ## Get the ids of the files
   matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_pheno"))
   if (type == "pheno"){
@@ -79,7 +79,7 @@ availToDwnld <- function(fileName, gameTime){
 
   stopifnot(is.character(fileName),
             fileName!="")
-  
+
   # quick Return
   initFiles <- list.files("data/shared/initial_data/")
   if (fileName %in% initFiles) {
@@ -121,4 +121,115 @@ availToDwnld <- function(fileName, gameTime){
 
   return(res)
 
+}
+
+
+
+
+
+#' Convert txt genotype to vcf genotype
+#'
+#' @param txt_file path of the `.txt(.gz)` genotype data file
+#' @param file path of the new `.vcf.gz` genotype data file
+#'
+#' @return NULL
+txt2Vcf <- function(txt_file, vcf_file, prog = NULL){
+
+  # read genotype data
+  if (!is.null(prog)) {
+    prog$set(value = 0,
+             detail = "Get genotype data...")
+  }
+  geno <- read.table(txt_file,
+                     header = TRUE,
+                     sep = '\t')
+  geno <- data.frame(lapply(geno, as.character),
+                      row.names = row.names(geno))
+
+  if (identical(colnames(geno), c('ind', 'snp', 'geno'))) {
+    # single snp genotyping results
+    geno <- tidyr::spread(geno, key = "snp", value = "geno")
+    row.names(geno) <- geno$ind
+    geno <- subset(geno, select = -1)
+  }
+
+  # read snp coordinates
+  if (!is.null(prog)) {
+    prog$set(value = 1,
+             detail = "Get SNP coordinates...")
+  }
+  snpCoord <- read.table('data/shared/initial_data/snp_coords_hd.txt.gz')
+  snpCoord <- snpCoord[row.names(snpCoord) %in% colnames(geno), ]
+
+  # Create the VCF "Fixed region"
+  if (!is.null(prog)) {
+    prog$set(value = 2,
+             detail = "Create VCF fixed region...")
+  }
+  fixedColNames <- c('#CHROM',
+                     'POS',
+                     'ID',
+                     'REF',
+                     'ALT',
+                     'QUAL',
+                     'FILTER',
+                     'INFO',
+                     'FORMAT')
+  data <- as.data.frame(matrix(NA,
+                               nrow = ncol(geno),
+                               ncol = nrow(geno) + length(fixedColNames)))
+  colnames(data)[1:length(fixedColNames)] <- fixedColNames
+  colnames(data)[seq(length(fixedColNames) + 1, ncol(data))] <- row.names(geno)
+  data$`#CHROM` <- snpCoord$chr
+  data$POS <- snpCoord$pos
+  data$ID <- row.names(snpCoord)
+  data[,c('REF', 'ALT', 'QUAL', 'INFO')] <- '.'
+  data$FILTER <- "PASS"
+  data$FORMAT <- "GT"
+
+  data <- data[order(data$POS),]
+  data <- data[order(data$`#CHROM`),]
+
+
+
+  # Genotype region
+  if (!is.null(prog)) {
+    prog$set(value = 3,
+             detail = "Create VCF genotype region...")
+  }
+  gt <- matrix(NA, nrow = nrow(geno), ncol = ncol(geno))
+  gt[geno == "0"] <- '0/0'
+  gt[geno == "1"] <- '1/0'
+  gt[geno == "2"] <- '1/1'
+  colnames(gt) <- colnames(geno)
+  row.names(gt) <- row.names(geno)
+  gt <- t(gt)
+  data[, colnames(gt)] <- gt[data$ID,]
+
+
+  # Meta region
+  meta <- paste("##fileformat=VCFv4.3",
+                '##source="PlantBreedGame", data in this file are simulated.',
+                "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
+                sep = "\n")
+
+  # write file
+  if (!is.null(prog)) {
+    prog$set(value = 4,
+             detail = "Write VCF File...")
+  }
+  if (file.exists(vcf_file)) {
+    file.remove(vcf_file)
+  }
+
+  f <- gzfile(vcf_file, "w")
+  writeLines(text = meta, con = f)
+  close(f)
+  data.table::fwrite(x = data,
+                     file = vcf_file,
+                     append = TRUE,
+                     sep = "\t",
+                     quote = FALSE,
+                     row.names = FALSE,
+                     col.names = TRUE)
 }

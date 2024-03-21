@@ -35,7 +35,7 @@ shinydashboard::tabBox(width=12, title =paste0("My account"),
                 ),
                 div(
                     h3("Genotyping data:"),
-                    selectInput("genoFile", "", choices=genoFiles(),width="75%"),
+                    selectInput("genoFile", "", choices = genoFiles(), width="75%"),
                     uiOutput("UIdwnlGeno")
                 )
             ),
