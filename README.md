@@ -22,6 +22,8 @@ But if you want to install the game on your own computer or server, read on!
 
 # Installation
 
+> Note: for nix users, a flake is available in this repository (cf. [Nix](#Nix-snowflake) section)
+
 ## Dependencies
 
 Before using this game, you need to install R as well as various packages, listed in the file [`src/dependencies.R`](https://github.com/timflutre/PlantBreedGame/blob/master/src/dependencies.R).
@@ -45,11 +47,16 @@ The package can also be installed after cloning the git repository:
 git clone git@github.com:timflutre/PlantBreedGame.git
 ```
 
-2. Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/) to simulate the initial data set, for example with the command:
+2. Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/) to simulate the initial data set, this can be done with the command:
 
 ```sh
-R -e "rmarkdown::render('plantbreedgame_setup.Rmd')"
+make data
 ```
+
+> Or with R:
+>  ```sh
+>  R -e "rmarkdown::render('plantbreedgame_setup.Rmd')"
+>  ```
 
  It also creates all the necessary files and database for the game to function, and initiate the game with two players, "test" (no password) and "admin" (password `1234`).
 
@@ -241,6 +248,19 @@ This tab also allows a game master to create new breeders and sessions, among ot
 
 You can modify some key parameters of the game, e.g., effective population size, heritabilities, genetic correlation.
 For this, you need to edit the setup file [`plantbreedgame_setup.Rmd`](https://github.com/timflutre/PlantBreedGame/blob/master/plantbreedgame_setup.Rmd), notably by changing the parameters' values in the sections `Simulate haplotypes and genotypes` and `Simulate phenotypes` (e.g., subsection `Simulation procedure for trait 1`).
+
+
+# Nix :snowflake: 
+
+This repository uses a "[nix](https://nixos.org/) flake" and [`direnv`](https://direnv.net/). If you have nix and direnv installed just `cd` in this repo, enable direnv (`direnv allow`) and all dependencies will be automatically installed and available in a dedicated environment.
+
+You can then launch the application with:
+
+```sh
+nix run
+```
+
+To install nix you can visit: https://github.com/DeterminateSystems/nix-installer
 
 # Citation
 
