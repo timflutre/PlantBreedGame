@@ -59,7 +59,8 @@ list(
        ),
        tabPanel("Trait 3",
                 div(
-                    plotlyOutput("evalGraphT3", height = "100%",width="100%") %>% withSpinner()
+                  p("1 = symptoms, 0 = no symptoms"),
+                  plotlyOutput("evalGraphT3", height = "100%",width="100%") %>% withSpinner()
                 )
        ),
        tabPanel("Traits 1 vs 2",
@@ -87,12 +88,16 @@ list(
                     uiOutput("evalUIrequestHistory")
                 )
        ),
+       tabPanel("Players' scores",
+                div(
+                  uiOutput("evalUIgameScores")
+                )
+       ),
        tabPanel("Download Report",
                 p("By clicking on the button below you can download",
                   "a complete HTML report about this game session."),
                 p("(The first report generation can take a bit of time.)"),
                 downloadButton("elvalReport")
-
        )
 
     ),

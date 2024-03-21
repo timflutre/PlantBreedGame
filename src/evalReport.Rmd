@@ -571,6 +571,66 @@ plot_ly(data = bestBV[order(bestBV$gen),],
 
 
 
+### Product Trait 2 x Trait 1
+
+
+```{r}
+if (!is.null(progressBar)) {
+  progressBar$set(value = progressBar$getValue() + 1,
+                  message = "Compile Rmd:",
+                  detail = "Best individuals T1xT2...")
+}
+
+# get the best individuals per breeder per generation
+bestBV <- NULL
+for (breeder in unique(BVdta$breeder)) {
+  tmp1 <- BVdta[BVdta$breeder == breeder,]
+
+  for (gen in unique(tmp1$gen)) {
+    tmp2 <- tmp1[tmp1$gen == gen,]
+    bestBV <- rbind(bestBV,
+                    tmp2[tmp2$t1t2 == max(tmp2$t1t2),])
+  }
+
+  # add initial collection ind to all breeders
+  if (breeder != "Initial collection") {
+    bestIni <- bestBV[bestBV$breeder == "Initial collection", ]
+    bestIni$breeder <- breeder
+    bestBV <- rbind(bestBV, bestIni)
+  }
+}
+
+# remove "Initial collection" breeder
+bestBV <- bestBV[bestBV$breeder != "Initial collection",]
+
+
+plot_ly(data = bestBV[order(bestBV$gen),],
+        type = "scatter",
+        mode = "lines+markers",
+        x = ~gen,
+        y = ~t1t2,
+        color = ~breeder,
+        hoverinfo = 'text',
+        text = ~paste0(
+          '<b>', ind, '</b>', # (in bold)
+          '\nparent1: ', parent1,
+          '\nparent2: ', parent2,
+          '\nBV trait1 = ', round(trait1,2),
+          '\nBV trait2 = ', round(trait2,2),
+          '\nBV trait1 x trait2 = ', round(t1t2, 2))
+) %>%
+  layout(
+    title = paste0("Best individuals (Trait 2)"),
+    xaxis = list(
+      title = 'Generation',
+      dtick = 1
+    ),
+    yaxis = list(
+      title = 'Breedind values'
+    )
+  )
+```
+
 
 ## T1 vs T2 {.tabset .tabset-fade .tabset-pills}
 

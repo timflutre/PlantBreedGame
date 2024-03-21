@@ -162,11 +162,16 @@ output$evalGraphT2 <- renderPlotly({
 
 
 evalGraphT3 <- reactive({
-  dfPhenoPatho <- dfPhenoEval()
-  dfPhenoPatho <- dfPhenoPatho[(as.numeric(dfPhenoPatho$plot) %% input$nRep) == 1,]
 
-  breederOrder <- c(unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder=="control"])),
-                    unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder!="control"])))
+  dfPhenoPatho <- dfPhenoEval()
+  dfPhenoPatho <- dfPhenoPatho %>%
+    group_by(ind, breeder) %>%
+    summarise(t3 = max(trait3))
+
+  breederOrder <- c(
+    unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder == "control"])),
+    unique(as.character(dfPhenoPatho$ind[dfPhenoPatho$breeder != "control"]))
+  )
 
 
   ## Plot
@@ -179,10 +184,10 @@ evalGraphT3 <- reactive({
   )
 
 
-  p <- plot_ly(data=dfPhenoPatho,
+  p <- plot_ly(data = dfPhenoPatho,
                type = 'bar',
-               y = ~trait3*2-1,
-               x= ~ind,
+               y = ~t3,
+               x = ~ind,
                color = ~breeder,
                colors = mycolors) %>%
     layout(title = "Phenotypic values of trait 3",
@@ -211,9 +216,10 @@ evalGraphT1vT2 <- reactive({
   # add intercept to GVs
   dfPheno$GAT1 <- dfPheno$GAT1 + p0$mu['trait1']
   dfPheno$GAT2 <- dfPheno$GAT2 + p0$mu['trait2']
+  dfPheno$T1xT2 <- round(dfPheno$GAT1 * dfPheno$GAT2, 2)
   dfInitColl$GAT1 <- dfInitColl$GAT1 + p0$mu['trait1']
   dfInitColl$GAT2 <- dfInitColl$GAT2 + p0$mu['trait2']
-
+  dfInitColl$T1xT2 <- round(dfInitColl$GAT1 * dfInitColl$GAT2, 2)
 
   # linear regretion
   linMod <- lm(GAT2 ~ GAT1, data=dfInitColl)
@@ -230,7 +236,7 @@ evalGraphT1vT2 <- reactive({
                 x= ~GAT1,
                 color = "Initial Collection",
                 marker=list(color="gray" , size=5 , opacity=0.5),
-                text=~ind,
+                text=~paste0(ind,"\nT1xT2 = ", T1xT2),
                 inherit=FALSE) %>%
     add_lines(data=NULL,
               type='scatter',
@@ -247,7 +253,7 @@ evalGraphT1vT2 <- reactive({
                 x= ~GAT1,
                 marker=list(size=8, opacity=1),
                 color=~breeder,
-                text=~ind,
+                text=~paste0(ind,"\nT1xT2 = ", T1xT2),
                 inherit=FALSE) %>%
     layout(title = "Genotypic values (+intercept) of traits 1 vs 2 ",
            xaxis = list(title = "GA 1"),
@@ -585,11 +591,127 @@ output$elvalReport <- downloadHandler(
 )
 
 
+## Game Score ----
+
+output$evalUIgameScores <- renderUI({
+
+  list(div(
+    style="display: inline-block; vertical-align:top; width: 33%;",
+    h3("Let's find the winner !"),
+    selectInput("scoreType",
+                "Score Calculation system:",
+                choices = c(`T1 with sufficient quality` = "T1_minimalT2",
+                            `Product T1 x T2` = "T1xT2")),
+    uiOutput("evalUI_t2penalty"),
+    sliderInput("T3_penalty",
+                "Penality for non-resistant individuals",
+                min = 0,
+                max = 100,
+                value = 75,
+                step = 1,
+                pre = "-",
+                post = "%"),
+    checkboxInput("averageScore",
+                  "Average accross all submited individuals",
+                  value = FALSE),
+    actionButton("calcScore",
+                 "Find the Winner !",
+                 icon = icon("medal"))
+  ),
+  div(style = "display: inline-block; vertical-align:top; width: 33%;",
+    uiOutput("podium")
+  ),
+  div(style = "display: inline-block; vertical-align:top; width: 33%;",
+    tableOutput("scoreTable")
+  )
+
+  )
+})
+
+output$evalUI_t2penalty <- renderUI({
+  if (input$scoreType == "T1_minimalT2") {
+    out <- sliderInput("T2_penalty",
+                "Penality for low quality individuals",
+                min = 0,
+                max = 100,
+                value = 50,
+                step = 1,
+                pre = "-",
+                post = "%")
+  } else {
+    out <- NULL
+  }
+  out
+})
+
+scoreTable <- eventReactive(input$calcScore, {
+  # get intercepts for T1 and T2
+  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  load(f)
+
+  dfPheno <- dfPhenoEval()
+  dfPheno$GAT1 <- dfPheno$GAT1 + p0$mu['trait1']
+  dfPheno$GAT2 <- dfPheno$GAT2 + p0$mu['trait2']
+  # browser()
+
+  scoreTable <- dfPheno %>%
+    group_by(ind, breeder) %>%
+    summarise(GAT1 = unique(GAT1),
+              GAT2 = unique(GAT2),
+              GAT3 = max(trait3))
+
+  if (input$scoreType == 'T1xT2') {
+    scoreTable$score <- scoreTable$GAT1 * scoreTable$GAT2
+
+  } else if (input$scoreType == 'T1_minimalT2') {
+    scoreTable$score <- scoreTable$GAT1
+
+    targetQuality <- constants$register.min.trait2
+    lowQuality <- scoreTable$GAT2 < targetQuality
+    scoreTable$score[lowQuality] <- scoreTable$score[lowQuality] * (1-input$T2_penalty/100)
+  }
+
+  # Add penalty for non resistant
+  sensitive <- scoreTable$GAT3 == 1
+  scoreTable$score[sensitive] <- scoreTable$score[sensitive] * (1-input$T3_penalty/100)
+
+  # remove GA columns
+  scoreTable <- scoreTable[, c("breeder", "ind", "score")]
+
+  # average per breeder
+  if (input$averageScore) {
+    scoreTable <- scoreTable %>% group_by(breeder) %>%
+      summarise(score = mean(score))
+  }
+
+  # sort table
+  scoreTable <- scoreTable[order(scoreTable$score, decreasing = TRUE),]
+
+  scoreTable
+})
+
+output$podium <- renderUI({
+  scoreTable <- scoreTable()
+  ranking <- unique(scoreTable$breeder)
+
+  rankList <- lapply(ranking, tags$li)
+
+  list(h1(icon("medal"), ranking[1], icon("medal")),
+       tags$ol(
+         rankList
+       ))
+
+})
+
+output$scoreTable <- renderTable({
+  scoreTable()
+}, rownames = TRUE)
+
+
 ## debug ----
 output$evalDebug <- renderPrint({
   print("---------")
-  print(dfPhenoEval())
-
-
+  print(constants$register.min.trait2)
+  print(scoreTable())
 })
 
