@@ -76,7 +76,7 @@ stopifnot(compareVersion("0.170.0",
 suppressPackageStartupMessages(library(scrm))    # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges))# from bioconductor
 
-source("src/functions.R")
+source("src/fun/functions.R")
 ```
 
 Set the seed:

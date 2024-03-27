@@ -21,7 +21,7 @@
 ## server for "identification"
 
 ## Function
-source("src/func_id.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_id.R", local=TRUE, encoding = "UTF-8")$value
 
 
 
@@ -180,7 +180,7 @@ budget <- reactive({
 ## Call ui_id_loggedIn.R ----
 output$userAction <- renderUI({
   if(accessGranted()){
-      source("src/ui_id_loggedIn.R", local=TRUE, encoding="UTF-8")$value
+      source("src/ui/ui_id_loggedIn.R", local=TRUE, encoding="UTF-8")$value
   }
 })
 

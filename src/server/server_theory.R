@@ -18,7 +18,7 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-source("src/func_theory.R", local=TRUE, encoding="UTF-8")$value
+source("src/fun/func_theory.R", local=TRUE, encoding="UTF-8")$value
 
 
 getDatSel <- reactive({

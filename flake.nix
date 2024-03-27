@@ -14,8 +14,7 @@
         let
           pkgs = import nixpkgs {inherit system;};
           Rpkgs = pkgs;
-          R-with-my-packages = Rpkgs.rWrapper.override {
-            packages = with Rpkgs.rPackages; [
+          R-packages = with Rpkgs.rPackages; [
               shiny
               shinydashboard
               shinycssloaders
@@ -54,7 +53,8 @@
               R_ZIPCMD = "${pkgs.zip}/bin/zip";
               nativeBuildInputs = [pkgs.bashInteractive];
               buildInputs = [
-                R-with-my-packages
+                (Rpkgs.rWrapper.override { packages = R-packages; })
+                (Rpkgs.rstudioWrapper.override{ packages = R-packages; })
                 pkgs.zip
               ];
             };

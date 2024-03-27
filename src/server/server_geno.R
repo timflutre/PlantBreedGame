@@ -20,7 +20,7 @@
 
 
 ## Function
-source("src/func_geno.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_geno.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ###### server for "genotyping" ######

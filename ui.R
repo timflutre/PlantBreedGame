@@ -72,23 +72,23 @@ shinyUI(
                             tags$link(href = "https://fonts.googleapis.com/css?family=Nunito", rel = "stylesheet")),
 
                   tabItems(
-                      source("src/ui_information.R", local=TRUE,
+                      source("src/ui/ui_information.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_id_logPage.R", local=TRUE,
+                      source("src/ui/ui_id_logPage.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_plant_material.R", local=TRUE,
+                      source("src/ui/ui_plant_material.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_pheno.R", local=TRUE,
+                      source("src/ui/ui_pheno.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_geno.R", local=TRUE,
+                      source("src/ui/ui_geno.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_eval.R", local=TRUE,
+                      source("src/ui/ui_eval.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_theory.R", local=TRUE,
+                      source("src/ui/ui_theory.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_admin.R", local=TRUE,
+                      source("src/ui/ui_admin.R", local=TRUE,
                              encoding="UTF-8")$value,
-                      source("src/ui_about.R", local=TRUE,
+                      source("src/ui/ui_about.R", local=TRUE,
                              encoding="UTF-8")$value
                   )
                 )

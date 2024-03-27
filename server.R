@@ -32,13 +32,13 @@ shinyServer(function(input, output, session){
     getGameTime(setup)
   })
 
-  source("src/server_information.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_id.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_pheno.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_geno.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_eval.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_theory.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_admin.R", local=TRUE, encoding="UTF-8")$value
-  source("src/server_about.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_information.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_id.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_plant_material.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_pheno.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_geno.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_eval.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_theory.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_admin.R", local=TRUE, encoding="UTF-8")$value
+  source("src/server/server_about.R", local=TRUE, encoding="UTF-8")$value
 })

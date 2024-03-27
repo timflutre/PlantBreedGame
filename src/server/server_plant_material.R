@@ -20,7 +20,7 @@
 
 
 ## Function
-source("src/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ## server for "plant material"

@@ -19,7 +19,7 @@
 
 
 ## Function
-source("src/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ## server for "phenotyping"

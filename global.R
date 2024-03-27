@@ -18,11 +18,11 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-source("src/dependencies.R", local=TRUE, encoding="UTF-8")$value
+source("src/dependencies.R", local = TRUE, encoding = "UTF-8")$value
 
-source("src/functions.R", local=TRUE, encoding="UTF-8")$value
-source("src/func_time.R", local=TRUE, encoding="UTF-8")$value
-source("src/func_id.R", local=TRUE, encoding="UTF-8")$value
+source("src/fun/functions.R", local = TRUE, encoding = "UTF-8")$value
+source("src/fun/func_time.R", local = TRUE, encoding = "UTF-8")$value
+source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 ## -------------------------------------------------------------------
 ## parameters

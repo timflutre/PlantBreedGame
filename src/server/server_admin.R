@@ -21,13 +21,13 @@
 
 
 ## Function
-source("src/func_admin.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_admin.R", local=TRUE, encoding = "UTF-8")$value
 
 
 ## Main UI: ----
 output$adminUI <- renderUI({
     if (breederStatus()=="game master"){
-        source("src/ui_admin_loggedIn.R", local=TRUE, encoding="UTF-8")$value
+        source("src/ui/ui_admin_loggedIn.R", local=TRUE, encoding="UTF-8")$value
     }else{
         shinydashboard::box(width=12, title = "Content unavailable",
                             div(p("Sorry, you need the 'game-master' status to access this."))
