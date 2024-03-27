@@ -20,26 +20,28 @@
 
 ## functions for the "id part"
 
-getBreederList <- function(dbname){
-  db <- dbConnect(SQLite(), dbname=dbname)
+getBreederList <- function(dbname) {
+  db <- dbConnect(SQLite(), dbname = dbname)
   tbl <- "breeders"
   query <- paste0("SELECT name FROM ", tbl)
-  breederNames <- dbGetQuery(conn=db, query)[,1]
+  breederNames <- dbGetQuery(conn = db, query)[, 1]
   dbDisconnect(db)
   return(breederNames)
 }
 
-getBreederStatus <- function(dbname, breeder.name){
-  db <- dbConnect(SQLite(), dbname=dbname)
+getBreederStatus <- function(dbname, breeder.name) {
+  db <- dbConnect(SQLite(), dbname = dbname)
   tbl <- "breeders"
-  query <- paste0("SELECT status FROM ", tbl,
-                  " WHERE name = '", breeder.name, "'")
-  breeder.status <- dbGetQuery(conn=db, query)[,1]
+  query <- paste0(
+    "SELECT status FROM ", tbl,
+    " WHERE name = '", breeder.name, "'"
+  )
+  breeder.status <- dbGetQuery(conn = db, query)[, 1]
   dbDisconnect(db)
   return(breeder.status)
 }
 
-getDataFileList <- function(type, breeder){
+getDataFileList <- function(type, breeder) {
   # function to get the list of data file of the breeder
   # type (char) type of data (pheno or geno)
   # breeder (char) name of the breeder
@@ -53,32 +55,33 @@ getDataFileList <- function(type, breeder){
   dataFile <- c(dataFile, list.files("data/shared/initial_data/"))
 
   ## Get the ids of the files
-  matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_pheno"))
-  if (type == "pheno"){
+  matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_pheno"))
+  if (type == "pheno") {
     matchId <- which(matchId)
-  }else if (type == "geno") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="Result_geno"))
-  }else if (type == "pltMat"){
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="IndList_"))
-  }else if (type == "request") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN=grepl, pattern="(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
+  } else if (type == "geno") {
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_geno"))
+  } else if (type == "pltMat") {
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "IndList_"))
+  } else if (type == "request") {
+    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
   }
 
 
   return(as.list(dataFile[matchId]))
-
 }
 
 
 
 
-availToDwnld <- function(fileName, gameTime){
+availToDwnld <- function(fileName, gameTime) {
   # function to check if files are available to download
   # fileName (char) name of the file
   # gameTime ("POSIXlt") (given by getGameTime function)
 
-  stopifnot(is.character(fileName),
-            fileName!="")
+  stopifnot(
+    is.character(fileName),
+    fileName != ""
+  )
 
   # quick Return
   initFiles <- list.files("data/shared/initial_data/")
@@ -97,22 +100,23 @@ availToDwnld <- function(fileName, gameTime){
 
 
   # calculate the available date
-  if (grepl("pheno-field", fileName)){
+  if (grepl("pheno-field", fileName)) {
     maxDate <- strptime(paste0(data.table::year(requestDate), "-", constants$max.upload.pheno.field), format = "%Y-%m-%d")
-    availDate <- seq(from=maxDate, by=paste0(constants$duration.pheno.field, " month"), length.out=2)[2]
-    if (requestDate > maxDate){
-      availDate <- seq(from=availDate, by="1 year", length.out=2)[2]
+    availDate <- seq(from = maxDate, by = paste0(constants$duration.pheno.field, " month"), length.out = 2)[2]
+    if (requestDate > maxDate) {
+      availDate <- seq(from = availDate, by = "1 year", length.out = 2)[2]
     }
-
-  }else if (grepl("pheno-patho", fileName)){
-    availDate <- seq(from=requestDate, by=paste0(constants$duration.pheno.patho, " month"), length.out=2)[2]
-  }else if (grepl("genos-single-snps", fileName)){
-    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.single, " month"), length.out=2)[2]
-  }else if (grepl("genos-hd", fileName)){
-    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.hd, " month"), length.out=2)[2]
-  }else if (grepl("genos-ld", fileName)){
-    availDate <- seq(from=requestDate, by=paste0(constants$duration.geno.ld, " month"), length.out=2)[2]
-  }else(stop())
+  } else if (grepl("pheno-patho", fileName)) {
+    availDate <- seq(from = requestDate, by = paste0(constants$duration.pheno.patho, " month"), length.out = 2)[2]
+  } else if (grepl("genos-single-snps", fileName)) {
+    availDate <- seq(from = requestDate, by = paste0(constants$duration.geno.single, " month"), length.out = 2)[2]
+  } else if (grepl("genos-hd", fileName)) {
+    availDate <- seq(from = requestDate, by = paste0(constants$duration.geno.hd, " month"), length.out = 2)[2]
+  } else if (grepl("genos-ld", fileName)) {
+    availDate <- seq(from = requestDate, by = paste0(constants$duration.geno.ld, " month"), length.out = 2)[2]
+  } else {
+    (stop())
+  }
 
   # results
   res <- list()
@@ -120,7 +124,6 @@ availToDwnld <- function(fileName, gameTime){
   res$availDate <- availDate
 
   return(res)
-
 }
 
 
@@ -133,20 +136,23 @@ availToDwnld <- function(fileName, gameTime){
 #' @param file path of the new `.vcf.gz` genotype data file
 #'
 #' @return NULL
-txt2Vcf <- function(txt_file, vcf_file, prog = NULL){
-
+txt2Vcf <- function(txt_file, vcf_file, prog = NULL) {
   # read genotype data
   if (!is.null(prog)) {
-    prog$set(value = 0,
-             detail = "Get genotype data...")
+    prog$set(
+      value = 0,
+      detail = "Get genotype data..."
+    )
   }
   geno <- read.table(txt_file,
-                     header = TRUE,
-                     sep = '\t')
+    header = TRUE,
+    sep = "\t"
+  )
   geno <- data.frame(lapply(geno, as.character),
-                      row.names = row.names(geno))
+    row.names = row.names(geno)
+  )
 
-  if (identical(colnames(geno), c('ind', 'snp', 'geno'))) {
+  if (identical(colnames(geno), c("ind", "snp", "geno"))) {
     # single snp genotyping results
     geno <- tidyr::spread(geno, key = "snp", value = "geno")
     row.names(geno) <- geno$ind
@@ -155,68 +161,80 @@ txt2Vcf <- function(txt_file, vcf_file, prog = NULL){
 
   # read snp coordinates
   if (!is.null(prog)) {
-    prog$set(value = 1,
-             detail = "Get SNP coordinates...")
+    prog$set(
+      value = 1,
+      detail = "Get SNP coordinates..."
+    )
   }
-  snpCoord <- read.table('data/shared/initial_data/snp_coords_hd.txt.gz')
+  snpCoord <- read.table("data/shared/initial_data/snp_coords_hd.txt.gz")
   snpCoord <- snpCoord[row.names(snpCoord) %in% colnames(geno), ]
 
   # Create the VCF "Fixed region"
   if (!is.null(prog)) {
-    prog$set(value = 2,
-             detail = "Create VCF fixed region...")
+    prog$set(
+      value = 2,
+      detail = "Create VCF fixed region..."
+    )
   }
-  fixedColNames <- c('#CHROM',
-                     'POS',
-                     'ID',
-                     'REF',
-                     'ALT',
-                     'QUAL',
-                     'FILTER',
-                     'INFO',
-                     'FORMAT')
+  fixedColNames <- c(
+    "#CHROM",
+    "POS",
+    "ID",
+    "REF",
+    "ALT",
+    "QUAL",
+    "FILTER",
+    "INFO",
+    "FORMAT"
+  )
   data <- as.data.frame(matrix(NA,
-                               nrow = ncol(geno),
-                               ncol = nrow(geno) + length(fixedColNames)))
+    nrow = ncol(geno),
+    ncol = nrow(geno) + length(fixedColNames)
+  ))
   colnames(data)[1:length(fixedColNames)] <- fixedColNames
   colnames(data)[seq(length(fixedColNames) + 1, ncol(data))] <- row.names(geno)
   data$`#CHROM` <- snpCoord$chr
   data$POS <- snpCoord$pos
   data$ID <- row.names(snpCoord)
-  data[,c('REF', 'ALT', 'QUAL', 'INFO')] <- '.'
+  data[, c("REF", "ALT", "QUAL", "INFO")] <- "."
   data$FILTER <- "PASS"
   data$FORMAT <- "GT"
 
-  data <- data[order(data$POS),]
-  data <- data[order(data$`#CHROM`),]
+  data <- data[order(data$POS), ]
+  data <- data[order(data$`#CHROM`), ]
 
 
 
   # Genotype region
   if (!is.null(prog)) {
-    prog$set(value = 3,
-             detail = "Create VCF genotype region...")
+    prog$set(
+      value = 3,
+      detail = "Create VCF genotype region..."
+    )
   }
   gt <- matrix(NA, nrow = nrow(geno), ncol = ncol(geno))
-  gt[geno == "0"] <- '0/0'
-  gt[geno == "1"] <- '1/0'
-  gt[geno == "2"] <- '1/1'
+  gt[geno == "0"] <- "0/0"
+  gt[geno == "1"] <- "1/0"
+  gt[geno == "2"] <- "1/1"
   colnames(gt) <- colnames(geno)
   row.names(gt) <- row.names(geno)
   gt <- t(gt)
-  data[, colnames(gt)] <- gt[data$ID,]
+  data[, colnames(gt)] <- gt[data$ID, ]
 
 
   # Meta region
   meta <- paste("##fileformat=VCFv4.3",
-                '##source="PlantBreedGame", data in this file are simulated.',
-                "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
-                sep = "\n")
+    '##source="PlantBreedGame", data in this file are simulated.',
+    "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">",
+    sep = "\n"
+  )
 
   # write file
   if (!is.null(prog)) {
-    prog$set(value = 4,
-             detail = "Write VCF File...")
+    prog$set(
+      value = 4,
+      detail = "Write VCF File..."
+    )
   }
   if (file.exists(vcf_file)) {
     file.remove(vcf_file)
@@ -225,11 +243,13 @@ txt2Vcf <- function(txt_file, vcf_file, prog = NULL){
   f <- gzfile(vcf_file, "w")
   writeLines(text = meta, con = f)
   close(f)
-  data.table::fwrite(x = data,
-                     file = vcf_file,
-                     append = TRUE,
-                     sep = "\t",
-                     quote = FALSE,
-                     row.names = FALSE,
-                     col.names = TRUE)
+  data.table::fwrite(
+    x = data,
+    file = vcf_file,
+    append = TRUE,
+    sep = "\t",
+    quote = FALSE,
+    row.names = FALSE,
+    col.names = TRUE
+  )
 }

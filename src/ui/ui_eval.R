@@ -19,8 +19,9 @@
 
 
 ## UI for "evaluation" part
-tabItem(tabName="eval",
-        fluidRow(
-          uiOutput("evalUI")
-        ) # close fluidRow
+tabItem(
+  tabName = "eval",
+  fluidRow(
+    uiOutput("evalUI")
+  ) # close fluidRow
 ) # close tabItem

@@ -42,8 +42,12 @@
               })
 
 
+              /*
+              developement packages
+              */
+              languageserver
+              styler
             ];
-          };
         in {
 
           devShells.default =

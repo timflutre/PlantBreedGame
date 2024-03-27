@@ -23,9 +23,9 @@
 
 
 output$dwnlIniData <- downloadHandler(
-  filename=function () input$iniDataFile, # lambda function
-  content=function(file){
-    filePath <- paste0("data/shared/initial_data/",input$iniDataFile)
+  filename = function() input$iniDataFile, # lambda function
+  content = function(file) {
+    filePath <- paste0("data/shared/initial_data/", input$iniDataFile)
     file.copy(filePath, file)
   }
 )
@@ -38,10 +38,4 @@ output$infoDebug <- renderPrint({
   print("----")
   print(input$iniDataFile)
   print(class(input$iniDataFile))
-
 })
-
-
-
-
-

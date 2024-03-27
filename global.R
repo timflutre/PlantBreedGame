@@ -27,16 +27,17 @@ source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 ## -------------------------------------------------------------------
 ## parameters
 
-options(warn=-1) # don't show warnings
+options(warn = -1) # don't show warnings
 options(stringsAsFactors = TRUE) # R-4.0.0 compatibility
 debugDisplay <- FALSE # display debug
 
 mycolors <- c("#00aedb", "#a200ff", "#f47835", "#d41243", "#8ec127")
 
-if(Sys.info()["sysname"] == "Windows"){
+if (Sys.info()["sysname"] == "Windows") {
   Sys.setlocale("LC_TIME", "English")
-} else
+} else {
   Sys.setlocale("LC_TIME", "en_US.UTF-8")
+}
 
 ## -------------------------------------------------------------------
 ## variables
@@ -50,15 +51,17 @@ if (is.null(constants$maxEvalInds)) {
 }
 
 
-prices <- list("allofecundation"=constants$cost.allof*constants$cost.pheno.field,
-               "autofecundation"=constants$cost.autof*constants$cost.pheno.field,
-               "haplodiploidization"=constants$cost.haplodiplo*constants$cost.pheno.field,
-               "pheno-field"=constants$cost.pheno.field,
-               "pheno-patho"=constants$cost.pheno.patho*constants$cost.pheno.field,
-               "geno-hd"=constants$cost.geno.hd*constants$cost.pheno.field,
-               "geno-ld"=round(constants$cost.geno.ld*constants$cost.pheno.field,2),
-               "geno-single-snp"=constants$cost.geno.single*constants$cost.pheno.field,
-               "register" = constants$cost.register * constants$cost.pheno.field)
+prices <- list(
+  "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
+  "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
+  "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
+  "pheno-field" = constants$cost.pheno.field,
+  "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
+  "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
+  "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
+  "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
+  "register" = constants$cost.register * constants$cost.pheno.field
+)
 
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
@@ -70,6 +73,7 @@ url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
 
 stopifnot(all(c("admin", "test") %in% getBreederList(setup$dbname)))
-stopifnot(all("game master" == getBreederStatus(setup$dbname, "admin"),
-              "tester" == getBreederStatus(setup$dbname, "test")))
-
+stopifnot(all(
+  "game master" == getBreederStatus(setup$dbname, "admin"),
+  "tester" == getBreederStatus(setup$dbname, "test")
+))

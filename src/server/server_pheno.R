@@ -19,43 +19,45 @@
 
 
 ## Function
-source("src/fun/func_pheno.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_pheno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ## server for "phenotyping"
 
 ## identification message
 output$idMessagePheno <- renderUI({
-  if(breeder()=="No Identification"){
+  if (breeder() == "No Identification") {
     p("You need to identify yourself in order to make a request: click on the 'Identification' tab.",
-      style="color:red;")
+      style = "color:red;"
+    )
   }
 })
 
 
 # read uploaded file
 readQryPheno <- reactive({
-
   # no input fileI
-  if(is.null(input$file.pheno)){
+  if (is.null(input$file.pheno)) {
     return(NULL)
-  }else if (breeder()=="No Identification"){
+  } else if (breeder() == "No Identification") {
     return("error - You are not connected")
   }
 
   # read input file
-  max.nb.plots <- ifelse(breederStatus()!="player",
-                         Inf , constants$nb.plots)
-  test <-  try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
-                                            subset.snps=subset.snps,
-                                            max.nb.plots = max.nb.plots))
+  max.nb.plots <- ifelse(breederStatus() != "player",
+    Inf, constants$nb.plots
+  )
+  test <- try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
+    subset.snps = subset.snps,
+    max.nb.plots = max.nb.plots
+  ))
 
 
-  if (is.data.frame(test)){
+  if (is.data.frame(test)) {
     # the file is ok
 
     # keep only "pheno" requests
-    df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"),]
+    df <- df[(df$task == "pheno-field" | df$task == "pheno-patho"), ]
 
     # list individuals
     indList <- unique(as.character(df$ind))
@@ -65,96 +67,105 @@ readQryPheno <- reactive({
     plotAvail <- plotAvailable(breeder(), df, getGameTime(setup))
 
     # check if individuals are available
-    if (((indAvail$indGrown & plotAvail) | breederStatus()!="player")
-        & indAvail$indExist){
+    if (((indAvail$indGrown & plotAvail) | breederStatus() != "player") &
+      indAvail$indExist) {
       return(df)
-    }else {return("error - Individuals or Plots not availables")}
-  }else {return(test)}
+    } else {
+      return("error - Individuals or Plots not availables")
+    }
+  } else {
+    return(test)
+  }
 })
 
 
 
 # check
 output$PhenoUploaded <- renderPrint({
-  if (is.data.frame(readQryPheno())){
+  if (is.data.frame(readQryPheno())) {
     writeLines("GOOD")
-  } else if (is.null(readQryPheno())){
+  } else if (is.null(readQryPheno())) {
     writeLines("No file uploaded")
-  } else writeLines(readQryPheno())
-
+  } else {
+    writeLines(readQryPheno())
+  }
 })
 
 
 
 # summary
 output$PhenoInvoice <- renderTable({
-  if (is.data.frame(readQryPheno())){
+  if (is.data.frame(readQryPheno())) {
     createInvoicePheno(readQryPheno())
   }
 })
 
 # data
-output$qryPheno <- renderDataTable({
-  if (is.data.frame(readQryPheno())){
-    readQryPheno()
-  }
-},options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
+output$qryPheno <- renderDataTable(
+  {
+    if (is.data.frame(readQryPheno())) {
+      readQryPheno()
+    }
+  },
+  options = list(lengthMenu = c(10, 20, 50), pageLength = 10)
+)
 
 # submit button
 output$submitPhenoRequest <- renderUI({
-
-  colorButton <- ifelse(is.data.frame(readQryPheno()),"#00A65A","#ff0000") # yes:green, no:red
+  colorButton <- ifelse(is.data.frame(readQryPheno()), "#00A65A", "#ff0000") # yes:green, no:red
 
   list(
     tags$head(
-      tags$style(HTML(paste0('#requestPheno{background-color:',colorButton,'; color: white}')))
+      tags$style(HTML(paste0("#requestPheno{background-color:", colorButton, "; color: white}")))
     ),
     p("Do you really want these phenotyping data?"),
     actionButton("requestPheno", "Yes, I do!") # style="background-color:red"
   )
-
 })
 
 # output
-pheno_data <- eventReactive(input$requestPheno,{
-  if (is.data.frame(readQryPheno())){
-
-
+pheno_data <- eventReactive(input$requestPheno, {
+  if (is.data.frame(readQryPheno())) {
     # Create a Progress object
-    progressPheno <- shiny::Progress$new(session, min=0, max=4)
-    progressPheno$set(value = 0,
-                     message = "Process Pheno request:",
-                     detail = "Initialisation...")
+    progressPheno <- shiny::Progress$new(session, min = 0, max = 4)
+    progressPheno$set(
+      value = 0,
+      message = "Process Pheno request:",
+      detail = "Initialisation..."
+    )
 
-    res <- try(phenotype(breeder(),
-                         readQryPheno(),
-                         getGameTime(setup),
-                         progressPheno,
-                         input$file.pheno$name))
-    if (res=="done"){
-      writeRequest(readQryPheno(),breeder(),input$file.pheno$name)
-      progressPheno$set(value = 4,
-                        detail = "Done")
+    res <- try(phenotype(
+      breeder(),
+      readQryPheno(),
+      getGameTime(setup),
+      progressPheno,
+      input$file.pheno$name
+    ))
+    if (res == "done") {
+      writeRequest(readQryPheno(), breeder(), input$file.pheno$name)
+      progressPheno$set(
+        value = 4,
+        detail = "Done"
+      )
       return(res)
-    }else{
-      progressPheno$set(detail=paste0("error in phenotype (", res, ")"))
+    } else {
+      progressPheno$set(detail = paste0("error in phenotype (", res, ")"))
       return("error")
     }
-
-  }else return(NULL)
-
+  } else {
+    return(NULL)
+  }
 })
 
 
 output$phenoRequestResultUI <- renderUI({
-  if (!is.null(pheno_data()) && pheno_data()=="done"){
+  if (!is.null(pheno_data()) && pheno_data() == "done") {
     reset("file.pheno")
     session$sendCustomMessage(type = "resetValue", message = "file.pheno")
     p("Great ! Your results will be available soon.")
-  }  else if (!is.null(pheno_data()) && pheno_data()=="error"){
+  } else if (!is.null(pheno_data()) && pheno_data() == "error") {
     p("Something went wrong. Please check your file.")
   }
-
 })
 
 
@@ -173,7 +184,7 @@ output$breederBoxPheno <- renderValueBox({
 output$dateBoxPheno <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %b %Y"),
+    value = strftime(currentGTime(), format = "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
@@ -201,11 +212,13 @@ output$serverIndicPheno <- renderValueBox({
 })
 
 output$UIbreederInfoPheno <- renderUI({
-  if (breeder()!="No Identification"){
-    list(infoBoxOutput("breederBoxPheno", width = 3),
-         infoBoxOutput("dateBoxPheno", width = 3),
-         infoBoxOutput("budgetBoxPheno", width = 3),
-         infoBoxOutput("serverIndicPheno", width = 3))
+  if (breeder() != "No Identification") {
+    list(
+      infoBoxOutput("breederBoxPheno", width = 3),
+      infoBoxOutput("dateBoxPheno", width = 3),
+      infoBoxOutput("budgetBoxPheno", width = 3),
+      infoBoxOutput("serverIndicPheno", width = 3)
+    )
   }
 })
 
@@ -214,5 +227,4 @@ output$UIbreederInfoPheno <- renderUI({
 output$PhenoDebug <- renderPrint({
   print("-----")
   print(readQryPheno())
-
 })

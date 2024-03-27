@@ -20,8 +20,9 @@
 
 ## UI for game's administration
 
-tabItem(tabName="admin",
-        fluidRow(
-          uiOutput("adminUI")
-        ) # close fluidRow
+tabItem(
+  tabName = "admin",
+  fluidRow(
+    uiOutput("adminUI")
+  ) # close fluidRow
 ) # close tabItem

@@ -21,157 +21,168 @@
 ## server for "identification"
 
 ## Function
-source("src/fun/func_id.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 
 
 ## get breeder list and create select input ----
 breederList <- reactive({
-  getBreederList(dbname=setup$dbname)
+  getBreederList(dbname = setup$dbname)
 })
 output$selectBreeder <- renderUI({
-  selectInput("breederName", "Breeder", choices=as.list(breederList()))
-
+  selectInput("breederName", "Breeder", choices = as.list(breederList()))
 })
 
 
 
 ## log in ----
 accessGranted <- eventReactive(input$submitPSW,
-                               ignoreNULL=FALSE,{
-   # The access is granted if this conditions are true:
-   # 1. the md5 sum of the given password match with the one in the data base
-   #    and doesn't correspond to the empty string;
-   # 2. the size of "data" folder is under the maximum disk usage limit.
-   # If any condition is false, a javascript "alert" will show up explaining why
-   # it is not possible to log in.
-   #
-   # EXCEPTIONS:
-   # * The game master can log in even if the second condition is false,
-   # but the javascript "alert" will explain that the server is full.
-   # * A "tester" is the only status allowed to have an empty password.
+  ignoreNULL = FALSE,
+  {
+    # The access is granted if this conditions are true:
+    # 1. the md5 sum of the given password match with the one in the data base
+    #    and doesn't correspond to the empty string;
+    # 2. the size of "data" folder is under the maximum disk usage limit.
+    # If any condition is false, a javascript "alert" will show up explaining why
+    # it is not possible to log in.
+    #
+    # EXCEPTIONS:
+    # * The game master can log in even if the second condition is false,
+    # but the javascript "alert" will explain that the server is full.
+    # * A "tester" is the only status allowed to have an empty password.
 
-   if (input$submitPSW == 0) {# button not pressed
-       return(FALSE)
-   }
+    if (input$submitPSW == 0) { # button not pressed
+      return(FALSE)
+    }
 
-   # 1. get breeder status
-   status <- getBreederStatus(setup$dbname, input$breederName)
+    # 1. get breeder status
+    status <- getBreederStatus(setup$dbname, input$breederName)
 
-   # 2. check given password
-   db <- dbConnect(SQLite(), dbname = setup$dbname)
-   tbl <- "breeders"
-   query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
-   hashPsw <- dbGetQuery(conn = db, query)[,1]
-   dbDisconnect(db)
+    # 2. check given password
+    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    tbl <- "breeders"
+    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
+    hashPsw <- dbGetQuery(conn = db, query)[, 1]
+    dbDisconnect(db)
 
-   if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
-     goodPswd <- TRUE
-   } else{
-     goodPswd <- FALSE
-     alert("Error: wrong password")
-   }
+    if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
+      goodPswd <- TRUE
+    } else {
+      goodPswd <- FALSE
+      alert("Error: wrong password")
+    }
 
-   # 3. check disk usage
-   goodDiskUsage <- FALSE
-   if (goodPswd && status != "game master") {
-       withProgress({
-           # get maxDiskUsage
-           db <- dbConnect(SQLite(), dbname=setup$dbname)
-           tbl <- "breeders"
-           query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
-           maxDiskUsage <- as.numeric(dbGetQuery(conn=db, query)[,1])
-           dbDisconnect(db)
+    # 3. check disk usage
+    goodDiskUsage <- FALSE
+    if (goodPswd && status != "game master") {
+      withProgress(
+        {
+          # get maxDiskUsage
+          db <- dbConnect(SQLite(), dbname = setup$dbname)
+          tbl <- "breeders"
+          query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
+          maxDiskUsage <- as.numeric(dbGetQuery(conn = db, query)[, 1])
+          dbDisconnect(db)
 
-           allDataFiles <- list.files("data", all.files=TRUE, recursive=TRUE)
-           currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
-             10^9 # in Gb
+          allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
+          currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
+            10^9 # in Gb
 
-           if(currentSize < maxDiskUsage){
-               goodDiskUsage <-TRUE
-           }else if(status != "game master"){
-               goodDiskUsage <-FALSE
-               alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
-           }else{
-               goodDiskUsage <-TRUE
-               alert(paste0("Warning! The size of the \"data\" folder exceeds the specified limit\n",
-                            paste("of",round(currentSize,2),"Gb (maximum size allowed:",maxDiskUsage,"Gb).\n"),
-                            "To preserve your server, players can't log in anymore (but connected users can still play).\n",
-                            "If you want to resume the game, please raise the maximum disk usage limit.\n",
-                            "Go to the Admin tab, then \"Disk usage\", and raise the threshold."))
-           }
-       },message = "Connecting...")
-   } else if (goodPswd && status == "game master") {
-       # the game master can always log in
-       goodDiskUsage <- TRUE
-   }
+          if (currentSize < maxDiskUsage) {
+            goodDiskUsage <- TRUE
+          } else if (status != "game master") {
+            goodDiskUsage <- FALSE
+            alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
+          } else {
+            goodDiskUsage <- TRUE
+            alert(paste0(
+              "Warning! The size of the \"data\" folder exceeds the specified limit\n",
+              paste("of", round(currentSize, 2), "Gb (maximum size allowed:", maxDiskUsage, "Gb).\n"),
+              "To preserve your server, players can't log in anymore (but connected users can still play).\n",
+              "If you want to resume the game, please raise the maximum disk usage limit.\n",
+              "Go to the Admin tab, then \"Disk usage\", and raise the threshold."
+            ))
+          }
+        },
+        message = "Connecting..."
+      )
+    } else if (goodPswd && status == "game master") {
+      # the game master can always log in
+      goodDiskUsage <- TRUE
+    }
 
-   # 4. check db (in case of "corrupted" data-base)
-   if (goodPswd) {
-     db <- dbConnect(SQLite(), dbname = setup$dbname)
-     allTbls <- dbListTables(conn = db)
-     dbDisconnect(db)
-     tbl_pltMat <- paste0("plant_material_", input$breederName)
-     if (!tbl_pltMat %in% allTbls) {
-       alert(paste("Sorry, our data-base have corrupted information",
-                   "regarding your account, and you will not be able to play",
-                   "the game anymore. Please ask a game master to delete your",
-                   "account, and create a new one for you.\n",
-                   "If you are a game master, you can connect, but please",
-                   "be aware that some game features will not work."))
-       if (status != "game master") {
-         # do not allow access if user is not "game master"
-         return(FALSE)
-       }
-     }
-   }
+    # 4. check db (in case of "corrupted" data-base)
+    if (goodPswd) {
+      db <- dbConnect(SQLite(), dbname = setup$dbname)
+      allTbls <- dbListTables(conn = db)
+      dbDisconnect(db)
+      tbl_pltMat <- paste0("plant_material_", input$breederName)
+      if (!tbl_pltMat %in% allTbls) {
+        alert(paste(
+          "Sorry, our data-base have corrupted information",
+          "regarding your account, and you will not be able to play",
+          "the game anymore. Please ask a game master to delete your",
+          "account, and create a new one for you.\n",
+          "If you are a game master, you can connect, but please",
+          "be aware that some game features will not work."
+        ))
+        if (status != "game master") {
+          # do not allow access if user is not "game master"
+          return(FALSE)
+        }
+      }
+    }
 
 
-   # 5. output
-   if (goodPswd && goodDiskUsage) {
-     removeUI("#logInDiv")
-     return(TRUE)
-   } else
-     return(FALSE)
-})
+    # 5. output
+    if (goodPswd && goodDiskUsage) {
+      removeUI("#logInDiv")
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  }
+)
 
 
 breeder <- reactive({
-  if (accessGranted()){
+  if (accessGranted()) {
     input$breederName
-  } else
+  } else {
     "No Identification"
+  }
 })
 
 breederStatus <- reactive({
-  if(accessGranted()){
+  if (accessGranted()) {
     return(getBreederStatus(setup$dbname, input$breederName))
-  } else
+  } else {
     return("No Identification")
+  }
 })
 
 budget <- reactive({
   input$leftMenu
   input$requestGeno
   input$id_submitInds
-  if (breeder()!="No Identification"){
-
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
+  if (breeder() != "No Identification") {
+    db <- dbConnect(SQLite(), dbname = setup$dbname)
     tbl <- "log"
     query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
-    res <- dbGetQuery(conn=db, query)
+    res <- dbGetQuery(conn = db, query)
     dbDisconnect(db)
 
-    if (nrow(res)>0){
-      funApply <- function(x){
-        prices[x[3]][[1]]*as.integer(x[4])
+    if (nrow(res) > 0) {
+      funApply <- function(x) {
+        prices[x[3]][[1]] * as.integer(x[4])
       }
       expenses <- sum(apply(res, MARGIN = 1, FUN = funApply))
-    }else{expenses <- 0}
+    } else {
+      expenses <- 0
+    }
 
     iniTialBuget <- constants$initialBudget
-    return(round(iniTialBuget-expenses,2))
-
+    return(round(iniTialBuget - expenses, 2))
   }
 })
 
@@ -179,8 +190,8 @@ budget <- reactive({
 
 ## Call ui_id_loggedIn.R ----
 output$userAction <- renderUI({
-  if(accessGranted()){
-      source("src/ui/ui_id_loggedIn.R", local=TRUE, encoding="UTF-8")$value
+  if (accessGranted()) {
+    source("src/ui/ui_id_loggedIn.R", local = TRUE, encoding = "UTF-8")$value
   }
 })
 
@@ -191,33 +202,34 @@ output$userAction <- renderUI({
 # list of avaiable files (this must be reactive value to be refresh)
 phenoFiles <- reactive({
   input$leftMenu
-  getDataFileList(type="pheno", breeder=breeder())
+  getDataFileList(type = "pheno", breeder = breeder())
 })
 genoFiles <- reactive({
   input$leftMenu
-  choices = tools::file_path_sans_ext(
+  choices <- tools::file_path_sans_ext(
     getDataFileList(type = "geno", breeder = breeder()),
-    compression = TRUE)
+    compression = TRUE
+  )
 })
 pltMatFiles <- reactive({
   input$leftMenu
-  choices=getDataFileList(type="pltMat", breeder=breeder())
+  choices <- getDataFileList(type = "pltMat", breeder = breeder())
 })
 requestFiles <- reactive({
   input$leftMenu
-  choices=getDataFileList(type="request", breeder=breeder())
+  choices <- getDataFileList(type = "request", breeder = breeder())
 })
 
 
 # dwnl buttons ----
 output$dwnlPheno <- downloadHandler(
-  filename=function () input$phenoFile, # lambda function
-  content=function(file){
+  filename = function() input$phenoFile, # lambda function
+  content = function(file) {
     initFiles <- list.files("data/shared/initial_data/")
     if (input$phenoFile %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
-      folder <- paste0("data/shared/",breeder())
+      folder <- paste0("data/shared/", breeder())
     }
     filePath <- paste0(folder, "/", input$phenoFile)
     file.copy(filePath, file)
@@ -225,11 +237,11 @@ output$dwnlPheno <- downloadHandler(
 )
 
 output$dwnlGeno <- downloadHandler(
-  filename = function () paste0(input$genoFile, '.txt.gz'), # lambda function
+  filename = function() paste0(input$genoFile, ".txt.gz"), # lambda function
   content = function(file) {
-    gFile <- paste0(input$genoFile, '.txt.gz')
+    gFile <- paste0(input$genoFile, ".txt.gz")
     initFiles <- list.files("data/shared/initial_data/")
-    if (gFile  %in% initFiles) {
+    if (gFile %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
       folder <- paste0("data/shared/", breeder())
@@ -240,34 +252,38 @@ output$dwnlGeno <- downloadHandler(
 )
 
 output$dwnlGeno_vcf <- downloadHandler(
-  filename = function () paste0(input$genoFile, '.vcf.gz'), # lambda function
+  filename = function() paste0(input$genoFile, ".vcf.gz"), # lambda function
   content = function(file) {
-    gFile_txt <- paste0(input$genoFile, '.txt.gz')
+    gFile_txt <- paste0(input$genoFile, ".txt.gz")
     initFiles <- list.files("data/shared/initial_data/")
-    if (gFile_txt  %in% initFiles) {
+    if (gFile_txt %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
       folder <- paste0("data/shared/", breeder())
     }
     gFile_txt <- paste0(folder, "/", gFile_txt)
     progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
-    progressVcf$set(value = 0,
-                    message = "Create VCF File:",
-                    detail = "Initialisation...")
+    progressVcf$set(
+      value = 0,
+      message = "Create VCF File:",
+      detail = "Initialisation..."
+    )
     txt2Vcf(gFile_txt, file, progressVcf)
-    progressVcf$set(value = 5,
-                    detail = "DONE!")
+    progressVcf$set(
+      value = 5,
+      detail = "DONE!"
+    )
   }
 )
 
 output$dwnlPltMat <- downloadHandler(
-  filename=function () input$pltMatFile, # lambda function
-  content=function(file){
+  filename = function() input$pltMatFile, # lambda function
+  content = function(file) {
     initFiles <- list.files("data/shared/initial_data/")
     if (input$pltMatFile %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
-      folder <- paste0("data/shared/",breeder())
+      folder <- paste0("data/shared/", breeder())
     }
     filePath <- paste0(folder, "/", input$pltMatFile)
     file.copy(filePath, file)
@@ -276,13 +292,13 @@ output$dwnlPltMat <- downloadHandler(
 
 
 output$dwnlRequest <- downloadHandler(
-  filename=function () input$requestFile, # lambda function
-  content=function(file){
+  filename = function() input$requestFile, # lambda function
+  content = function(file) {
     initFiles <- list.files("data/shared/initial_data/")
     if (input$requestFile %in% initFiles) {
       folder <- "data/shared/initial_data"
     } else {
-      folder <- paste0("data/shared/",breeder())
+      folder <- paste0("data/shared/", breeder())
     }
     filePath <- paste0(folder, "/", input$requestFile)
     file.copy(filePath, file)
@@ -291,67 +307,79 @@ output$dwnlRequest <- downloadHandler(
 
 # UI of dwnl buttons ----
 output$UIdwnlPheno <- renderUI({
-  if (input$phenoFile!=""){
-    if (breederStatus()=="player" && !availToDwnld(input$phenoFile,currentGTime())$isAvailable ){
-      p(paste0("Sorry, your data are not available yet. Delivery date: ",
-               availToDwnld(input$phenoFile,currentGTime())$availDate))
-    }else{
+  if (input$phenoFile != "") {
+    if (breederStatus() == "player" && !availToDwnld(input$phenoFile, currentGTime())$isAvailable) {
+      p(paste0(
+        "Sorry, your data are not available yet. Delivery date: ",
+        availToDwnld(input$phenoFile, currentGTime())$availDate
+      ))
+    } else {
       downloadButton("dwnlPheno", "Download your file")
     }
-
-  }else p("No file selected.")
-
+  } else {
+    p("No file selected.")
+  }
 })
 
 output$UIdwnlGeno <- renderUI({
-  if (input$genoFile!=""){
-    genoFile <- paste0(input$genoFile, '.txt.gz')
-    if (breederStatus() == "player" && !availToDwnld(genoFile,currentGTime())$isAvailable ) {
-      p(paste0("Sorry, your data are not available yet. Delivery date: ",
-               availToDwnld(genoFile, currentGTime())$availDate))
-    } else{
-           div(downloadButton("dwnlGeno", "Download as `txt.gz`"),
-               downloadButton("dwnlGeno_vcf", "Download as `vcf.gz`"))
-
+  if (input$genoFile != "") {
+    genoFile <- paste0(input$genoFile, ".txt.gz")
+    if (breederStatus() == "player" && !availToDwnld(genoFile, currentGTime())$isAvailable) {
+      p(paste0(
+        "Sorry, your data are not available yet. Delivery date: ",
+        availToDwnld(genoFile, currentGTime())$availDate
+      ))
+    } else {
+      div(
+        downloadButton("dwnlGeno", "Download as `txt.gz`"),
+        downloadButton("dwnlGeno_vcf", "Download as `vcf.gz`")
+      )
     }
-  }else p("No file selected.")
+  } else {
+    p("No file selected.")
+  }
 })
 
 output$UIdwnlPltMat <- renderUI({
-  if (input$pltMatFile!=""){
+  if (input$pltMatFile != "") {
     downloadButton("dwnlPltMat", "Download your file")
-  }else p("No file selected.")
-
+  } else {
+    p("No file selected.")
+  }
 })
 
 output$UIdwnlRequest <- renderUI({
-  if (input$requestFile!=""){
+  if (input$requestFile != "") {
     downloadButton("dwnlRequest", "Download your file")
-  }else p("No file selected.")
-
+  } else {
+    p("No file selected.")
+  }
 })
 
 
 ## My plant-material ----
 myPltMat <- reactive({
-  if (input$leftMenu=="id"){
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
+  if (input$leftMenu == "id") {
+    db <- dbConnect(SQLite(), dbname = setup$dbname)
     tbl <- paste0("plant_material_", breeder())
     stopifnot(tbl %in% dbListTables(db))
     query <- paste0("SELECT * FROM ", tbl)
-    res <- dbGetQuery(conn=db, query)
+    res <- dbGetQuery(conn = db, query)
     # disconnect db
     dbDisconnect(db)
-    res$avail_from <- strftime(res$avail_from, format= "%Y-%m-%d")
+    res$avail_from <- strftime(res$avail_from, format = "%Y-%m-%d")
     res
   }
 })
 
 output$myPltMatDT <- DT::renderDataTable({
   DT::datatable(myPltMat(),
-                options = list(lengthMenu = c(10, 20, 50),
-                               pageLength = 10,
-                               searchDelay = 500))
+    options = list(
+      lengthMenu = c(10, 20, 50),
+      pageLength = 10,
+      searchDelay = 500
+    )
+  )
 })
 
 
@@ -362,33 +390,32 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
   tbl <- "breeders"
-  query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName,"'")
-  hashPsw <- dbGetQuery(conn=db, query)[,1]
+  query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
+  hashPsw <- dbGetQuery(conn = db, query)[, 1]
   dbDisconnect(db)
-  if (digest(input$prevPsw, "md5", serialize = FALSE)==hashPsw){
+  if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
 
-    db <- dbConnect(SQLite(), dbname=setup$dbname)
+    db <- dbConnect(SQLite(), dbname = setup$dbname)
     tbl <- "breeders"
-    query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed,"' WHERE name = '", breeder(), "'" )
-    dbExecute(conn=db, query)
+    query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
+    dbExecute(conn = db, query)
     dbDisconnect(db)
 
     return(TRUE)
-
-  }else {return(FALSE)}
-
+  } else {
+    return(FALSE)
+  }
 })
 
 output$UIpswChanged <- renderUI({
-  if(pswChanged()){
+  if (pswChanged()) {
     p("Password Updated")
-  } else if (!pswChanged()){
+  } else if (!pswChanged()) {
     p("Wrong password, try again")
   }
-
 })
 
 
@@ -406,7 +433,7 @@ output$breederBoxID <- renderValueBox({
 output$dateBoxID <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %b %Y"),
+    value = strftime(currentGTime(), format = "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
@@ -415,7 +442,6 @@ output$dateBoxID <- renderValueBox({
 
 
 output$budgetBoxID <- renderValueBox({
-
   x <- input$id_submitInds
   valueBox(
     value = budget(),
@@ -437,13 +463,14 @@ output$serverIndicID <- renderValueBox({
 })
 
 output$UIbreederInfoID <- renderUI({
-  if (breeder()!="No Identification"){
-    list(infoBoxOutput("breederBoxID", width = 3),
-         infoBoxOutput("dateBoxID", width = 3),
-         infoBoxOutput("budgetBoxID", width = 3),
-         infoBoxOutput("serverIndicID", width = 3))
+  if (breeder() != "No Identification") {
+    list(
+      infoBoxOutput("breederBoxID", width = 3),
+      infoBoxOutput("dateBoxID", width = 3),
+      infoBoxOutput("budgetBoxID", width = 3),
+      infoBoxOutput("serverIndicID", width = 3)
+    )
   }
-
 })
 
 
@@ -451,10 +478,11 @@ output$UIbreederInfoID <- renderUI({
 ## Final Individuals submission ----
 
 # add new inds for submission
-observeEvent(input$id_submitInds, priority = 10,{
+observeEvent(input$id_submitInds, priority = 10, {
   # load data
   evalDta <- read.table("data/shared/Evaluation.txt",
-                        header = T, sep = "\t")
+    header = T, sep = "\t"
+  )
   subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
   subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
   colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
@@ -472,11 +500,13 @@ observeEvent(input$id_submitInds, priority = 10,{
 
   # checks
   if (any(inds %in% subIndsDta$Individual)) {
-    alert(paste("individuals:",
-                paste0(inds[inds %in% subIndsDta$Individual],
-                       collapse = ", "),
-                "have already been submitted.")
-    )
+    alert(paste(
+      "individuals:",
+      paste0(inds[inds %in% subIndsDta$Individual],
+        collapse = ", "
+      ),
+      "have already been submitted."
+    ))
     inds <- inds[!inds %in% subIndsDta$Individual]
 
     if (length(inds) == 0) {
@@ -495,43 +525,47 @@ observeEvent(input$id_submitInds, priority = 10,{
   }
 
   # add submitted individuals
-  submitDta <- data.frame(breeder = breeder(),
-                          ind = inds)
+  submitDta <- data.frame(
+    breeder = breeder(),
+    ind = inds
+  )
 
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
-  query <- paste0("INSERT INTO log(breeder,request_date,task,quantity)",
-                  " VALUES ('", breeder(),
-                  "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
-                  "', 'register', '",
-                  nrow(submitDta), "')")
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  query <- paste0(
+    "INSERT INTO log(breeder,request_date,task,quantity)",
+    " VALUES ('", breeder(),
+    "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
+    "', 'register', '",
+    nrow(submitDta), "')"
+  )
   res <- dbGetQuery(db, query)
   dbDisconnect(db)
   b <- budget()
 
-  write.table(submitDta, file = "data/shared/Evaluation.txt",
-              append = TRUE,
-              quote = FALSE, sep = "\t",
-              row.names = FALSE, col.names = FALSE)
+  write.table(submitDta,
+    file = "data/shared/Evaluation.txt",
+    append = TRUE,
+    quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = FALSE
+  )
 
   # reset input
   reset("id_evalInds", asis = FALSE)
-
 })
 
 
 
 
 # delete inds for submission
-observeEvent(input$id_delSubmitInds, priority = 11,{
-
-
+observeEvent(input$id_delSubmitInds, priority = 11, {
   if (is.null(input$submittedIndsDT_rows_selected)) {
     return(NULL)
   }
 
   # load data
   evalDta <- read.table("data/shared/Evaluation.txt",
-                        header = T, sep = "\t")
+    header = T, sep = "\t"
+  )
   subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
   subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
   colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
@@ -540,38 +574,39 @@ observeEvent(input$id_delSubmitInds, priority = 11,{
 
   delLines <- which(evalDta$breeder == breeder() & evalDta$ind %in% delInds)
   # delete lines
-  evalDta <- evalDta[-delLines,]
+  evalDta <- evalDta[-delLines, ]
 
-  write.table(evalDta, file = "data/shared/Evaluation.txt",
-              append = FALSE,
-              quote = FALSE, sep = "\t",
-              row.names = FALSE, col.names = TRUE)
-
+  write.table(evalDta,
+    file = "data/shared/Evaluation.txt",
+    append = FALSE,
+    quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE
+  )
 })
 
 
 submittedInds <- eventReactive(
-  (input$id_submitInds|input$id_delSubmitInds),
-  ignoreNULL = FALSE, {
-
+  (input$id_submitInds | input$id_delSubmitInds),
+  ignoreNULL = FALSE,
+  {
     evalDta <- read.table("data/shared/Evaluation.txt",
-                          header = T, sep = "\t")
+      header = T, sep = "\t"
+    )
     subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
     subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
     colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
     subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
     subIndsDta
-
-
-  })
+  }
+)
 
 
 
 output$submittedIndsDT <- renderDataTable({
   DT::datatable(submittedInds(),
-                filter = c("none"),
-                style = "bootstrap4",
-                options = list(sDom  = '<"top">rt<"bottom">')
+    filter = c("none"),
+    style = "bootstrap4",
+    options = list(sDom = '<"top">rt<"bottom">')
   )
 })
 
@@ -585,6 +620,3 @@ output$IdDebug <- renderPrint({
   print(input$phenoFile)
   print(input$genoFile)
 })
-
-
-

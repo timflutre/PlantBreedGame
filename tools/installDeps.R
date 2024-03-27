@@ -26,8 +26,9 @@ install.packages(
 
 # install installer
 install.packages(c(
-    "devtools",
-    "BiocManager"))
+  "devtools",
+  "BiocManager"
+))
 
 # Dep from bioconductor
 BiocManager::install("GenomicRanges")

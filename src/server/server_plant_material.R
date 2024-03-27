@@ -20,16 +20,17 @@
 
 
 ## Function
-source("src/fun/func_plant_material.R", local=TRUE, encoding = "UTF-8")$value
+source("src/fun/func_plant_material.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ## server for "plant material"
 
 ## identification message
 output$idMessagePltMat <- renderUI({
-  if(breeder()=="No Identification"){
+  if (breeder() == "No Identification") {
     p("You need to identify yourself in order to make a request: click on the 'Identification' tab.",
-      style="color:red;")
+      style = "color:red;"
+    )
   }
 })
 
@@ -37,27 +38,29 @@ output$idMessagePltMat <- renderUI({
 
 # read uploaded file
 readQryPlmat <- reactive({
-
   # no input fileI
-  if(is.null(input$file.plmat)){
+  if (is.null(input$file.plmat)) {
     return(NULL)
-  }else if (breeder()=="No Identification"){
+  } else if (breeder() == "No Identification") {
     return("error - You are not connected")
   }
 
 
   # read input file
-  maxHD <- ifelse(breederStatus()!="player",
-                  Inf,constants$max.nb.haplodiplos)
-  maxReq <- ifelse(breederStatus()!="player",
-                  Inf,constants$max.nb.pltmatReq)
+  maxHD <- ifelse(breederStatus() != "player",
+    Inf, constants$max.nb.haplodiplos
+  )
+  maxReq <- ifelse(breederStatus() != "player",
+    Inf, constants$max.nb.pltmatReq
+  )
 
   test <- try(df <- readCheckBreedPlantFile(input$file.plmat$datapath,
-                                            max.nb=maxReq,
-                                            max.nb.hd=maxHD))
+    max.nb = maxReq,
+    max.nb.hd = maxHD
+  ))
 
   # check file
-  if (!is.data.frame(test)){
+  if (!is.data.frame(test)) {
     return(test)
   }
   # the file is ok
@@ -66,103 +69,110 @@ readQryPlmat <- reactive({
   # check new individuals not already exist
   childList <- unique(c(as.character(df$child)))
 
-  if (indExist(childList, breeder())){
+  if (indExist(childList, breeder())) {
     return("error - Individuals already exist")
   }
 
   # list individuals
-  indList <- unique(c(as.character(df$parent1),as.character(df$parent2)))
+  indList <- unique(c(as.character(df$parent1), as.character(df$parent2)))
   indList <- indList[!is.na(indList)]
   indAvail <- indAvailable(indList, getGameTime(setup), breeder())
 
   # check if individuals are available
-  if ((indAvail$indGrown | breederStatus()!="player")
-      & indAvail$indExist){
+  if ((indAvail$indGrown | breederStatus() != "player") &
+    indAvail$indExist) {
     return(df)
-  }else {return("error - Individuals not availables")}
+  } else {
+    return("error - Individuals not availables")
+  }
 })
 
 
 
 # check
 output$plmatUploaded <- renderPrint({
-
-  if (is.data.frame(readQryPlmat())){
+  if (is.data.frame(readQryPlmat())) {
     writeLines("GOOD")
-  } else if (is.null(readQryPlmat())){
+  } else if (is.null(readQryPlmat())) {
     writeLines("No file uploaded")
-  } else writeLines(readQryPlmat())
-
-
+  } else {
+    writeLines(readQryPlmat())
+  }
 })
 
 
 
 # summary
 output$PltmatInvoice <- renderTable({
-  if (is.data.frame(readQryPlmat())){
+  if (is.data.frame(readQryPlmat())) {
     createInvoicePltmat(readQryPlmat())
   }
 })
 
 
 # data
-output$qryPlmat <- renderDataTable({
-  if (is.data.frame(readQryPlmat())){
-    readQryPlmat()
-  }
-
-},options = list(lengthMenu = c(10, 20, 50), pageLength = 10))
+output$qryPlmat <- renderDataTable(
+  {
+    if (is.data.frame(readQryPlmat())) {
+      readQryPlmat()
+    }
+  },
+  options = list(lengthMenu = c(10, 20, 50), pageLength = 10)
+)
 
 # submit button
 output$submitPlmatRequest <- renderUI({
-
-  colorButton <- ifelse(is.data.frame(readQryPlmat()),"#00A65A","#ff0000") # yes:green, no:red
+  colorButton <- ifelse(is.data.frame(readQryPlmat()), "#00A65A", "#ff0000") # yes:green, no:red
 
   list(
     tags$head(
-      tags$style(HTML(paste0('#requestPlmat{background-color:',colorButton,'; color: white}')))
+      tags$style(HTML(paste0("#requestPlmat{background-color:", colorButton, "; color: white}")))
     ),
     p("Do you really want this plant material?"),
     actionButton("requestPlmat", "Yes, I do!") # style="background-color:red"
   )
-
 })
 
 
 # output
-plantMatRequested <- eventReactive(input$requestPlmat,{
-  if (is.data.frame(readQryPlmat())){
-
+plantMatRequested <- eventReactive(input$requestPlmat, {
+  if (is.data.frame(readQryPlmat())) {
     # Create a Progress object
-    progressPltMat <- shiny::Progress$new(session, min=0, max=5)
-    progressPltMat$set(value = 0,
-                       message = "Create Plant Material:",
-                       detail = "Initialisation...")
+    progressPltMat <- shiny::Progress$new(session, min = 0, max = 5)
+    progressPltMat$set(
+      value = 0,
+      message = "Create Plant Material:",
+      detail = "Initialisation..."
+    )
 
 
-    res <- try(create_plant_material(breeder(),
-                                     readQryPlmat(),
-                                     getGameTime(setup),
-                                     progressPltMat))
+    res <- try(create_plant_material(
+      breeder(),
+      readQryPlmat(),
+      getGameTime(setup),
+      progressPltMat
+    ))
 
-    if (res=="done"){
-      writeRequest(readQryPlmat(),breeder(),input$file.plmat$name)
-      progressPltMat$set(value = 5,
-                         detail = "Done !")
+    if (res == "done") {
+      writeRequest(readQryPlmat(), breeder(), input$file.plmat$name)
+      progressPltMat$set(
+        value = 5,
+        detail = "Done !"
+      )
 
       return(res)
-    }else{
+    } else {
       progressPltMat$set(detail = "ERROR !")
       return("error")
     }
-
-  }else return(NULL)
+  } else {
+    return(NULL)
+  }
 })
 
 
 output$plmatRequestResultUI <- renderUI({
-  if (!is.null(plantMatRequested()) && plantMatRequested()=="done"){
+  if (!is.null(plantMatRequested()) && plantMatRequested() == "done") {
     # reset inputs
     reset("file.plmat")
     session$sendCustomMessage(type = "resetValue", message = "file.plmat")
@@ -170,10 +180,11 @@ output$plmatRequestResultUI <- renderUI({
     # display message
 
     p("\n Great ! Your plants are growing up !")
-  } else if (!is.null(plantMatRequested()) && plantMatRequested()=="error"){
+  } else if (!is.null(plantMatRequested()) && plantMatRequested() == "error") {
     p("\n Something went wrong. Please check your file.")
-  } else  p("")
-
+  } else {
+    p("")
+  }
 })
 
 
@@ -191,7 +202,7 @@ output$breederBoxPltMat <- renderValueBox({
 output$dateBoxPltMat <- renderValueBox({
   valueBox(
     subtitle = "Date",
-    value = strftime(currentGTime(), format= "%d %b %Y"),
+    value = strftime(currentGTime(), format = "%d %b %Y"),
     icon = icon("calendar"),
     color = "yellow"
   )
@@ -219,11 +230,13 @@ output$serverIndicPltMat <- renderValueBox({
 })
 
 output$UIbreederInfoPltMat <- renderUI({
-  if (breeder()!="No Identification"){
-    list(infoBoxOutput("breederBoxPltMat", width = 3),
-         infoBoxOutput("dateBoxPltMat", width = 3),
-         infoBoxOutput("budgetBoxPltMat", width = 3),
-         infoBoxOutput("serverIndicPltMat", width = 3))
+  if (breeder() != "No Identification") {
+    list(
+      infoBoxOutput("breederBoxPltMat", width = 3),
+      infoBoxOutput("dateBoxPltMat", width = 3),
+      infoBoxOutput("budgetBoxPltMat", width = 3),
+      infoBoxOutput("serverIndicPltMat", width = 3)
+    )
   }
 })
 
@@ -235,6 +248,4 @@ output$UIbreederInfoPltMat <- renderUI({
 #
 output$plmatDebug <- renderPrint({
   print("-----")
-
-
 })

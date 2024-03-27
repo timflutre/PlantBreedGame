@@ -1,4 +1,4 @@
-## Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique 
+## Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantBreedGame.
@@ -22,59 +22,54 @@
 
 
 
-getGameTime <- function(setup){
+getGameTime <- function(setup) {
   ## function to convert real time into game time
-  
+
   # get current time
   now <- Sys.time()
 
-  
+
   ## get sessions informations
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
   tbl <- "sessions"
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT * FROM ", tbl)
-  res <- dbGetQuery(conn=db, query)
+  res <- dbGetQuery(conn = db, query)
   # disconnect db
   dbDisconnect(db)
-  
-  res$start <- strptime(res$start, format="%Y-%m-%d %H:%M")
-  res$end <- strptime(res$end, format="%Y-%m-%d %H:%M")
-  res <- res[order(res$start),]
-  
-  
-  
+
+  res$start <- strptime(res$start, format = "%Y-%m-%d %H:%M")
+  res$end <- strptime(res$end, format = "%Y-%m-%d %H:%M")
+  res <- res[order(res$start), ]
+
+
+
   ## get the current session
   currentSesion <- which(now >= res$start & now < res$end)
-  if (length(currentSesion)==0){
+  if (length(currentSesion) == 0) {
     ## out of game session
     previousSession <- which(now >= res$start)
     currentSesion <- max(previousSession)
-    if (length(previousSession)!=0){
+    if (length(previousSession) != 0) {
       now <- res$end[max(previousSession)] # end date of the laste session
-    } else return (strptime("2015-01-01", format="%Y-%m-%d"))
-   
+    } else {
+      return(strptime("2015-01-01", format = "%Y-%m-%d"))
+    }
   }
-  
-  
-  ## calculation 
+
+
+  ## calculation
   elapsTime <- 0
-  for (i in 1:currentSesion){
-    if (i!= currentSesion){
-      elapsTime <- as.double(elapsTime + difftime(res$end[i],res$start[i], units="mins")/res$year_time[i])
-    } else elapsTime <- as.double(elapsTime + difftime(now, res$start[i], units="mins")/res$year_time[i])
+  for (i in 1:currentSesion) {
+    if (i != currentSesion) {
+      elapsTime <- as.double(elapsTime + difftime(res$end[i], res$start[i], units = "mins") / res$year_time[i])
+    } else {
+      elapsTime <- as.double(elapsTime + difftime(now, res$start[i], units = "mins") / res$year_time[i])
+    }
   }
-  elapsTime <- as.difftime(elapsTime*365.25, units = "days")
+  elapsTime <- as.difftime(elapsTime * 365.25, units = "days")
 
   # result
-  gameTime <- strptime("2015-01-01", format="%Y-%m-%d") + elapsTime
+  gameTime <- strptime("2015-01-01", format = "%Y-%m-%d") + elapsTime
   return(gameTime)
 }
-
-
-
-
-
-
-
-

@@ -29,34 +29,39 @@ output:
 progressBar <- params$progressBar
 
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Initialisation...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Initialisation..."
+  )
 }
 
-knitr::opts_chunk$set(echo = FALSE, # show code
-                      eval = TRUE, # eval code
-                      include = TRUE, # if false, show nothing
-                      warning = FALSE,
-                      message = FALSE,
-                      error = TRUE, # do not stop on error
-                      results = "hold", # display chunk output in one block
+knitr::opts_chunk$set(
+  echo = FALSE, # show code
+  eval = TRUE, # eval code
+  include = TRUE, # if false, show nothing
+  warning = FALSE,
+  message = FALSE,
+  error = TRUE, # do not stop on error
+  results = "hold", # display chunk output in one block
 
-                      # df_print paged options
-                      rows.print = 10,
-                      max.print = Inf,
+  # df_print paged options
+  rows.print = 10,
+  max.print = Inf,
+  tidy = FALSE, # better code organisation
+  tidy.opts = list(width.cutoff = 80),
+  strip.white = TRUE, # remove the white lines in the beginning or end of a source chunk
 
-                      tidy = FALSE, # better code organisation
-                      tidy.opts = list(width.cutoff = 80),
-                      strip.white = TRUE, #remove the white lines in the beginning or end of a source chunk
+  fig.align = "center",
+  fig.width = 9,
+  fig.height = 5
+)
 
-                      fig.align = "center",
-                      fig.width = 9,
-                      fig.height = 5)
-
-knitr::opts_knit$set(progress = TRUE,
-                     verbose = FALSE,
-                     width = 80)
+knitr::opts_knit$set(
+  progress = TRUE,
+  verbose = FALSE,
+  width = 80
+)
 ```
 
 ```{css echo=FALSE, eval = TRUE}
@@ -72,7 +77,6 @@ suppressPackageStartupMessages({
 
 #  R options
 options(stringsAsFactors = FALSE)
-
 ```
 
 Thank you for playing the PlanBreedGame ! There is a small report of the game session.
@@ -96,26 +100,28 @@ Flutre, T., Diot, J., and David, J. (2019). PlantBreedGame: A Serious Game that 
 
 ```{r evalT1}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Evaluation Trait 1...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Evaluation Trait 1..."
+  )
 }
 
 params$evalT1
-
 ```
 
 ## Trait 2, sepmetin content in g/kg
 
 ```{r evalT2}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Evaluation Trait 2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Evaluation Trait 2..."
+  )
 }
 
 params$evalT2
-
 ```
 
 ## Trait 3, presence of symptoms caused by P. psychedelica
@@ -124,22 +130,25 @@ In this plot, `+1` means presence of symptom and `-1` means abscence of symptoms
 
 ```{r evalT3}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Evaluation Trait 3...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Evaluation Trait 3..."
+  )
 }
 
 params$evalT3
-
 ```
 
 ## Trait 1 vs Trait 2
 
 ```{r evalT1T2}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Evaluation Trait 1 vs Trait 2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Evaluation Trait 1 vs Trait 2..."
+  )
 }
 
 params$evalT1T2
@@ -151,11 +160,12 @@ params$evalT1T2
 genealogy <- params$genealogy
 
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Evaluation Pedigree...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Evaluation Pedigree..."
+  )
 }
-
 ```
 
 
@@ -165,17 +175,18 @@ for (breeder in names(genealogy)) {
   cat("\n### ", breeder, "\n")
 
   plotPedigree(genealogy[[breeder]]$child,
-               genealogy[[breeder]]$parent1,
-               genealogy[[breeder]]$parent2,
-               genealogy[[breeder]]$generation,
-               edge.col.mother = "black",
-               edge.col.father = "black",
-               vertex.label.color = "darkgreen",
-               vertex.size = 15,
-               main = breeder,
-               plot.it = TRUE,
-               verbose = 0)
-  
+    genealogy[[breeder]]$parent1,
+    genealogy[[breeder]]$parent2,
+    genealogy[[breeder]]$generation,
+    edge.col.mother = "black",
+    edge.col.father = "black",
+    vertex.label.color = "darkgreen",
+    vertex.size = 15,
+    main = breeder,
+    plot.it = TRUE,
+    verbose = 0
+  )
+
   cat("\n")
 }
 ```
@@ -186,9 +197,11 @@ for (breeder in names(genealogy)) {
 breederHistoryTimeLines <- params$breederHistoryTimeLines
 
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Request history...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Request history..."
+  )
 }
 ```
 
@@ -225,8 +238,8 @@ for (breeder in names(breederHistoryTimeLines)) {
 BVdta <- params$BVdta
 selInds <- params$selInds
 BVdta$selected <- 0
-apply(selInds, 1, function(l){
-  BVdta$selected[BVdta$breeder==l[1]&BVdta$ind==l[2]] <<- 1
+apply(selInds, 1, function(l) {
+  BVdta$selected[BVdta$breeder == l[1] & BVdta$ind == l[2]] <<- 1
   invisible()
 })
 ```
@@ -244,144 +257,159 @@ Stars are the individuals selected for evaluation.
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "All BV T1...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "All BV T1..."
+  )
 }
 
-p <- plot_ly(type = "scatter",
-        mode = "markers")
+p <- plot_ly(
+  type = "scatter",
+  mode = "markers"
+)
 
-dta <- BVdta[BVdta$selected == 0,]
+dta <- BVdta[BVdta$selected == 0, ]
 
 p <- p %>% add_markers(
   data = dta,
   color = dta$breeder,
   x = jitter(dta$gen),
   y = dta$trait1,
-  size = dta$selected/5,
+  size = dta$selected / 5,
   opacity = 0.95,
-  hoverinfo = 'text',
+  hoverinfo = "text",
   text = paste0(
     dta$breeder,
     dta$ind,
-    '\nparent1: ', dta$parent1,
-    '\nparent2: ', dta$parent2,
-    '\nBV trait1 = ', round(dta$trait1,2),
-    '\nBV trait2 = ', round(dta$trait2,2),
-    '\nBV trait1 x trait2 = ', round(dta$t1t2, 2))
+    "\nparent1: ", dta$parent1,
+    "\nparent2: ", dta$parent2,
+    "\nBV trait1 = ", round(dta$trait1, 2),
+    "\nBV trait2 = ", round(dta$trait2, 2),
+    "\nBV trait1 x trait2 = ", round(dta$t1t2, 2)
+  )
 )
 
 
-dta <- BVdta[BVdta$selected == 1,]
-p <- p %>% add_markers(
-  inherit = FALSE,
-  data = dta,
-  color = dta$breeder,
-  marker = list(
-            symbol = "star",
-            size = 9,
-            line = list(
-              color = 'rgb(0, 0, 0)',
-              width = 1
-            )),
-  x = jitter(dta$gen),
-  y = dta$trait1,
-  size = dta$selected/5,
-  opacity = 0.95,
-  hoverinfo = 'text',
-  text = paste0(
-    dta$breeder,
-    '\n<b>', dta$ind, "*", '</b>',
-    '\nparent1: ', dta$parent1,
-    '\nparent2: ', dta$parent2,
-    '\nBV trait1 = ', round(dta$trait1,2),
-    '\nBV trait2 = ', round(dta$trait2,2),
-    '\nBV trait1 x trait2 = ', round(dta$t1t2, 2))
-) %>%
-layout(
-  title = paste0('All individuals (Trait 1)'),
-  xaxis = list(
-    title = 'Generation',
+dta <- BVdta[BVdta$selected == 1, ]
+p <- p %>%
+  add_markers(
+    inherit = FALSE,
+    data = dta,
+    color = dta$breeder,
+    marker = list(
+      symbol = "star",
+      size = 9,
+      line = list(
+        color = "rgb(0, 0, 0)",
+        width = 1
+      )
+    ),
+    x = jitter(dta$gen),
+    y = dta$trait1,
+    size = dta$selected / 5,
+    opacity = 0.95,
+    hoverinfo = "text",
+    text = paste0(
+      dta$breeder,
+      "\n<b>", dta$ind, "*", "</b>",
+      "\nparent1: ", dta$parent1,
+      "\nparent2: ", dta$parent2,
+      "\nBV trait1 = ", round(dta$trait1, 2),
+      "\nBV trait2 = ", round(dta$trait2, 2),
+      "\nBV trait1 x trait2 = ", round(dta$t1t2, 2)
+    )
+  ) %>%
+  layout(
+    title = paste0("All individuals (Trait 1)"),
+    xaxis = list(
+      title = "Generation",
       dtick = 1
     ),
     yaxis = list(
-      title = 'Breedind values'
+      title = "Breedind values"
     )
   )
 
 
 p
-
 ```
 
 ### Sepmetine concentration (Trait 2)
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "All BV T2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "All BV T2..."
+  )
 }
 
-p <- plot_ly(type = "scatter",
-        mode = "markers")
+p <- plot_ly(
+  type = "scatter",
+  mode = "markers"
+)
 
-dta <- BVdta[BVdta$selected == 0,]
+dta <- BVdta[BVdta$selected == 0, ]
 
 p <- p %>% add_markers(
   data = dta,
   color = dta$breeder,
   x = jitter(dta$gen),
   y = dta$trait2,
-  size = dta$selected/5,
+  size = dta$selected / 5,
   opacity = 0.95,
-  hoverinfo = 'text',
+  hoverinfo = "text",
   text = paste0(
     dta$breeder,
     dta$ind,
-    '\nparent1: ', dta$parent1,
-    '\nparent2: ', dta$parent2,
-    '\nBV trait1 = ', round(dta$trait1,2),
-    '\nBV trait2 = ', round(dta$trait2,2),
-    '\nBV trait1 x trait2 = ', round(dta$t1t2, 2))
+    "\nparent1: ", dta$parent1,
+    "\nparent2: ", dta$parent2,
+    "\nBV trait1 = ", round(dta$trait1, 2),
+    "\nBV trait2 = ", round(dta$trait2, 2),
+    "\nBV trait1 x trait2 = ", round(dta$t1t2, 2)
+  )
 )
 
 
-dta <- BVdta[BVdta$selected == 1,]
-p <- p %>% add_markers(
-  inherit = FALSE,
-  data = dta,
-  color = dta$breeder,
-  marker = list(
-            symbol = "star",
-            size = 9,
-            line = list(
-              color = 'rgb(0, 0, 0)',
-              width = 1
-            )),
-  x = jitter(dta$gen),
-  y = dta$trait2,
-  size = dta$selected/5,
-  opacity = 0.95,
-  hoverinfo = 'text',
-  text = paste0(
-    dta$breeder,
-    '\n<b>', dta$ind, "*", '</b>',
-    '\nparent1: ', dta$parent1,
-    '\nparent2: ', dta$parent2,
-    '\nBV trait1 = ', round(dta$trait1,2),
-    '\nBV trait2 = ', round(dta$trait2,2),
-    '\nBV trait1 x trait2 = ', round(dta$t1t2, 2))
-) %>%
-layout(
-  title = paste0('All individuals (Trait 1)'),
-  xaxis = list(
-    title = 'Generation',
+dta <- BVdta[BVdta$selected == 1, ]
+p <- p %>%
+  add_markers(
+    inherit = FALSE,
+    data = dta,
+    color = dta$breeder,
+    marker = list(
+      symbol = "star",
+      size = 9,
+      line = list(
+        color = "rgb(0, 0, 0)",
+        width = 1
+      )
+    ),
+    x = jitter(dta$gen),
+    y = dta$trait2,
+    size = dta$selected / 5,
+    opacity = 0.95,
+    hoverinfo = "text",
+    text = paste0(
+      dta$breeder,
+      "\n<b>", dta$ind, "*", "</b>",
+      "\nparent1: ", dta$parent1,
+      "\nparent2: ", dta$parent2,
+      "\nBV trait1 = ", round(dta$trait1, 2),
+      "\nBV trait2 = ", round(dta$trait2, 2),
+      "\nBV trait1 x trait2 = ", round(dta$t1t2, 2)
+    )
+  ) %>%
+  layout(
+    title = paste0("All individuals (Trait 1)"),
+    xaxis = list(
+      title = "Generation",
       dtick = 1
     ),
     yaxis = list(
-      title = 'Breedind values'
+      title = "Breedind values"
     )
   )
 p
@@ -393,29 +421,32 @@ p
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "All BV box T1...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "All BV box T1..."
+  )
 }
 
-  plot_ly(data = BVdta,
-          type = "box",
-          x = ~gen,
-          y = ~trait1,
-          hoverinfo = "y",
-          color = ~breeder
-  ) %>%
-    layout(
-      boxmode = "group",
-      title = paste0("All individuals (Trait1)"),
-      xaxis = list(
-        title = 'Generation',
-        dtick = 1
-      ),
-      yaxis = list(
-        title = 'Breedind values'
-      )
+plot_ly(
+  data = BVdta,
+  type = "box",
+  x = ~gen,
+  y = ~trait1,
+  hoverinfo = "y",
+  color = ~breeder
+) %>%
+  layout(
+    boxmode = "group",
+    title = paste0("All individuals (Trait1)"),
+    xaxis = list(
+      title = "Generation",
+      dtick = 1
+    ),
+    yaxis = list(
+      title = "Breedind values"
     )
+  )
 ```
 
 
@@ -424,28 +455,31 @@ if (!is.null(progressBar)) {
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "All BV box T2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "All BV box T2..."
+  )
 }
-  plot_ly(data = BVdta,
-          type = "box",
-          x = ~gen,
-          y = ~trait2,
-          hoverinfo = "y",
-          color = ~breeder
-  ) %>%
-    layout(
-      boxmode = "group",
-      title = paste0("All individuals (Trait2)"),
-      xaxis = list(
-        title = 'Generation',
-        dtick = 1
-      ),
-      yaxis = list(
-        title = 'Breedind values'
-      )
+plot_ly(
+  data = BVdta,
+  type = "box",
+  x = ~gen,
+  y = ~trait2,
+  hoverinfo = "y",
+  color = ~breeder
+) %>%
+  layout(
+    boxmode = "group",
+    title = paste0("All individuals (Trait2)"),
+    xaxis = list(
+      title = "Generation",
+      dtick = 1
+    ),
+    yaxis = list(
+      title = "Breedind values"
     )
+  )
 ```
 
 
@@ -456,20 +490,24 @@ if (!is.null(progressBar)) {
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Best individuals T1...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Best individuals T1..."
+  )
 }
 
 
 # get the best individuals per breeder per generation
 bestBV <- NULL
 for (breeder in unique(BVdta$breeder)) {
-  tmp1 <- BVdta[BVdta$breeder == breeder,]
+  tmp1 <- BVdta[BVdta$breeder == breeder, ]
   for (gen in unique(tmp1$gen)) {
-    tmp2 <- tmp1[tmp1$gen == gen,]
-    bestBV <- rbind(bestBV,
-                    tmp2[tmp2$trait1 == max(tmp2$trait1),])
+    tmp2 <- tmp1[tmp1$gen == gen, ]
+    bestBV <- rbind(
+      bestBV,
+      tmp2[tmp2$trait1 == max(tmp2$trait1), ]
+    )
   }
 
   # add initial collection ind to all breeders
@@ -481,32 +519,34 @@ for (breeder in unique(BVdta$breeder)) {
 }
 
 # remove "Initial collection" breeder
-bestBV <- bestBV[bestBV$breeder != "Initial collection",]
+bestBV <- bestBV[bestBV$breeder != "Initial collection", ]
 
 
-plot_ly(data = bestBV[order(bestBV$gen),],
-        type = "scatter",
-        mode = "lines+markers",
-        x = ~gen,
-        y = ~trait1,
-        color = ~breeder,
-        hoverinfo = 'text',
-        text = ~paste0(
-          '<b>', ind, '</b>', # (in bold)
-          '\nparent1: ', parent1,
-          '\nparent2: ', parent2,
-          '\nBV trait1 = ', round(trait1,2),
-          '\nBV trait2 = ', round(trait2,2),
-          '\nBV trait1 x trait2 = ', round(t1t2, 2))
+plot_ly(
+  data = bestBV[order(bestBV$gen), ],
+  type = "scatter",
+  mode = "lines+markers",
+  x = ~gen,
+  y = ~trait1,
+  color = ~breeder,
+  hoverinfo = "text",
+  text = ~ paste0(
+    "<b>", ind, "</b>", # (in bold)
+    "\nparent1: ", parent1,
+    "\nparent2: ", parent2,
+    "\nBV trait1 = ", round(trait1, 2),
+    "\nBV trait2 = ", round(trait2, 2),
+    "\nBV trait1 x trait2 = ", round(t1t2, 2)
+  )
 ) %>%
   layout(
     title = paste0("Best individuals (Trait 1)"),
     xaxis = list(
-      title = 'Generation',
+      title = "Generation",
       dtick = 1
     ),
     yaxis = list(
-      title = 'Breedind values'
+      title = "Breedind values"
     )
   )
 ```
@@ -515,19 +555,23 @@ plot_ly(data = bestBV[order(bestBV$gen),],
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Best individuals T2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Best individuals T2..."
+  )
 }
 
 # get the best individuals per breeder per generation
 bestBV <- NULL
 for (breeder in unique(BVdta$breeder)) {
-  tmp1 <- BVdta[BVdta$breeder == breeder,]
+  tmp1 <- BVdta[BVdta$breeder == breeder, ]
   for (gen in unique(tmp1$gen)) {
-    tmp2 <- tmp1[tmp1$gen == gen,]
-    bestBV <- rbind(bestBV,
-                    tmp2[tmp2$trait2 == max(tmp2$trait2),])
+    tmp2 <- tmp1[tmp1$gen == gen, ]
+    bestBV <- rbind(
+      bestBV,
+      tmp2[tmp2$trait2 == max(tmp2$trait2), ]
+    )
   }
 
   # add initial collection ind to all breeders
@@ -539,32 +583,34 @@ for (breeder in unique(BVdta$breeder)) {
 }
 
 # remove "Initial collection" breeder
-bestBV <- bestBV[bestBV$breeder != "Initial collection",]
+bestBV <- bestBV[bestBV$breeder != "Initial collection", ]
 
 
-plot_ly(data = bestBV[order(bestBV$gen),],
-        type = "scatter",
-        mode = "lines+markers",
-        x = ~gen,
-        y = ~trait2,
-        color = ~breeder,
-        hoverinfo = 'text',
-        text = ~paste0(
-          '<b>', ind, '</b>', # (in bold)
-          '\nparent1: ', parent1,
-          '\nparent2: ', parent2,
-          '\nBV trait1 = ', round(trait1,2),
-          '\nBV trait2 = ', round(trait2,2),
-          '\nBV trait1 x trait2 = ', round(t1t2, 2))
+plot_ly(
+  data = bestBV[order(bestBV$gen), ],
+  type = "scatter",
+  mode = "lines+markers",
+  x = ~gen,
+  y = ~trait2,
+  color = ~breeder,
+  hoverinfo = "text",
+  text = ~ paste0(
+    "<b>", ind, "</b>", # (in bold)
+    "\nparent1: ", parent1,
+    "\nparent2: ", parent2,
+    "\nBV trait1 = ", round(trait1, 2),
+    "\nBV trait2 = ", round(trait2, 2),
+    "\nBV trait1 x trait2 = ", round(t1t2, 2)
+  )
 ) %>%
   layout(
     title = paste0("Best individuals (Trait 2)"),
     xaxis = list(
-      title = 'Generation',
+      title = "Generation",
       dtick = 1
     ),
     yaxis = list(
-      title = 'Breedind values'
+      title = "Breedind values"
     )
   )
 ```
@@ -576,20 +622,24 @@ plot_ly(data = bestBV[order(bestBV$gen),],
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Best individuals T1xT2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Best individuals T1xT2..."
+  )
 }
 
 # get the best individuals per breeder per generation
 bestBV <- NULL
 for (breeder in unique(BVdta$breeder)) {
-  tmp1 <- BVdta[BVdta$breeder == breeder,]
+  tmp1 <- BVdta[BVdta$breeder == breeder, ]
 
   for (gen in unique(tmp1$gen)) {
-    tmp2 <- tmp1[tmp1$gen == gen,]
-    bestBV <- rbind(bestBV,
-                    tmp2[tmp2$t1t2 == max(tmp2$t1t2),])
+    tmp2 <- tmp1[tmp1$gen == gen, ]
+    bestBV <- rbind(
+      bestBV,
+      tmp2[tmp2$t1t2 == max(tmp2$t1t2), ]
+    )
   }
 
   # add initial collection ind to all breeders
@@ -601,32 +651,34 @@ for (breeder in unique(BVdta$breeder)) {
 }
 
 # remove "Initial collection" breeder
-bestBV <- bestBV[bestBV$breeder != "Initial collection",]
+bestBV <- bestBV[bestBV$breeder != "Initial collection", ]
 
 
-plot_ly(data = bestBV[order(bestBV$gen),],
-        type = "scatter",
-        mode = "lines+markers",
-        x = ~gen,
-        y = ~t1t2,
-        color = ~breeder,
-        hoverinfo = 'text',
-        text = ~paste0(
-          '<b>', ind, '</b>', # (in bold)
-          '\nparent1: ', parent1,
-          '\nparent2: ', parent2,
-          '\nBV trait1 = ', round(trait1,2),
-          '\nBV trait2 = ', round(trait2,2),
-          '\nBV trait1 x trait2 = ', round(t1t2, 2))
+plot_ly(
+  data = bestBV[order(bestBV$gen), ],
+  type = "scatter",
+  mode = "lines+markers",
+  x = ~gen,
+  y = ~t1t2,
+  color = ~breeder,
+  hoverinfo = "text",
+  text = ~ paste0(
+    "<b>", ind, "</b>", # (in bold)
+    "\nparent1: ", parent1,
+    "\nparent2: ", parent2,
+    "\nBV trait1 = ", round(trait1, 2),
+    "\nBV trait2 = ", round(trait2, 2),
+    "\nBV trait1 x trait2 = ", round(t1t2, 2)
+  )
 ) %>%
   layout(
     title = paste0("Best individuals (Trait 2)"),
     xaxis = list(
-      title = 'Generation',
+      title = "Generation",
       dtick = 1
     ),
     yaxis = list(
-      title = 'Breedind values'
+      title = "Breedind values"
     )
   )
 ```
@@ -636,13 +688,17 @@ plot_ly(data = bestBV[order(bestBV$gen),],
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "T1vsT2...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "T1vsT2..."
+  )
 }
 
-myColors <- c("#bbbbbb", "#165b16", "#0c246f", "#da4a3b", "#ffbe00",
-              "#03A13D", "#7E28AD", "#1ED5E6", "#C78A1A", "#BF1B26")
+myColors <- c(
+  "#bbbbbb", "#165b16", "#0c246f", "#da4a3b", "#ffbe00",
+  "#03A13D", "#7E28AD", "#1ED5E6", "#C78A1A", "#BF1B26"
+)
 
 
 
@@ -651,69 +707,75 @@ p <- list()
 for (breeder in unique(BVdta$breeder)) {
   # extract BV of the requested breeder
   if (breeder == "Initial collection") next()
-  dta <- BVdta[BVdta$breeder %in% c(breeder,"Initial collection"),]
+  dta <- BVdta[BVdta$breeder %in% c(breeder, "Initial collection"), ]
   dta$gen <- sprintf("%02d", dta$gen)
 
 
-  plt <- plot_ly(data = dta,
-          type = "scatter",
-          mode = "markers",
-          colors = myColors)
-  dta2 <- dta[dta$selected == 0,]
+  plt <- plot_ly(
+    data = dta,
+    type = "scatter",
+    mode = "markers",
+    colors = myColors
+  )
+  dta2 <- dta[dta$selected == 0, ]
 
   plt <- plt %>% add_markers(
     data = dta2,
     x = ~trait1,
     y = ~trait2,
     color = ~gen,
-    size = ~selected/5,
+    size = ~ selected / 5,
     opacity = 0.95,
-    hoverinfo = 'text',
-    text = ~paste0(
+    hoverinfo = "text",
+    text = ~ paste0(
       ind,
-      '\nparent1: ', parent1,
-      '\nparent2: ', parent2,
-      '\nBV trait1 = ', round(trait1,2),
-      '\nBV trait2 = ', round(trait2,2),
-      '\nBV trait1 x trait2 = ', round(t1t2, 2))
+      "\nparent1: ", parent1,
+      "\nparent2: ", parent2,
+      "\nBV trait1 = ", round(trait1, 2),
+      "\nBV trait2 = ", round(trait2, 2),
+      "\nBV trait1 x trait2 = ", round(t1t2, 2)
+    )
   )
-  
-  dta2 <- dta[dta$selected == 1,]
-  
-  plt <- plt %>% add_markers(
-    data = dta2,
-    x = ~trait1,
-    y = ~trait2,
-    color = ~gen,
-    marker = list(
-            symbol = "star",
-            size = 9,
-            line = list(
-              color = 'rgb(0, 0, 0)',
-              width = 1
-            )),
-    size = ~selected/5,
-    opacity = 0.95,
-    hoverinfo = 'text',
-    text = ~paste0(
-      '\n<b>', ind,ifelse(selected==1,"*",""), '</b>', # (in bold)
-      '\nparent1: ', parent1,
-      '\nparent2: ', parent2,
-      '\nBV trait1 = ', round(trait1,2),
-      '\nBV trait2 = ', round(trait2,2),
-      '\nBV trait1 x trait2 = ', round(t1t2, 2))
-  ) %>%
+
+  dta2 <- dta[dta$selected == 1, ]
+
+  plt <- plt %>%
+    add_markers(
+      data = dta2,
+      x = ~trait1,
+      y = ~trait2,
+      color = ~gen,
+      marker = list(
+        symbol = "star",
+        size = 9,
+        line = list(
+          color = "rgb(0, 0, 0)",
+          width = 1
+        )
+      ),
+      size = ~ selected / 5,
+      opacity = 0.95,
+      hoverinfo = "text",
+      text = ~ paste0(
+        "\n<b>", ind, ifelse(selected == 1, "*", ""), "</b>", # (in bold)
+        "\nparent1: ", parent1,
+        "\nparent2: ", parent2,
+        "\nBV trait1 = ", round(trait1, 2),
+        "\nBV trait2 = ", round(trait2, 2),
+        "\nBV trait1 x trait2 = ", round(t1t2, 2)
+      )
+    ) %>%
     layout(
-      title = paste0('Trait 1 vs Trait 2 (', breeder,")"),
+      title = paste0("Trait 1 vs Trait 2 (", breeder, ")"),
       xaxis = list(
-        title = 'Trait 1'
+        title = "Trait 1"
       ),
       yaxis = list(
-        title = 'Trait 2'
+        title = "Trait 2"
       )
     )
-  
-  
+
+
   p[[breeder]] <- plt
 }
 ```
@@ -725,16 +787,18 @@ for (breeder in unique(BVdta$breeder)) {
   # print(summary(lm(data=mtcars, mtcars[,1]~ mtcars[,i])))
   # print(p[[breeder]])
   cat(knitr::knit_print(p[[breeder]]))
-   # print(as_widget(p[[breeder]]))
-  cat('\n\n')
+  # print(as_widget(p[[breeder]]))
+  cat("\n\n")
 }
 ```
 
 
 ```{r}
 if (!is.null(progressBar)) {
-  progressBar$set(value = progressBar$getValue() + 1,
-                  message = "Compile Rmd:",
-                  detail = "Finalization...")
+  progressBar$set(
+    value = progressBar$getValue() + 1,
+    message = "Compile Rmd:",
+    detail = "Finalization..."
+  )
 }
 ```

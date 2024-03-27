@@ -38,6 +38,8 @@ library(tidyr)
 ## required packages NOT available on the CRAN
 ## R> devtools::install_github("timflutre/rutilstimflutre")
 library(rutilstimflutre)
-stopifnot(compareVersion("0.158.2",
-                         as.character(packageVersion("rutilstimflutre")))
-          != 1)
+stopifnot(compareVersion(
+  "0.158.2",
+  as.character(packageVersion("rutilstimflutre"))
+)
+!= 1)

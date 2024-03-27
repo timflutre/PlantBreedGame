@@ -19,7 +19,7 @@
 
 
 
-addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
+addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
   ## this function create a new breeder
   ## breederName (char) name of the new breeder
 
@@ -28,143 +28,164 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder=NULL){
     # only alpha numeric and character "_"
     stop("Breeder's name should contain only alpha-numeric characters and special character : _  ")
   }
-  if(status != "tester" & psw == ""){
-    stop(paste0("a breeder with another status than tester",
-                " can't have the empty string as password"))
+  if (status != "tester" & psw == "") {
+    stop(paste0(
+      "a breeder with another status than tester",
+      " can't have the empty string as password"
+    ))
   }
 
   #### initialisation:
   initIndsHaplo <- list.files(setup$truth.dir)
-  initIndsHaplo <- initIndsHaplo[grep("Coll",initIndsHaplo)]
-  db <- dbConnect(SQLite(), dbname=setup$dbname)
+  initIndsHaplo <- initIndsHaplo[grep("Coll", initIndsHaplo)]
+  db <- dbConnect(SQLite(), dbname = setup$dbname)
 
 
   #### test if new breeder already exist
-  if (!is.null(progressNewBreeder)){
-    progressNewBreeder$set(value = 1,
-                           detail = "Check breeder existance")
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 1,
+      detail = "Check breeder existance"
+    )
   }
 
   tbl <- paste0("plant_material_", breederName)
-  if(tbl %in% dbListTables(db)){
+  if (tbl %in% dbListTables(db)) {
     stop("breeder already exist")
   }
 
 
 
   #### add breeder in the "breeders" table of database:
-  if (!is.null(progressNewBreeder)){
-    progressNewBreeder$set(value = 2,
-                           detail = "Add breeder in \"breeders\" table")
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 2,
+      detail = "Add breeder in \"breeders\" table"
+    )
   }
-  hashed.psw <- digest(psw, "md5", serialize=FALSE)
+  hashed.psw <- digest(psw, "md5", serialize = FALSE)
 
   tbl <- "breeders"
-  query <- paste0("INSERT INTO ", tbl, " VALUES",
-                  " ('", breederName,"','", status,"','", hashed.psw, "')")
-  res <- dbExecute(conn=db, query)
+  query <- paste0(
+    "INSERT INTO ", tbl, " VALUES",
+    " ('", breederName, "','", status, "','", hashed.psw, "')"
+  )
+  res <- dbExecute(conn = db, query)
 
 
 
 
   #### create "plant_material_newBreeder"
-  if (!is.null(progressNewBreeder)){
-    progressNewBreeder$set(value = 3,
-                           detail = "create \"plant_material\" table")
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 3,
+      detail = "create \"plant_material\" table"
+    )
   }
   tbl <- paste0("plant_material_", breederName)
-  query <- paste0("CREATE TABLE ", tbl,
-                  " (parent1 TEXT",
-                  ", parent2 TEXT",
-                  ", child TEXT PRIMARY KEY",
-                  ", avail_from TEXT)")
-  res <- dbExecute(conn=db, query)
+  query <- paste0(
+    "CREATE TABLE ", tbl,
+    " (parent1 TEXT",
+    ", parent2 TEXT",
+    ", child TEXT PRIMARY KEY",
+    ", avail_from TEXT)"
+  )
+  res <- dbExecute(conn = db, query)
 
 
 
   #### fill "plant_material_newBreeder"
-  if (!is.null(progressNewBreeder)){
-    progressNewBreeder$set(value = 4,
-                           detail = "fill \"plant_material\" table")
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 4,
+      detail = "fill \"plant_material\" table"
+    )
   }
-  coll.ids <- gsub("_haplos.RData","",initIndsHaplo)
-  query <- paste0("INSERT INTO ", tbl,
-                  " (parent1, parent2, child, avail_from)",
-                  " VALUES",
-                  " ('", paste(gsub("Coll","ind", coll.ids),
-                               rep(NA, length(coll.ids)),
-                               coll.ids,
-                               rep(paste0(constants$first.year, "-01-01 00:00:00"),
-                                   length(coll.ids)),
-                               sep="','",collapse = "'),('")
-                  , "')")
-  res <- dbExecute(conn=db, query)
+  coll.ids <- gsub("_haplos.RData", "", initIndsHaplo)
+  query <- paste0(
+    "INSERT INTO ", tbl,
+    " (parent1, parent2, child, avail_from)",
+    " VALUES",
+    " ('", paste(gsub("Coll", "ind", coll.ids),
+      rep(NA, length(coll.ids)),
+      coll.ids,
+      rep(
+        paste0(constants$first.year, "-01-01 00:00:00"),
+        length(coll.ids)
+      ),
+      sep = "','", collapse = "'),('"
+    ),
+    "')"
+  )
+  res <- dbExecute(conn = db, query)
   dbDisconnect(db)
 
 
   #### create folders of the new breeder:
-  if (!is.null(progressNewBreeder)){
-    progressNewBreeder$set(value = 5,
-                           detail = "create truth and shared folders")
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 5,
+      detail = "create truth and shared folders"
+    )
   }
-  newTruthDir <- paste0(setup$truth.dir,"/",breederName)
-  newSharedDir <- paste0(setup$shared.dir,"/",breederName)
+  newTruthDir <- paste0(setup$truth.dir, "/", breederName)
+  newSharedDir <- paste0(setup$shared.dir, "/", breederName)
   dir.create(newTruthDir)
   dir.create(newSharedDir)
 
 
 
-  funApply <- function(fileName){
-    if (!is.null(progressNewBreeder)){
-      progressNewBreeder$set(value = 6,
-                             detail = paste0("Create haplo symlink:",fileName))
+  funApply <- function(fileName) {
+    if (!is.null(progressNewBreeder)) {
+      progressNewBreeder$set(
+        value = 6,
+        detail = paste0("Create haplo symlink:", fileName)
+      )
     }
 
-    fromFile <- paste0("../",fileName)
-    toFile <- paste0(newTruthDir,"/",fileName)
-    file.symlink(fromFile,toFile)
+    fromFile <- paste0("../", fileName)
+    toFile <- paste0(newTruthDir, "/", fileName)
+    file.symlink(fromFile, toFile)
     return()
   }
 
-  if (Sys.info()["sysname"]!="Windows"){
+  if (Sys.info()["sysname"] != "Windows") {
     sapply(initIndsHaplo, FUN = funApply)
-  }else {
+  } else {
     # try with one file:
     funApply(initIndsHaplo[1])
-    if (file.exists(paste0(newTruthDir,"/",initIndsHaplo[1]))){ #if it worked
+    if (file.exists(paste0(newTruthDir, "/", initIndsHaplo[1]))) { # if it worked
       sapply(initIndsHaplo[-1], FUN = funApply)
-
-
-    }else{
+    } else {
       # copy files
-      funApply <- function(fileName){
-        if (!is.null(progressNewBreeder)){
-          progressNewBreeder$set(value = 6,
-                                 detail = paste0("Create haplo copy:",fileName))
+      funApply <- function(fileName) {
+        if (!is.null(progressNewBreeder)) {
+          progressNewBreeder$set(
+            value = 6,
+            detail = paste0("Create haplo copy:", fileName)
+          )
         }
-        fromFile <- paste0(setup$truth.dir,"/",fileName)
-        toFile <- paste0(newTruthDir,"/",fileName)
-        file.copy(fromFile,toFile) # copy
+        fromFile <- paste0(setup$truth.dir, "/", fileName)
+        toFile <- paste0(newTruthDir, "/", fileName)
+        file.copy(fromFile, toFile) # copy
         return()
       }
       sapply(initIndsHaplo, FUN = funApply)
     }
   }
-
 }
 
 
 
 
-deleteBreeder <- function(breederName){
-
+deleteBreeder <- function(breederName) {
   if (breederName == "admin") {
     stop("admin can't be deleted.")
   }
 
   ## delete truth and shared folders
-  sharedDir <- paste0(setup$shared.dir,"/",breederName)
-  truthDir <- paste0(setup$truth.dir,"/",breederName)
+  sharedDir <- paste0(setup$shared.dir, "/", breederName)
+  truthDir <- paste0(setup$truth.dir, "/", breederName)
 
   unlink(sharedDir, recursive = TRUE)
   unlink(truthDir, recursive = TRUE)
@@ -180,28 +201,33 @@ deleteBreeder <- function(breederName){
     res <- dbExecute(conn = db, paste0("DROP TABLE ", tbl_pltMat))
   }
   # delete entry in breeders' table
-  res <- dbExecute(conn = db,
-                   paste0("DELETE FROM breeders ",
-                          "WHERE name = '", breederName, "'"))
+  res <- dbExecute(
+    conn = db,
+    paste0(
+      "DELETE FROM breeders ",
+      "WHERE name = '", breederName, "'"
+    )
+  )
   # delete entry in log table
   dbDisconnect(db)
 
   # delete entry in Evaluation file:
   evalDta <- read.table("data/shared/Evaluation.txt",
-                        header = T, sep = "\t")
+    header = T, sep = "\t"
+  )
   evalDta <- evalDta[evalDta$breeder != breederName, ]
-  write.table(evalDta, file = "data/shared/Evaluation.txt",
-              append = FALSE,
-              quote = FALSE, sep = "\t",
-              row.names = FALSE, col.names = TRUE)
-
+  write.table(evalDta,
+    file = "data/shared/Evaluation.txt",
+    append = FALSE,
+    quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE
+  )
 }
 
 
 
 
-calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
-
+calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL) {
   if (!is.null(progress)) {
     n <- length(inds)
     i <- 1
@@ -210,37 +236,40 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL){
   # load SNP effects
   f <- paste0(setup$truth.dir, "/p0.RData")
   load(f)
-  BV <- t(sapply(inds, function(ind.id){
+  BV <- t(sapply(inds, function(ind.id) {
     if (!is.null(progress)) {
-      progress$set(detail = paste0("BV calculation for breeder: ", breeder,
-                                   " - ", i, "/", n))
+      progress$set(detail = paste0(
+        "BV calculation for breeder: ", breeder,
+        " - ", i, "/", n
+      ))
       i <<- i + 1
     }
-    indName <- paste0(c(breeder, ind.id),collapse="_")
+    indName <- paste0(c(breeder, ind.id), collapse = "_")
     f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
-    if(! file.exists(f))
+    if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
+    }
     load(f)
 
-    ind$genos <- segSites2allDoses(seg.sites=ind$haplos, ind.ids=ind.id)
+    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
     rownames(ind$genos) <- indName
 
     ind$genos %*% p0$Beta
   }))
 
   BV
-
 }
 
-calcGameProgress <- function(progBar = NULL){
-
+calcGameProgress <- function(progBar = NULL) {
   if (!is.null(progBar)) {
     if (is.null(progBar$getValue())) {
       progBar$set(value = 0)
     }
-    progBar$set(value = progBar$getValue() + 1,
-                message = "Game progress calculation:",
-                detail = "Initialisation...")
+    progBar$set(
+      value = progBar$getValue() + 1,
+      message = "Game progress calculation:",
+      detail = "Initialisation..."
+    )
   } else {
     progBar <- list()
     progBar$set <- function(...) {
@@ -268,14 +297,18 @@ calcGameProgress <- function(progBar = NULL){
     load(f) # load `p0` variable
 
     # initialisation of the breeding values data with the initial collection
-    BVcoll <- data.frame(trait1 = coll$geno %*% p0$Beta[,1],
-                         trait2 = coll$geno %*% p0$Beta[,2])
-    breedValuesDta <- data.frame(breeder = "Initial collection",
-                                 parent1 = NA,
-                                 parent2 = NA,
-                                 ind = rownames(BVcoll),
-                                 gen = 1,
-                                 BVcoll)
+    BVcoll <- data.frame(
+      trait1 = coll$geno %*% p0$Beta[, 1],
+      trait2 = coll$geno %*% p0$Beta[, 2]
+    )
+    breedValuesDta <- data.frame(
+      breeder = "Initial collection",
+      parent1 = NA,
+      parent2 = NA,
+      ind = rownames(BVcoll),
+      gen = 1,
+      BVcoll
+    )
     rm(list = c("coll", "BVcoll")) # Free memory
   }
 
@@ -289,7 +322,7 @@ calcGameProgress <- function(progBar = NULL){
 
 
   ### Remove deleted breeders from breedValuesDta
-  breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders,"Initial collection"),]
+  breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders, "Initial collection"), ]
 
   ### Get all database tables (to avoid query to missing tables).
   db <- dbConnect(SQLite(), dbname = setup$dbname)
@@ -300,50 +333,58 @@ calcGameProgress <- function(progBar = NULL){
   # get list of all individuals with generation and BV
   breedValuesDta <- rbind(
     breedValuesDta,
-    do.call(rbind,
-            sapply(breeders, simplify = F, function(breeder){
-              progBar$set(detail = paste0("BV calculation for breeder: ",
-                                          breeder))
+    do.call(
+      rbind,
+      sapply(breeders, simplify = F, function(breeder) {
+        progBar$set(detail = paste0(
+          "BV calculation for breeder: ",
+          breeder
+        ))
 
-              # get list of individuals
-              tbl_pltMat <- paste0("plant_material_", breeder)
-              if (tbl_pltMat %in% allTbls) {
-                db <- dbConnect(SQLite(), dbname = setup$dbname)
-                query <- paste0("SELECT * FROM ", tbl_pltMat)
-                allInds <- (dbGetQuery(conn = db, query))
-                dbDisconnect(db)
-              } else {
-                return()
-              }
+        # get list of individuals
+        tbl_pltMat <- paste0("plant_material_", breeder)
+        if (tbl_pltMat %in% allTbls) {
+          db <- dbConnect(SQLite(), dbname = setup$dbname)
+          query <- paste0("SELECT * FROM ", tbl_pltMat)
+          allInds <- (dbGetQuery(conn = db, query))
+          dbDisconnect(db)
+        } else {
+          return()
+        }
 
-              # get the new individuals
-              tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder,"Initial collection"),]
-              inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
+        # get the new individuals
+        tmpBVdta <- breedValuesDta[breedValuesDta$breeder %in% c(breeder, "Initial collection"), ]
+        inds <- allInds$child[!allInds$child %in% tmpBVdta$ind]
 
-              if (length(inds) == 0) {
-                return()
-              }
+        if (length(inds) == 0) {
+          return()
+        }
 
-              # calc breeding values of new individuals
-              BV <- calcBV(breeder, inds, progress = progBar)
-              colnames(BV) <- c("trait1", "trait2")
+        # calc breeding values of new individuals
+        BV <- calcBV(breeder, inds, progress = progBar)
+        colnames(BV) <- c("trait1", "trait2")
 
-              # calc generation
-              generation <- calcGeneration(allInds,
-                                           inds)
+        # calc generation
+        generation <- calcGeneration(
+          allInds,
+          inds
+        )
 
-              cbind(breeder = breeder,
-                    generation,
-                    BV)
-
-            })
-    ))
+        cbind(
+          breeder = breeder,
+          generation,
+          BV
+        )
+      })
+    )
+  )
 
 
   # save breeding values:
   progBar$set(value = progBar$getValue() + 1, detail = "Save breeding values...")
   save(breedValuesDta,
-       file = paste0(setup$truth.dir, "/allBV.RData"))
+    file = paste0(setup$truth.dir, "/allBV.RData")
+  )
 
 
   # return centered BV:
@@ -354,25 +395,25 @@ calcGameProgress <- function(progBar = NULL){
   breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
 
   # add intercept
-  load('data/truth/p0.RData')
-  breedValuesDta$trait1 <- breedValuesDta$trait1 + p0$mu['trait1']
-  breedValuesDta$trait2 <- breedValuesDta$trait2 + p0$mu['trait2']
+  load("data/truth/p0.RData")
+  breedValuesDta$trait1 <- breedValuesDta$trait1 + p0$mu["trait1"]
+  breedValuesDta$trait2 <- breedValuesDta$trait2 + p0$mu["trait2"]
   breedValuesDta$t1t2 <- breedValuesDta$trait1 * breedValuesDta$trait2
 
   progBar$set(value = progBar$getValue() + 1, detail = "Done !")
   breedValuesDta
-
 }
 
 
 
-calcGeneration <- function(ped, inds){
-
+calcGeneration <- function(ped, inds) {
   # checks
   stopifnot(
     is.data.frame(ped),
-    all(c("child", "parent1",
-          "parent2") %in% colnames(ped)),
+    all(c(
+      "child", "parent1",
+      "parent2"
+    ) %in% colnames(ped)),
     all(!is.na(ped$parent1)),
     all(!is.na(ped$child)),
     all(!duplicated(ped$child)),
@@ -385,27 +426,32 @@ calcGeneration <- function(ped, inds){
 
 
   # get the id of the initial individuals of the population
-  initInds <- unique(c(ped$parent1,ped$parent2))
+  initInds <- unique(c(ped$parent1, ped$parent2))
   initInds <- initInds[!initInds %in% ped$child]
 
   # initialize dataframe individual/generation
-  generation <- data.frame(parent1 = NA,
-                           parent2 = NA,
-                           ind = c(initInds, ped$child),
-                           gen = NA)
+  generation <- data.frame(
+    parent1 = NA,
+    parent2 = NA,
+    ind = c(initInds, ped$child),
+    gen = NA
+  )
   generation$gen[generation$ind %in% initInds] <- 0
 
   parents <- initInds[initInds != "NA"]
-  while (any(is.na(generation$gen))){
-
+  while (any(is.na(generation$gen))) {
     # get the list of all the child
     child <- ped$child[ped$parent1 %in% parents | ped$parent2 %in% parents]
 
     # get generation of the parents
     par1 <- ped$parent1[ped$child %in% child]
-    genP1 <- sapply(par1, function(par){generation$gen[generation$ind == par]})
+    genP1 <- sapply(par1, function(par) {
+      generation$gen[generation$ind == par]
+    })
     par2 <- ped$parent2[ped$child %in% child]
-    genP2 <- sapply(par2, function(par){generation$gen[generation$ind == par]})
+    genP2 <- sapply(par2, function(par) {
+      generation$gen[generation$ind == par]
+    })
 
     generation$gen[generation$ind %in% child] <- pmax(genP1, genP2) + 1
     generation$parent1[generation$ind %in% child] <- par1
@@ -415,8 +461,8 @@ calcGeneration <- function(ped, inds){
     parents <- child
   }
 
-  generation <- generation[generation$ind != "NA",]
+  generation <- generation[generation$ind != "NA", ]
 
 
-  generation[generation$ind %in% inds,]
+  generation[generation$ind %in% inds, ]
 }
