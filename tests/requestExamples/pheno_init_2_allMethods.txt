@@ -1,0 +1,3 @@
+ind	task	details
+Coll0001	pheno-field	3
+Coll0001	pheno-patho	1

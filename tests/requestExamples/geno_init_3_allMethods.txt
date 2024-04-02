@@ -1,0 +1,4 @@
+ind	task	details
+Coll0001	geno	hd
+Coll0002	geno	ld
+Coll0003	geno	snp00007
