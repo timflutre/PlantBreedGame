@@ -1,0 +1,20 @@
+{
+  "name": "plantbreedgame",
+  "version": "1.0.0",
+  "description": "--- title: PlantBreedGame ---",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "1.38.0",
+    "@types/node": "^20.12.2"
+  },
+  "dependencies": {
+    "gunzip-file": "^0.1.1"
+  }
+}
