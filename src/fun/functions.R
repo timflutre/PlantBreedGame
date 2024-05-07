@@ -445,3 +445,74 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 
   write.table(df, file = fout, sep = "\t", row.names = FALSE, quote = FALSE)
 }
+
+
+
+##' Get the breeding game setup
+##'
+##' Retrieve the paths to the directories used for the breeding game.
+##' @param root.dir path to the root directory
+##' @return list
+##' @author Timothee Flutre
+getBreedingGameSetup <- function(root.dir) {
+  stopifnot(is.character(root.dir),
+            length(root.dir) == 1,
+            dir.exists(root.dir))
+
+  out <- list(root.dir = root.dir)
+
+  out$truth.dir <- paste0(root.dir, "/truth")
+  out$shared.dir <- paste0(root.dir, "/shared")
+  out$init.dir <- paste0(out$shared.dir, "/initial_data")
+  tmp <- basename(Sys.glob(paste0(out$shared.dir, "/*")))
+  for (x in tmp) {
+    if (x != "initial_data")
+      out$breeders <- c(out$breeders, x)
+  }
+
+  out$breeder.dirs <- c()
+  for (breeder in out$breeders)
+    out$breeder.dirs[[breeder]] <-
+    paste0(out$shared.dir, "/", breeder)
+
+  out$dbname <- paste0(root.dir, "/breeding-game.sqlite")
+
+  return(out)
+}
+
+
+##' Get the breeding game constants
+##'
+##' Retrieve the constants used to parametrized the breeding game from the SQLite database.
+##' @param dbname name of the SQLite database (full path)
+##' @param table name of the table
+##' @return list
+##' @author Timothee Flutre
+getBreedingGameConstants <- function(dbname) {
+  requireNamespace("DBI")
+  requireNamespace("RSQLite")
+  stopifnot(file.exists(dbname))
+  table = "constants"
+
+  out.list <- list()
+
+  ## retrieve the content of the table
+  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = dbname)
+  query <- paste0("SELECT *",
+                  " FROM ", table)
+  out.df <- DBI::dbGetQuery(db, query)
+  DBI::dbDisconnect(db)
+
+  ## reformat
+  out.list <- as.list(out.df$value)
+  names(out.list) <- out.df$item
+  for (i in seq_along(out.list))
+    out.list[[i]] <- tryCatch({
+      as.numeric(out.list[[i]])
+    }, warning = function(c) {
+      # ex.: case of 'max.upload.pheno.field'
+      out.list[[i]]
+    })
+
+  return(out.list)
+}
