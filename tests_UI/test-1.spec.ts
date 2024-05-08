@@ -11,7 +11,7 @@ interface Registerd_indsList {
 
 test.describe("PlantBreedGame_UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("http://127.0.0.1:3000/");
+    await page.goto("/");
   });
 
   test("addBreeder", async ({ page }) => {
@@ -159,7 +159,6 @@ async function addBreeder(
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Add this new breeder" }).click();
 
-  await page.pause();
   await expect(page.getByText("Adding breeder Done!")).toBeVisible();
 }
 
