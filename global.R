@@ -1,4 +1,5 @@
 ## Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique
+
 ## and Montpellier SupAgro.
 ##
 ## This file is part of PlantBreedGame.
@@ -18,11 +19,12 @@
 ## <http://www.gnu.org/licenses/>.
 
 
-source("src/dependencies.R", local = TRUE, encoding = "UTF-8")$value
+source("src/dependencies.R", local = TRUE, encoding = "UTF-8")
 
-source("src/fun/functions.R", local = TRUE, encoding = "UTF-8")$value
-source("src/fun/func_time.R", local = TRUE, encoding = "UTF-8")$value
-source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
+source("src/fun/functions.R", local = TRUE, encoding = "UTF-8")
+source("src/fun/func_time.R", local = TRUE, encoding = "UTF-8")
+source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")
+source("./src/fun/constants_module.R", local = TRUE, encoding = "UTF-8")
 
 ## -------------------------------------------------------------------
 ## parameters
@@ -42,26 +44,15 @@ if (Sys.info()["sysname"] == "Windows") {
 ## -------------------------------------------------------------------
 ## variables
 
-root.dir <- "data"
-setup <- getBreedingGameSetup(root.dir)
-checkDbFile(setup$dbname)
-constants <- getBreedingGameConstants(setup$dbname)
-if (is.null(constants$maxEvalInds)) {
-  constants$maxEvalInds <- 5
-}
+DATA_ROOT <- "data"
+DATA_TRUTH <- file.path(DATA_ROOT, "truth")
+DATA_SHARED <- file.path(DATA_ROOT, "shared")
+DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
+DATA_DB <- file.path(DATA_ROOT, "breeding-game.sqlite")
 
 
-prices <- list(
-  "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
-  "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
-  "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
-  "pheno-field" = constants$cost.pheno.field,
-  "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
-  "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
-  "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
-  "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
-  "register" = constants$cost.register * constants$cost.pheno.field
-)
+setup <- getBreedingGameSetup(DATA_ROOT)
+
 
 subset.snps <- list()
 f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")

@@ -35,10 +35,10 @@ tabItem(
         p("In this module, you can request new plant materials."),
         p("A greenhouse can be used", strong("all year long"), " to perform crosses:"),
         tags$ul(
-          tags$li(strong("Allofecundation"), ": ", constants$duration.allof, "-month delay and costs", constants$cost.allof, " plot (", format(constants$cost.allof * constants$cost.pheno.field, digits = 2), " Mendels )."),
-          tags$li(strong("Autofecundation"), ": ", constants$duration.autof, "-month delay and costs", constants$cost.autof, " plot (", format(constants$cost.autof * constants$cost.pheno.field, digits = 2), " Mendels ).")
+          tags$li(strong("Allofecundation"), ": ", constants_ui("pltmat_duration.allof"), "-month delay and costs", constants_ui("pltmat_cost.allof"), " plot (", constants_ui("pltmat_cost.allof.mendels"), " Mendels )."),
+          tags$li(strong("Autofecundation"), ": ", constants_ui("pltmat_duration.autof"), "-month delay and costs", constants_ui("pltmat_cost.autof"), " plot (", constants_ui("pltmat_cost.autof.mendels"), " Mendels ).")
         ),
-        p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants$duration.haplodiplo, "-month delay, costs ", constants$cost.haplodiplo, " plot (", format(constants$cost.haplodiplo * constants$cost.pheno.field, digits = 2), " Mendels ), and a maximum of ", constants$max.nb.haplodiplos, " can be requested at once.")
+        p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants_ui("pltmat_duration.haplodiplo"), "-month delay, costs ", constants_ui("pltmat_cost.haplodiplo"), " plot (", constants_ui("pltmat_cost.haplodiplo.mendels"), " Mendels ), and a maximum of ", constants_ui("pltmat_max.nb.haplodiplos"), " can be requested at once.")
       ),
       div(
         id = "cross_info2",

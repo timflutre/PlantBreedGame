@@ -45,7 +45,7 @@ readQryPheno <- reactive({
 
   # read input file
   max.nb.plots <- ifelse(breederStatus() != "player",
-    Inf, constants$nb.plots
+    Inf, getBreedingGameConstants()$nb.plots
   )
   test <- try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
     subset.snps = subset.snps,

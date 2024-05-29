@@ -5,13 +5,14 @@ import { join } from "path";
 import gunzip from "gunzip-file";
 
 const psw: string = "1234";
+const page_root: string = "http://127.0.0.1:3000";
 interface Registerd_indsList {
   [key: string]: string[];
 }
 
 test.describe("PlantBreedGame_UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto(page_root);
   });
 
   test("addBreeder", async ({ page }) => {
@@ -63,7 +64,7 @@ test.describe("PlantBreedGame_UI", () => {
 
     // register individuals:
     for (let breeder in registered_inds) {
-      await page.goto("http://127.0.0.1:3000/");
+      await page.goto(page_root);
       await login(page, breeder, psw);
       await registerIndividuals(page, registered_inds[breeder], false);
     }
@@ -109,7 +110,7 @@ test.describe("PlantBreedGame_UI", () => {
 
     // register individuals:
     for (let breeder in registered_inds) {
-      await page.goto("http://127.0.0.1:3000/");
+      await page.goto(page_root);
       await login(page, breeder, psw);
       await registerIndividuals(page, registered_inds[breeder], false);
     }
@@ -119,7 +120,7 @@ test.describe("PlantBreedGame_UI", () => {
 });
 
 async function login(page: Page, username: string, password: string) {
-  await page.goto("http://127.0.0.1:3000/");
+  await page.goto(page_root);
   await page
     .getByRole("link", { name: "house-user icon Identification / Home" })
     .click();

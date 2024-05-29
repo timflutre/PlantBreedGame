@@ -190,7 +190,7 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
   # pop (character verctor) names of individuals
   X <- matrix(
     nrow = length(pop),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
   rownames(X) <- pop
 
@@ -251,19 +251,18 @@ getBreederHistory <- function(breeder, setup) {
 #' @param query \code{data.frame} containing individuals list
 #' (\code{ind} column is required)
 #' @param setup game's setup.
-#' @param constants game's constants
 #' @param progressBar (optional) a \code{shiny} progress bar
 #'
 #' @return
 #' @export
 #'
 #' @examples
-calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar = NULL) {
+calcAdditiveRelation <- function(breeder, query, setup, progressBar = NULL) {
   query <- query[query$breeder == breeder, ]
   ## 1. load the haplotypes and convert to genotypes
   X <- matrix(
     nrow = length(unique(query$ind)),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
 
   for (i in 1:length(unique(query$ind))) {

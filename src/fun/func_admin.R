@@ -110,7 +110,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
       rep(NA, length(coll.ids)),
       coll.ids,
       rep(
-        paste0(constants$first.year, "-01-01 00:00:00"),
+        paste0(getBreedingGameConstants()$first.year, "-01-01 00:00:00"),
         length(coll.ids)
       ),
       sep = "','", collapse = "'),('"

@@ -89,7 +89,7 @@ evalGraphT1 <- reactive({
     unique(as.character(dfPheno$ind[dfPheno$breeder != "control"]))
   )
 
-  target <- median(dfPheno$trait1[dfPheno$breeder == "control"]) * constants$register.min.trait1
+  target <- median(dfPheno$trait1[dfPheno$breeder == "control"]) * getBreedingGameConstants()$register.min.trait1
 
 
   ## Plot
@@ -141,7 +141,7 @@ evalGraphT2 <- reactive({
     unique(as.character(dfPheno$ind[dfPheno$breeder != "control"]))
   )
 
-  target <- constants$register.min.trait2
+  target <- getBreedingGameConstants()$register.min.trait2
 
 
   ## Plot
@@ -479,7 +479,6 @@ output$addRelTable <- renderTable(
       breeder = input$addRelBreeder,
       query = readQryEval(),
       setup = setup,
-      constants = constants
     )
   },
   rownames = TRUE,
@@ -548,6 +547,8 @@ breederHistoryTimeLines <- reactive({
     colorHaplo <- "#47db25"
     colorPhenoF <- "#ed8b3b"
     colorPhenoP <- "#ed9e5c"
+
+    constants <- getBreedingGameConstants()
 
     dta$duration[dta$task == "geno-hd"] <- constants$duration.geno.hd
     dta$color[dta$task == "geno-hd"] <- colorGenoHD
@@ -713,7 +714,6 @@ scoreTable <- eventReactive(input$calcScore, {
   dfPheno <- dfPhenoEval()
   dfPheno$GAT1 <- dfPheno$GAT1 + p0$mu["trait1"]
   dfPheno$GAT2 <- dfPheno$GAT2 + p0$mu["trait2"]
-  # browser()
 
   scoreTable <- dfPheno %>%
     group_by(ind, breeder) %>%
@@ -728,7 +728,7 @@ scoreTable <- eventReactive(input$calcScore, {
   } else if (input$scoreType == "T1_minimalT2") {
     scoreTable$score <- scoreTable$GAT1
 
-    targetQuality <- constants$register.min.trait2
+    targetQuality <- getBreedingGameConstants()$register.min.trait2
     lowQuality <- scoreTable$GAT2 < targetQuality
     scoreTable$score[lowQuality] <- scoreTable$score[lowQuality] * (1 - input$T2_penalty / 100)
   }
@@ -777,7 +777,4 @@ output$scoreTable <- renderTable(
 
 ## debug ----
 output$evalDebug <- renderPrint({
-  print("---------")
-  print(constants$register.min.trait2)
-  print(scoreTable())
 })

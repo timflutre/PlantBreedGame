@@ -46,13 +46,6 @@ getCodeVersion <- function(url.repo = "") {
   return(code.version)
 }
 
-checkDbFile <- function(db.file) {
-  stopifnot(
-    file.exists(db.file),
-    file.access(db.file, mode = 2) == 0
-  )
-}
-
 ##' Simul breeding game
 ##'
 ##' Make the structure of the data.frame that will be given to the players when they request phenotyping during the game.
@@ -455,9 +448,11 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 ##' @return list
 ##' @author Timothee Flutre
 getBreedingGameSetup <- function(root.dir) {
-  stopifnot(is.character(root.dir),
-            length(root.dir) == 1,
-            dir.exists(root.dir))
+  stopifnot(
+    is.character(root.dir),
+    length(root.dir) == 1,
+    dir.exists(root.dir)
+  )
 
   out <- list(root.dir = root.dir)
 
@@ -466,14 +461,16 @@ getBreedingGameSetup <- function(root.dir) {
   out$init.dir <- paste0(out$shared.dir, "/initial_data")
   tmp <- basename(Sys.glob(paste0(out$shared.dir, "/*")))
   for (x in tmp) {
-    if (x != "initial_data")
+    if (x != "initial_data") {
       out$breeders <- c(out$breeders, x)
+    }
   }
 
   out$breeder.dirs <- c()
-  for (breeder in out$breeders)
+  for (breeder in out$breeders) {
     out$breeder.dirs[[breeder]] <-
-    paste0(out$shared.dir, "/", breeder)
+      paste0(out$shared.dir, "/", breeder)
+  }
 
   out$dbname <- paste0(root.dir, "/breeding-game.sqlite")
 
@@ -484,35 +481,36 @@ getBreedingGameSetup <- function(root.dir) {
 ##' Get the breeding game constants
 ##'
 ##' Retrieve the constants used to parametrized the breeding game from the SQLite database.
-##' @param dbname name of the SQLite database (full path)
-##' @param table name of the table
 ##' @return list
 ##' @author Timothee Flutre
-getBreedingGameConstants <- function(dbname) {
-  requireNamespace("DBI")
-  requireNamespace("RSQLite")
-  stopifnot(file.exists(dbname))
-  table = "constants"
-
-  out.list <- list()
+getBreedingGameConstants <- function() {
+  stopifnot(file.exists(DATA_DB))
 
   ## retrieve the content of the table
-  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = dbname)
-  query <- paste0("SELECT *",
-                  " FROM ", table)
+  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = DATA_DB)
+  query <- "SELECT * FROM constants"
   out.df <- DBI::dbGetQuery(db, query)
   DBI::dbDisconnect(db)
 
   ## reformat
-  out.list <- as.list(out.df$value)
+  # suppress "NAs introduced by coercion" warning
+  withCallingHandlers(
+    {
+      out.list <- lapply(out.df$value, function(x) {
+        ifelse(!is.na(as.numeric(x)),
+          as.numeric(x),
+          x
+        )
+      })
+    },
+    warning = function(warn) {
+      warning_to_catch <- "NAs introduced by coercion"
+      if (identical(warn$message, warning_to_catch)) {
+        tryInvokeRestart("muffleWarning")
+      }
+    }
+  )
   names(out.list) <- out.df$item
-  for (i in seq_along(out.list))
-    out.list[[i]] <- tryCatch({
-      as.numeric(out.list[[i]])
-    }, warning = function(c) {
-      # ex.: case of 'max.upload.pheno.field'
-      out.list[[i]]
-    })
 
   return(out.list)
 }

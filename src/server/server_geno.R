@@ -47,7 +47,7 @@ readQryGeno <- reactive({
 
   # read input file
   max.nb.inds <- ifelse(breederStatus() != "player",
-    Inf, constants$max.nb.inds
+    Inf, getBreedingGameConstants()$max.nb.inds
   )
   test <- try(df <- readCheckBreedDataFile(input$file.geno$datapath,
     subset.snps = subset.snps,
@@ -168,7 +168,7 @@ output$genoRequestResultUI <- renderUI({
     # display message
     p(
       "Great ! Your results will be available in ",
-      constants$duration.geno.hd, " months."
+      getBreedingGameConstants()$duration.geno.hd, " months."
     )
   } else if (!is.null(geno_data()) && geno_data() == "error") {
     p("Something went wrong. Please check your file.")

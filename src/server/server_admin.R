@@ -200,10 +200,7 @@ observeEvent(input$deleteSession, {
 # get the current value
 output$admin_currentSYE <- renderText({
   input$admin_button_seedYearEfect # take depedency
-  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = setup$dbname)
-  query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
-  yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
-  DBI::dbDisconnect(db)
+  yearEffectSeed <- getBreedingGameConstants()$seed.year.effect
   yearEffectSeed
 })
 
@@ -358,12 +355,7 @@ currentMaxDiskUsage <- reactive({
   input$admin_maxDiskUsage # take depedency
   input$updateMaxDiskUsage # take depedency
 
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  tbl <- "breeders"
-  query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
-  maxDiskUsage <- dbGetQuery(conn = db, query)[, 1]
-  dbDisconnect(db)
-
+  maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
   maxDiskUsage
 })
 

@@ -22,24 +22,25 @@ source("src/fun/func_theory.R", local = TRUE, encoding = "UTF-8")$value
 
 
 getDatSel <- reactive({
-  dat <- simulDat(
+  data <- simulDat(
     mu.0 = input$mu.0,
     sigma2 = (1 - input$h2) * input$sigma.0^2,
     h2 = input$h2,
-    I = constants$nb.phenotyped.coll,
+    I = 800,
     seed = 1859
   )
 
   sel <- applySelection(
-    mu.0 = dat$mu.0, y = dat$y, y.e = dat$y.e,
-    y.t = input$y.t, sigma.02 = dat$sigma.a2 + dat$sigma2
+    mu.0 = data$mu.0, y = data$y, y.e = data$y.e,
+    y.t = input$y.t, sigma.02 = data$sigma.a2 + data$sigma2
   )
 
-  return(append(dat, sel))
+  return(append(data, sel))
 })
 
 output$regParsOffs <- renderPlot({
   all <- getDatSel()
+
   plotRegMidparentsOffsprings(
     mu.0 = all$mu.0,
     sigma.02 = all$sigma.a2 + all$sigma2,

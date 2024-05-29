@@ -186,6 +186,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   flush.console()
   nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
 
+  constants <- getBreedingGameConstants()
   getAvailDate <- function(type) {
     if (type == "allofecundation") {
       availableDate <- seq(from = gameTime, by = paste0(constants$duration.allof, " month"), length.out = 2)[2]
@@ -253,6 +254,13 @@ createInvoicePltmat <- function(request.df) {
 
 
   # get prices
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
+    "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
+    "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field
+  )
+
   invoice.pltmat$Unitary_Price <- as.vector(as.numeric(prices[invoice.pltmat$Task]))
   invoice.pltmat$Total <- invoice.pltmat$Unitary_Price * invoice.pltmat$Quantity
 

@@ -47,6 +47,7 @@ readQryPlmat <- reactive({
 
 
   # read input file
+  constants <- getBreedingGameConstants()
   maxHD <- ifelse(breederStatus() != "player",
     Inf, constants$max.nb.haplodiplos
   )

@@ -38,29 +38,27 @@ tabItem(
       width = 12, title = "Parameters",
       sliderInput("mu.0", "Phenotypic mean without selection (\\(\\mu_0\\)):",
         min = 0,
-        max = 1.2 * constants$mu.trait1,
-        value = constants$mu.trait1,
-        step = 5, round = TRUE
+        max = 1.2 * 100, # 100 is the default value for mu.trait1
+        value = 100, # 100 is the default value for mu.trait1
+        step = 1, round = TRUE
       ),
       sliderInput("sigma.0", "Phenotypic standard deviation without selection (\\(\\sigma_0\\)):",
         min = 0,
-        max = round(1.2 * sqrt(constants$sigma.p2.trait1)),
-        value = sqrt(constants$sigma.p2.trait1),
-        step = 10, round = TRUE
+        max = round(1.2 * sqrt(711)), # 711 is the default value for simga.p2.trait1
+        value = sqrt(711), # 711 is the default value for simga.p2.trait1
+        step = 1, round = TRUE
       ),
       sliderInput("h2", "Narrow-sense heritability (\\(h^2\\)):",
         min = 0,
-        max = 1,
+        max = 0.99,
         value = 0.75,
-        step = 0.05
+        step = 0.01
       ),
       sliderInput("y.t", "Phenotypic threshold (\\(y_t\\)):",
         min = 0,
-        max = round(constants$mu.trait1 +
-          4 * sqrt(constants$sigma.p2.trait1)),
-        value = constants$mu.trait1 +
-          2 * sqrt(constants$sigma.p2.trait1),
-        step = 2, round = TRUE
+        max = round(100 + 4 * sqrt(711)), # mu + 4 sigma
+        value = round(100 + 1 * sqrt(711)),
+        step = 1, round = TRUE
       )
     ),
     shinydashboard::box(

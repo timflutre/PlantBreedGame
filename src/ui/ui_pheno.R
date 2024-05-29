@@ -20,8 +20,6 @@
 
 
 # UI of "pheno" part
-
-
 tabItem(
   tabName = "pheno",
   fluidRow(
@@ -36,12 +34,12 @@ tabItem(
         id = "pheno_info1",
         p("In this module, you can request phenotyping data."),
         p(
-          "One experimental site, Agrom-sur-Lez (AZ), is available with ", strong(constants$nb.plots, " plots."),
-          " Planting a plot should be requested ", strong("before ", format(as.Date(constants$max.upload.pheno.field, format = "%m-%d"), "%B %d")), ", and requires about ", 500, " seeds.",
-          " The data are available ", constants$duration.pheno.field, " months after, that is not before ", strong(format(seq.Date(as.Date(constants$max.upload.pheno.field, format = "%m-%d"), length = 2, by = paste0(constants$duration.pheno.field, " months"))[2], "%B %d")), ".",
-          " The cost of a single plot (seeding, phenotyping of the three traits and harvesting) is ", strong(constants$cost.pheno.field, " Mendels.")
+          "One experimental site, Agrom-sur-Lez (AZ), is available with ", strong(constants_ui("pheno_nb.plots"), " plots."),
+          " Planting a plot should be requested ", strong("before ", constants_ui("pheno_max.upload.pheno.field")), ".",
+          " The data are then available ", constants_ui("pheno_duration.pheno.field"), " months after, on ", strong(constants_ui("pheno_pheno.data.availability.date")), ".",
+          " The cost of a single plot (seeding, phenotyping of the three traits and harvesting) is ", strong(constants_ui("pheno_cost.pheno.field"), " Mendels.")
         ),
-        p("A", strong("greenhouse"), " can also be used all year long to assess the resistance to", HTML("<em>P.&nbsp;psychedelica.</em>"), "This request has a ", strong(constants$duration.pheno.patho, "-month"), " delay and costs ", strong(constants$cost.pheno.patho, " plot"), " (", format(constants$cost.pheno.patho * constants$cost.pheno.field, digits = 2), " Mendels).")
+        p("A", strong("greenhouse"), " can also be used all year long to assess the resistance to", HTML("<em>P.psychedelica.</em>"), "This request takes ", strong(constants_ui("pheno_duration.pheno.patho"), "months"), " and costs ", strong(constants_ui("pheno_cost.pheno.patho.mendels"), " Mendels"), " (which represents", constants_ui("pheno_cost.pheno.patho"), " plot).")
       ),
       div(
         id = "pheno_info2",
@@ -67,7 +65,8 @@ tabItem(
           tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
           tags$li("All columns (", code("ind"), ", ", code("task"), ", and ", code("details"), ") are compulsory."),
           tags$li("The ", code("task"), " column should contain 'pheno-field' (for experimental site phenotyping) or 'pheno-patho' (for greenhouse phenotyping)"),
-          tags$li("If 'task=pheno-field', the ", code("details"), " column should contain the number of plots (the total number of requested plots should not exceed the total available:", strong(constants$nb.plots, " plots."), ")"),
+          tags$li("If 'task=pheno-field', the ", code("details"), " column should contain the number of plots (the total number of requested plots should not exceed the total available:", strong(constants_ui("pheno_nb.plots_2"), " plots."), ")"),
+          # WIP ---- blocked here as `outputs` can only be used once ! ><
           tags$li("If 'task=pheno-patho', the ", code("details"), " column should contain the number of replicates"),
           tags$li("Individuals should be available."),
           tags$li("Individuals should not be duplicated within each task."),
@@ -107,9 +106,6 @@ tabItem(
         "Summary",
         tableOutput("PhenoInvoice")
       ),
-      # verbatimTextOutput("PhenoSmy"),
-      # verbatimTextOutput("PhenoStr")),
-
       tabPanel(
         "Check",
         verbatimTextOutput("PhenoUploaded")
@@ -121,5 +117,5 @@ tabItem(
         verbatimTextOutput("PhenoDebug")
       )
     }
-  ) # close fluidRow
-) # close tabItem
+  )
+)

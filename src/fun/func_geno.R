@@ -103,7 +103,7 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
   X <- matrix(
     nrow = length(unique(inds.todo$ind)),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
 
   for (i in 1:length(unique(inds.todo$ind))) {
@@ -237,6 +237,12 @@ createInvoiceGeno <- function(request.df) {
 
 
   # get prices
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
+    "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
+    "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field
+  )
   invoice.geno$Unitary_Price <- as.vector(as.numeric(prices[invoice.geno$Task]))
   invoice.geno$Total <- invoice.geno$Unitary_Price * invoice.geno$Quantity
 

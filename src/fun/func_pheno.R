@@ -29,7 +29,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   # inds.todo (data frame) output of "readCheckBreedDataFile"
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
-
+  constants <- getBreedingGameConstants()
 
   ## Initialisations
   db <- dbConnect(SQLite(), dbname = setup$dbname)
@@ -105,8 +105,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
   ## 1. Calculate year effect
   # get the seed from database:
-  query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
-  yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
+  yearEffectSeed <- constants$seed.year.effect
 
   # set seed
   set.seed(yearEffectSeed + year) # seed depend of the year
@@ -308,6 +307,12 @@ createInvoicePheno <- function(request.df) {
   invoice.pheno <- aggregate(details ~ task, data = request.df, sum)
   names(invoice.pheno) <- c("Task", "Quantity")
 
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "pheno-field" = constants$cost.pheno.field,
+    "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field
+  )
+
   # get prices
   invoice.pheno$Unitary_Price <- as.vector(as.numeric(prices[invoice.pheno$Task]))
   invoice.pheno$Total <- invoice.pheno$Unitary_Price * invoice.pheno$Quantity
@@ -352,6 +357,9 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
   query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
   historyPheno <- dbGetQuery(conn = db, query)
   dbDisconnect(db)
+
+  ## get game constants
+  constants <- getBreedingGameConstants()
 
   ## Calculate the start date of the current pheno session:
   limitDate <- strptime(

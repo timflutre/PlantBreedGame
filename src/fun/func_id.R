@@ -98,6 +98,7 @@ availToDwnld <- function(fileName, gameTime) {
   requestDate <- strptime(regmatches(fileName, m), format = "%Y-%m-%d")
 
 
+  constants <- getBreedingGameConstants()
 
   # calculate the available date
   if (grepl("pheno-field", fileName)) {

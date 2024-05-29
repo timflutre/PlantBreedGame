@@ -104,10 +104,10 @@ shinydashboard::tabBox(
         p("You can specify here the individuals you want to submit for the final evaluation."),
         p(
           "A maximum of ",
-          strong(constants$maxEvalInds, " individuals"),
+          strong(constants_ui("home_maxEvalInds"), "individuals"),
           "can be registered."
         ),
-        p("The registration fee is ", strong(format(constants$cost.register * constants$cost.pheno.field, digits = 2), " Mendels"), "per genotype. No refund are possible, thank-you for your understanding.")
+        p("The registration fee is ", strong(constants_ui("home_cost.register.mendels"), "Mendels"), "per genotype. No refund are possible, thank-you for your understanding.")
       ),
       div(
         selectInput("id_evalInds",

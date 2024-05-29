@@ -36,10 +36,10 @@ tabItem(
         p("In this module you, can request genotyping data."),
         p("A laboratory can be used", strong("all year long"), " to perform genotyping. Two SNP chips are available:"),
         tags$ul(
-          tags$li(strong("High-density"), ": ", constants$nb.snps.hd, " SNP, ", constants$duration.geno.hd, "-month delay and costs", constants$cost.geno.hd, " plot (", format(constants$cost.geno.hd * constants$cost.pheno.field, digits = 2), " Mendels )."),
-          tags$li(strong("Low-density"), ": ", constants$nb.snps.ld, " SNP, ", constants$duration.geno.ld, "-month delay and costs", constants$cost.geno.ld, " plot (", format(constants$cost.geno.ld * constants$cost.pheno.field, digits = 2), " Mendels ).")
+          tags$li(strong("High-density"), ": ", constants_ui("geno_nb.snps.hd"), " SNP, ", constants_ui("geno_duration.geno.hd"), "-month delay and costs", constants_ui("geno_cost.geno.hd"), " plot (", constants_ui("geno_cost.geno.hd.mendels"), " Mendels )."),
+          tags$li(strong("Low-density"), ": ", constants_ui("geno_nb.snps.ld"), " SNP, ", constants_ui("geno_duration.geno.ld"), "-month delay and costs", constants_ui("geno_cost.geno.ld"), " plot (", constants_ui("geno_cost.geno.ld.mendels"), " Mendels ).")
         ),
-        p(strong("Single-SNP"), "genotyping can also be performed: ", constants$duration.geno.single, "-month delay and costs", constants$cost.geno.single, " plot (", format(constants$cost.geno.single * constants$cost.pheno.field, digits = 2), " Mendels ).")
+        p(strong("Single-SNP"), "genotyping can also be performed: ", constants_ui("geno_duration.geno.single"), "-month delay and costs", constants_ui("geno_cost.geno.single"), " plot (", constants_ui("geno_cost.geno.single.mendels"), " Mendels ).")
       ),
       div(
         id = "geno_info2",

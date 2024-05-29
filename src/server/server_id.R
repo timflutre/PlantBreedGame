@@ -77,12 +77,8 @@ accessGranted <- eventReactive(input$submitPSW,
     if (goodPswd && status != "game master") {
       withProgress(
         {
-          # get maxDiskUsage
-          db <- dbConnect(SQLite(), dbname = setup$dbname)
-          tbl <- "breeders"
-          query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
-          maxDiskUsage <- as.numeric(dbGetQuery(conn = db, query)[, 1])
-          dbDisconnect(db)
+          maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
+
 
           allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
           currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
@@ -166,11 +162,25 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    db <- dbConnect(SQLite(), dbname = DATA_DB)
     tbl <- "log"
     query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
     res <- dbGetQuery(conn = db, query)
     dbDisconnect(db)
+
+
+    constants <- getBreedingGameConstants()
+    prices <- list(
+      "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
+      "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
+      "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
+      "pheno-field" = constants$cost.pheno.field,
+      "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
+      "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
+      "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
+      "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
+      "register" = constants$cost.register * constants$cost.pheno.field
+    )
 
     if (nrow(res) > 0) {
       funApply <- function(x) {
@@ -514,6 +524,7 @@ observeEvent(input$id_submitInds, priority = 10, {
     }
   }
 
+  constants <- getBreedingGameConstants()
   if (length(inds) > constants$maxEvalInds - nSubmitted) {
     alert(paste("Sorry, you have already submitted", nSubmitted, "individuals, on a total of", constants$maxEvalInds, ". You can only submit", constants$maxEvalInds - nSubmitted, "more individuals."))
     return(subIndsDta)
