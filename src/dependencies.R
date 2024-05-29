@@ -21,25 +21,28 @@
 ## required packages available on the CRAN
 ## https://cran.r-project.org/
 ## R> install.packages("<package_name>")
-library(shiny)
-library(shinydashboard)
-library(shinycssloaders)
-library(shinyjs)
-library(RSQLite)
-library(MASS)
-library(digest)
-library(plotly)
-library(DT)
-library(igraph)
-library(lubridate)
-library(vistime)
-library(tidyr)
 
-## required packages NOT available on the CRAN
-## R> devtools::install_github("timflutre/rutilstimflutre")
-library(rutilstimflutre)
-stopifnot(compareVersion(
-  "0.158.2",
-  as.character(packageVersion("rutilstimflutre"))
-)
-!= 1)
+suppressPackageStartupMessages({
+  library(shiny)
+  library(shinydashboard)
+  library(shinycssloaders)
+  library(shinyjs)
+  library(RSQLite)
+  library(MASS)
+  library(digest)
+  library(plotly)
+  library(DT)
+  library(igraph)
+  library(lubridate)
+  library(vistime)
+  library(tidyr)
+
+  ## required packages NOT available on the CRAN
+  ## R> devtools::install_github("timflutre/rutilstimflutre")
+  library(rutilstimflutre)
+  stopifnot(compareVersion(
+    "0.158.2",
+    as.character(packageVersion("rutilstimflutre"))
+  )
+  != 1)
+})
