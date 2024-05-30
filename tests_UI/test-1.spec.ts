@@ -15,6 +15,10 @@ test.describe("PlantBreedGame_UI", () => {
     await page.goto(page_root);
   });
 
+  test("basicLogin", async ({ page }) => {
+    await login(page, "admin", psw);
+  });
+
   test("addBreeder", async ({ page }) => {
     await login(page, "admin", psw);
     await addBreeder(page, "test_UI", psw, "tester");
@@ -136,7 +140,25 @@ async function login(page: Page, username: string, password: string) {
   await page.getByLabel("Password").click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
+
+  // top bar visible ?
+  await expect(page.locator("#breederBoxID")).toBeVisible();
   await expect(page.getByRole("heading", { name: username })).toBeVisible();
+  await expect(page.locator("#dateBoxID")).toBeVisible();
+  await expect(page.locator("#budgetBoxID")).toBeVisible();
+  await expect(page.locator("#serverIndicID")).toBeVisible();
+
+  // content
+  await expect(
+    page.getByRole("heading", { name: "Phenotyping data:" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Genotyping data:" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Plant material data:" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Other:" })).toBeVisible();
 }
 
 async function addBreeder(
