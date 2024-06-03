@@ -50,13 +50,6 @@ DATA_SHARED <- file.path(DATA_ROOT, "shared")
 DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
 DATA_DB <- file.path(DATA_ROOT, "breeding-game.sqlite")
 
-
-subset.snps <- list()
-f <- paste0(DATA_INITIAL_DATA, "/snp_coords_hd.txt.gz")
-subset.snps[["hd"]] <- rownames(read.table(f))
-f <- paste0(DATA_INITIAL_DATA, "/snp_coords_ld.txt.gz")
-subset.snps[["ld"]] <- rownames(read.table(f))
-
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
 
