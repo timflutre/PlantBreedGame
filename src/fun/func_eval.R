@@ -65,11 +65,7 @@ phenotype4Eval <- function(df, nRep = 50) {
   load(f)
   f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f)
-  subset.snps <- list()
-  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_hd.txt.gz")
-  subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_ld.txt.gz")
-  subset.snps[["ld"]] <- rownames(read.table(f))
+  subset.snps <- getSNPsubset()
 
 
 

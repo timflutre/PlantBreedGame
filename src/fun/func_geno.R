@@ -80,12 +80,7 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
   flush.console()
   f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  subset.snps <- list()
-  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_hd.txt.gz")
-  subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_ld.txt.gz")
-  subset.snps[["ld"]] <- rownames(read.table(f))
-
+  subset.snps <- getSNPsubset()
 
 
   ## 2. check that the requested individuals already exist

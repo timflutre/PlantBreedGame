@@ -514,3 +514,16 @@ getBreedingGameConstants <- function() {
 
   return(out.list)
 }
+
+getSNPsubset <- function() {
+  snpcoord_hd_file <- file.path(DATA_INITIAL_DATA, "snp_coords_hd.txt.gz")
+  snpcoord_ld_file <- file.path(DATA_INITIAL_DATA, "snp_coords_ld.txt.gz")
+
+  if (!file.exists(snpcoord_hd_file) || !file.exists(snpcoord_ld_file)) {
+    return(NULL)
+  }
+  subset.snps <- list()
+  subset.snps[["hd"]] <- rownames(read.table(snpcoord_hd_file))
+  subset.snps[["ld"]] <- rownames(read.table(snpcoord_ld_file))
+  return(subset.snps)
+}
