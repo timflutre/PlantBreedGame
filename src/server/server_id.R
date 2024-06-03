@@ -27,7 +27,7 @@ source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 ## get breeder list and create select input ----
 breederList <- reactive({
-  getBreederList(dbname = setup$dbname)
+  getBreederList(dbname = DATA_DB)
 })
 output$selectBreeder <- renderUI({
   selectInput("breederName", "Breeder", choices = as.list(breederList()))
@@ -56,10 +56,10 @@ accessGranted <- eventReactive(input$submitPSW,
     }
 
     # 1. get breeder status
-    status <- getBreederStatus(setup$dbname, input$breederName)
+    status <- getBreederStatus(DATA_DB, input$breederName)
 
     # 2. check given password
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    db <- dbConnect(SQLite(), dbname = DATA_DB)
     tbl <- "breeders"
     query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
     hashPsw <- dbGetQuery(conn = db, query)[, 1]
@@ -109,7 +109,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
     # 4. check db (in case of "corrupted" data-base)
     if (goodPswd) {
-      db <- dbConnect(SQLite(), dbname = setup$dbname)
+      db <- dbConnect(SQLite(), dbname = DATA_DB)
       allTbls <- dbListTables(conn = db)
       dbDisconnect(db)
       tbl_pltMat <- paste0("plant_material_", input$breederName)
@@ -151,7 +151,7 @@ breeder <- reactive({
 
 breederStatus <- reactive({
   if (accessGranted()) {
-    return(getBreederStatus(setup$dbname, input$breederName))
+    return(getBreederStatus(DATA_DB, input$breederName))
   } else {
     return("No Identification")
   }
@@ -370,7 +370,7 @@ output$UIdwnlRequest <- renderUI({
 ## My plant-material ----
 myPltMat <- reactive({
   if (input$leftMenu == "id") {
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    db <- dbConnect(SQLite(), dbname = DATA_DB)
     tbl <- paste0("plant_material_", breeder())
     stopifnot(tbl %in% dbListTables(db))
     query <- paste0("SELECT * FROM ", tbl)
@@ -400,7 +400,7 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- "breeders"
   query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
   hashPsw <- dbGetQuery(conn = db, query)[, 1]
@@ -408,7 +408,7 @@ pswChanged <- eventReactive(input$"changePsw", {
   if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
 
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    db <- dbConnect(SQLite(), dbname = DATA_DB)
     tbl <- "breeders"
     query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
     dbExecute(conn = db, query)
@@ -541,7 +541,7 @@ observeEvent(input$id_submitInds, priority = 10, {
     ind = inds
   )
 
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0(
     "INSERT INTO log(breeder,request_date,task,quantity)",
     " VALUES ('", breeder(),

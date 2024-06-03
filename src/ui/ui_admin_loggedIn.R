@@ -334,7 +334,7 @@ list(
           class = "col-sm-12 col-md-12 col-lg-6",
           selectInput("admin_T1T2Breeder",
             label = "Breeder",
-            choices = getBreederList(dbname = setup$dbname)
+            choices = getBreederList(dbname = DATA_DB) # TODO breeders list can change, this is probably not good, need to check.
           ),
           plotlyOutput("admin_T1T2GameProgress") %>% withSpinner()
         )

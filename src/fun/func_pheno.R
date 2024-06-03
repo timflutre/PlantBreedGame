@@ -32,7 +32,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   constants <- getBreedingGameConstants()
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT name FROM breeders")
   breederList <- (dbGetQuery(conn = db, query))
   stopifnot(breeder %in% breederList$name)
@@ -45,28 +45,28 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   for (dty in c("pheno-field", "pheno-patho")) {
     if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)) { # fileName must not contain a date
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
           strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
         )
       }
     } else {
       fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
           strftime(gameTime, format = "%Y-%m-%d"),
           "_", n, ".txt.gz"
         )
@@ -93,14 +93,14 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
   ## 0. load required data
   flush.console()
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f)
   subset.snps <- list()
-  f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
+  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_hd.txt.gz")
   subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
+  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_ld.txt.gz")
   subset.snps[["ld"]] <- rownames(read.table(f))
 
   ## 1. Calculate year effect
@@ -150,7 +150,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
     # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }
@@ -345,7 +345,7 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT name FROM breeders")
   breederList <- (dbGetQuery(conn = db, query))
   dbDisconnect(db)
@@ -353,7 +353,7 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 
 
   ## get the historic of pheno requests
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
   historyPheno <- dbGetQuery(conn = db, query)
   dbDisconnect(db)

@@ -30,7 +30,7 @@ getGameTime <- function(setup) {
 
 
   ## get sessions informations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- "sessions"
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT * FROM ", tbl)

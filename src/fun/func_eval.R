@@ -55,20 +55,20 @@ phenotype4Eval <- function(df, nRep = 50) {
 
   ## Initialisations
   data.types <- "evaluation"
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
 
 
 
   ## 0. load required data
   flush.console()
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f)
   subset.snps <- list()
-  f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
+  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_hd.txt.gz")
   subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
+  f <- paste0(DATA_INITIAL_DATA, "/snp_coords_ld.txt.gz")
   subset.snps[["ld"]] <- rownames(read.table(f))
 
 
@@ -102,9 +102,9 @@ phenotype4Eval <- function(df, nRep = 50) {
       # message(paste0(i, "/", length(inds.todo), " ", ind.id))
 
       if (breeder == "control") {
-        f <- paste0(setup$truth.dir, "/", ind.id, "_haplos.RData")
+        f <- paste0(DATA_TRUTH, "/", ind.id, "_haplos.RData")
       } else {
-        f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+        f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
       }
 
 
@@ -206,7 +206,7 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
     }
 
     # message(paste0(i, "/", length(pop), " ", ind.id))
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     load(f)
 
     ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
@@ -229,7 +229,7 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
 #' @export
 getBreederHistory <- function(breeder, setup) {
   # get data
-  db <- RSQLite::dbConnect(SQLite(), dbname = setup$dbname)
+  db <- RSQLite::dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder, "\'")
   res <- RSQLite::dbGetQuery(conn = db, query)
   dbDisconnect(db)
@@ -275,7 +275,7 @@ calcAdditiveRelation <- function(breeder, query, setup, progressBar = NULL) {
       )
     }
 
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }

@@ -50,7 +50,7 @@ readQryEval <- reactive({
   df <- evalRawFile()
 
   # add controls in the data.frame
-  df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names = "ind")
+  df.controls <- read.table(paste0(DATA_INITIAL_DATA, "/controls.txt"), col.names = "ind")
   df.controls$breeder <- rep("control", length(df.controls))
   df <- rbind(df, df.controls)
   df <- df[order(df$breeder), ]
@@ -239,7 +239,7 @@ evalGraphT1vT2 <- reactive({
   dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1, ]
 
   # get the data for the initial collection
-  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  f <- paste0(DATA_TRUTH, "/", "p0.RData")
   load(f)
   dfInitColl <- data.frame(GAT1 = p0$G.A[, 1], GAT2 = p0$G.A[, 2], ind = names(p0$G.A[, 2]))
 
@@ -327,12 +327,12 @@ afsEval <- reactive({
   # get parameters
   prop <- input$propAFS / 100
   breeder <- input$afsBreeder
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f) # afs0
 
 
   # get all individuals
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM plant_material_", breeder)
   res <- (dbGetQuery(conn = db, query))
   dbDisconnect(db)
@@ -429,7 +429,7 @@ genealogy <- reactive({
 
   gene <- lapply(breeders, function(b) {
     # extract all individuals
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
+    db <- dbConnect(SQLite(), dbname = DATA_DB)
     query <- paste0("SELECT * FROM plant_material_", b)
     allInds <- (dbGetQuery(conn = db, query))
     dbDisconnect(db)
@@ -708,7 +708,7 @@ output$evalUI_t2penalty <- renderUI({
 
 scoreTable <- eventReactive(input$calcScore, {
   # get intercepts for T1 and T2
-  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  f <- paste0(DATA_TRUTH, "/", "p0.RData")
   load(f)
 
   dfPheno <- dfPhenoEval()

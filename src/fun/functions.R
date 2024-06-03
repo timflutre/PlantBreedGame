@@ -362,7 +362,7 @@ indAvailable <- function(indList, gameTime, breeder) {
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
@@ -378,7 +378,7 @@ indAvailable <- function(indList, gameTime, breeder) {
   indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")
 
   ## 3. get requested individuals information
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
+  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- paste0("plant_material_", breeder)
   stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
@@ -429,11 +429,11 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 
   # fileName
   fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
-  fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType, "_", fileName, ".txt")
+  fout <- paste0(DATA_SHARED, "/", breeder, "/", "Request-", reqType, "_", fileName, ".txt")
   n <- 0
   while (file.exists(fout)) {
     n <- n + 1
-    fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType, "_", fileName, "_", n, ".txt")
+    fout <- paste0(DATA_SHARED, "/", breeder, "/", "Request-", reqType, "_", fileName, "_", n, ".txt")
   }
 
   write.table(df, file = fout, sep = "\t", row.names = FALSE, quote = FALSE)
