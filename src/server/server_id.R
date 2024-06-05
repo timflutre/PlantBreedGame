@@ -24,6 +24,17 @@
 source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 
+## Call ui_id_loggedIn.R ----
+output$id_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  if (accessGranted()) {
+    return(source("./src/ui/ui_id_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_id_askForLogin.R", local = TRUE, encoding = "UTF-8")$value)
+})
+
 
 ## get breeder list and create select input ----
 breederList <- reactive({
@@ -50,12 +61,15 @@ accessGranted <- eventReactive(input$submitPSW,
     # but the javascript "alert" will explain that the server is full.
     # * A "tester" is the only status allowed to have an empty password.
 
+    if (is.null(input$submitPSW)) { # button not yet available
+      return(FALSE)
+    }
     if (input$submitPSW == 0) { # button not pressed
       return(FALSE)
     }
 
     # 1. get breeder status
-    status <- getBreederStatus(DATA_DB, input$breederName)
+    status <- getBreederStatus(input$breederName)
 
     # 2. check given password
     query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
@@ -145,7 +159,7 @@ breeder <- reactive({
 
 breederStatus <- reactive({
   if (accessGranted()) {
-    return(getBreederStatus(DATA_DB, input$breederName))
+    return(getBreederStatus(input$breederName))
   } else {
     return("No Identification")
   }
@@ -189,12 +203,6 @@ budget <- reactive({
 
 
 
-## Call ui_id_loggedIn.R ----
-output$userAction <- renderUI({
-  if (accessGranted()) {
-    source("src/ui/ui_id_loggedIn.R", local = TRUE, encoding = "UTF-8")$value
-  }
-})
 
 
 

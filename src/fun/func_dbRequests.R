@@ -50,13 +50,13 @@ db_list_tables <- function(dbname = DATA_DB) {
   return(allTbls)
 }
 
-getBreederList <- function(dbname) {
+getBreederList <- function(dbname = DATA_DB) {
   query <- paste0("SELECT name FROM breeders")
   breederNames <- db_get_request(query)[, 1]
   return(breederNames)
 }
 
-getBreederStatus <- function(dbname, breeder.name) {
+getBreederStatus <- function(breeder.name, dbname = DATA_DB) {
   query <- paste0(
     "SELECT status FROM breeders WHERE name = '", breeder.name, "'"
   )
@@ -110,4 +110,12 @@ getSNPsubset <- function() {
   subset.snps[["hd"]] <- rownames(read.table(snpcoord_hd_file))
   subset.snps[["ld"]] <- rownames(read.table(snpcoord_ld_file))
   return(subset.snps)
+}
+
+getBreedersIndividuals <- function(breeder) {
+  # return a data-frame of all the breeder's individuals
+
+  tbl <- paste0("plant_material_", breeder)
+  query <- paste0("SELECT * FROM ", tbl)
+  return(db_get_request(query))
 }

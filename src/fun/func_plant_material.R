@@ -76,12 +76,11 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   parent.ids <- unique(c(crosses.todo$parent1, crosses.todo$parent2))
   parent.ids <- parent.ids[!is.na(parent.ids)]
   child.ids <- crosses.todo$child
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- db_get_request(query)
 
-  stopifnot(all(parent.ids %in% res$child))
-  stopifnot(all(!child.ids %in% res$child))
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+
+  stopifnot(all(parent.ids %in% all_breeder_inds$child))
+  stopifnot(all(!child.ids %in% all_breeder_inds$child))
 
 
   ## load the haplotypes of all parents
@@ -202,6 +201,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
     (crosses.todo$availableDate),
     sep = "','", collapse = "'),('"
   )
+  tbl <- paste0("plant_material_", breeder)
   query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('", query, "')")
   db_execute_request(query)
 
@@ -278,14 +278,12 @@ createInvoicePltmat <- function(request.df) {
 
 
 indExist <- function(indList, breeder) {
-  # function to check if any individuals n indList already exist in the DB
+  # function to check if any individuals in indList already exist in the DB
   # indList (character verctor), list of individuals to check
   # breeder (charracter) breeder name
 
   # get requested individuals information
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- db_get_request(query)
+  all_breeder_inds <- getBreedersIndividuals(breeder)
 
-  return(any(indList %in% res$child))
+  return(any(indList %in% all_breeder_inds$child))
 }

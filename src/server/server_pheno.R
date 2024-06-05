@@ -23,6 +23,12 @@ source("src/fun/func_pheno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ## server for "phenotyping"
+output$pheno_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_pheno.R", local = TRUE, encoding = "UTF-8")$value)
+})
 
 ## identification message
 output$idMessagePheno <- renderUI({

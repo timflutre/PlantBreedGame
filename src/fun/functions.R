@@ -362,15 +362,9 @@ indAvailable <- function(indList, gameTime, breeder) {
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- db_get_request(query)
+  all_breeder_inds <- getBreedersIndividuals(breeder)
 
-  if (!all(indList %in% res$child)) {
-    indExist <- FALSE
-  } else {
-    indExist <- TRUE
-  }
+  indExist <- all(indList %in% all_breeder_inds$child)
 
   ## 2. check available date
   indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")

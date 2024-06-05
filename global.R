@@ -54,9 +54,3 @@ DATA_DB <- file.path(DATA_ROOT, "breeding-game.sqlite")
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
-
-stopifnot(all(c("admin", "test") %in% getBreederList(DATA_DB)))
-stopifnot(all(
-  "game master" == getBreederStatus(DATA_DB, "admin"),
-  "tester" == getBreederStatus(DATA_DB, "test")
-))

@@ -27,14 +27,22 @@ source("src/fun/func_eval.R", local = TRUE, encoding = "UTF-8")$value
 
 ## Main UI ----
 output$evalUI <- renderUI({
+  if (!gameInitialised()) {
+    return(
+      source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+    )
+  }
+
   if (breeder() != "No Identification" & breederStatus() != "player") {
-    source("src/ui/ui_eval_loggedIn.R", local = TRUE, encoding = "UTF-8")$value
-  } else {
+    return(source("src/ui/ui_eval_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+
+  return(
     shinydashboard::box(
       width = 12, title = "Content unavailable",
       div(p("Sorry, you need the 'game-master' status or the 'tester' status to access this."))
     )
-  }
+  )
 })
 
 

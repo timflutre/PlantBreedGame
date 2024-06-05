@@ -35,6 +35,40 @@ shinyServer(function(input, output, session) {
     lastDBupdate = Sys.time()
   )
 
+  gameInitialised <- function() {
+    (dir.exists(DATA_ROOT) &
+      dir.exists(DATA_TRUTH) &
+      dir.exists(DATA_SHARED) &
+      dir.exists(DATA_INITIAL_DATA) &
+      file.exists(DATA_DB))
+  }
+
+  observe({
+    if (!gameInitialised()) {
+      alert("Game is not initialised :-(")
+
+      # insertUI("#id_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#id_main_ui")
+
+      # insertUI("#pltmat_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#pltmat_main_ui")
+
+      # insertUI("#pheno_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#pheno_main_ui")
+
+      # insertUI("#geno_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#geno_main_ui")
+    }
+  })
+
   source("src/server/server_information.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_id.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_plant_material.R", local = TRUE, encoding = "UTF-8")$value

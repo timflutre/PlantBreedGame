@@ -116,10 +116,8 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
   ## 2. check that the requested individuals already exist
   flush.console()
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- db_get_request(query)
-  stopifnot(all(inds.todo$ind %in% res$child))
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
 
 
   ## 3. load the haplotypes and convert to genotypes
@@ -273,7 +271,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- db_get_request(query)
+      res <- db_execute_request(query)
     }
   }
 

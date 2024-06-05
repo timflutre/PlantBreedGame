@@ -72,10 +72,8 @@ phenotype4Eval <- function(df, nRep = 50) {
   flush.console()
   for (breeder in unique(df$breeder)) {
     if (breeder != "control") {
-      tbl <- paste0("plant_material_", breeder)
-      query <- paste0("SELECT child FROM ", tbl)
-      res <- db_get_request(query)
-      stopifnot(all(df$ind[df$breeder == breeder] %in% res$child))
+      all_breeder_inds <- getBreedersIndividuals(breeder)
+      stopifnot(all(df$ind[df$breeder == breeder] %in% all_breeder_inds$child))
     }
   }
 

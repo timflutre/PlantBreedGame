@@ -81,45 +81,106 @@ shinyUI(
 
     # dashboard body
     dashboardBody(
+      useShinyjs(),
       ## javascript function
       tags$head(
         tags$script(src = "busyServer.js"),
+        tags$script("Shiny.addCustomMessageHandler(
+                                  'resetValue',function(variableName){
+                                  Shiny.onInputChange(variableName, null);});"),
         tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
         tags$link(href = "https://fonts.googleapis.com/css?family=Nunito", rel = "stylesheet")
       ),
       tabItems(
+        # ---- How to play ? ----
         source("src/ui/ui_information.R",
           local = TRUE,
           encoding = "UTF-8"
         )$value,
-        source("src/ui/ui_id_logPage.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
-        source("src/ui/ui_plant_material.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
-        source("src/ui/ui_pheno.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
-        source("src/ui/ui_geno.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
-        source("src/ui/ui_eval.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
+
+        # ---- Identification / Home ----
+        tabItem(
+          tabName = "id",
+          fluidRow(
+            uiOutput("id_main_UI"),
+            if (debugDisplay) {
+              shinydashboard::box(
+                width = 12, title = "Debug",
+                verbatimTextOutput("IdDebug")
+              )
+            }
+          )
+        ),
+
+        # ---- Plant Matrial menu ----
+        tabItem(
+          tabName = "plant_mat",
+          fluidRow(
+            uiOutput("pltmat_main_UI"),
+            if (debugDisplay) {
+              shinydashboard::box(
+                width = 12, title = "Debug",
+                verbatimTextOutput("plmatDebug")
+              )
+            }
+          )
+        ),
+
+        # ---- Phenotyping ----
+        tabItem(
+          tabName = "pheno",
+          fluidRow(
+            uiOutput("pheno_main_UI"),
+            if (debugDisplay) {
+              shinydashboard::box(
+                width = 12, title = "Debug",
+                verbatimTextOutput("PhenoDebug")
+              )
+            }
+          )
+        ),
+
+        # ---- Genotyping ----
+        tabItem(
+          tabName = "geno",
+          fluidRow(
+            uiOutput("geno_main_UI"),
+            if (debugDisplay) {
+              shinydashboard::box(
+                width = 12, title = "Debug",
+                verbatimTextOutput("GenoDebug")
+              )
+            }
+          )
+        ),
+        # source("src/ui/ui_geno.R",
+        #   local = TRUE,
+        #   encoding = "UTF-8"
+        # )$value,
+
+        # ---- Evaluation ----
+        tabItem(
+          tabName = "eval",
+          fluidRow(
+            uiOutput("evalUI")
+          )
+        ),
+
+        # ---- Theory ----
         source("src/ui/ui_theory.R",
           local = TRUE,
           encoding = "UTF-8"
         )$value,
-        source("src/ui/ui_admin.R",
-          local = TRUE,
-          encoding = "UTF-8"
-        )$value,
+
+        # ---- Admin ----
+        tabItem(
+          tabName = "admin",
+          fluidRow(
+            uiOutput("adminUI")
+          )
+        ),
+
+        # ---- About ----
         source("src/ui/ui_about.R",
           local = TRUE,
           encoding = "UTF-8"

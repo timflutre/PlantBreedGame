@@ -81,10 +81,8 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
   ## 2. check that the requested individuals already exist
   flush.console()
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- db_get_request(query)
-  stopifnot(all(inds.todo$ind %in% res$child))
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
 
 
 
@@ -98,7 +96,6 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
   for (i in 1:length(unique(inds.todo$ind))) {
     ind.id <- unique(inds.todo$ind)[i]
-    # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
     if (!is.null(progressGeno)) {
       progressGeno$set(
@@ -199,7 +196,7 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- db_get_request(query)
+      res <- db_execute_request(query)
     }
   }
 
