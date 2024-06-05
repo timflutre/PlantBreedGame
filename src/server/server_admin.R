@@ -67,9 +67,13 @@ observeEvent(input$addNewBreeder, {
       detail = t
     )
   }
+
+  values$lastDBupdate <- Sys.time()
 })
 
 # delete breeder:
+breeder_list_server("admin_breeder_list_for_deletion", "delBreederName", breederList)
+
 observeEvent(input$deleteBreeder, {
   if (input$delBreederName != "") {
     progressDelBreeder <- shiny::Progress$new(session, min = 0, max = 1)
@@ -96,6 +100,7 @@ observeEvent(input$deleteBreeder, {
       )
     )
   }
+  values$lastDBupdate <- Sys.time()
 })
 
 
@@ -516,7 +521,7 @@ output$admin_boxPlotGameProgress <- renderPlotly({
 
 
 
-
+breeder_list_server("admin_breeder_list_gameProgress", "admin_T1T2Breeder", breederList)
 output$admin_T1T2GameProgress <- renderPlotly({
   dta <- admin_gameProgressDta()
 

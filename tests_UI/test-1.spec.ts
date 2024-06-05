@@ -19,6 +19,12 @@ test.describe("PlantBreedGame_UI", () => {
     await login(page, "admin", psw);
   });
 
+  test("add and delete breeder", async ({ page }) => {
+    await login(page, "admin", psw);
+    await addBreeder(page, "toto", psw, "tester");
+    await deleteBreeder(page, "toto");
+  });
+
   test("addBreeder", async ({ page }) => {
     await login(page, "admin", psw);
     await addBreeder(page, "test_UI", psw, "tester");
@@ -191,11 +197,7 @@ async function deleteBreeder(page: Page, breederName: string) {
     page.getByRole("link", { name: "Manage breeders" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Manage breeders" }).click();
-  await page
-    .locator(
-      "div:nth-child(2) > table > tbody > tr > td > .form-group > div > .selectize-control > .selectize-input",
-    )
-    .click();
+  await page.locator("#delBreederName-selectized").click();
   await page.getByRole("option", { name: breederName, exact: true }).click();
   await page
     .getByRole("button", {

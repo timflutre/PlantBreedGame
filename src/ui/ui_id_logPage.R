@@ -43,7 +43,7 @@ tabItem(
         br(),
         div(
           style = "display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;", id = "id_1",
-          uiOutput("selectBreeder")
+          breeder_list_ui("login_breeder_list")
         ),
         div(
           style = "display: inline-block; vertical-align:top;   min-width: 5%; min-height:: 100%;", id = "id_2",

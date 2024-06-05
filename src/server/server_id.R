@@ -27,11 +27,10 @@ source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 ## get breeder list and create select input ----
 breederList <- reactive({
+  values$lastDBupdate # add a dependency to the db updates
   getBreederList(dbname = DATA_DB)
 })
-output$selectBreeder <- renderUI({
-  selectInput("breederName", "Breeder", choices = as.list(breederList()))
-})
+breeder_list_server("login_breeder_list", "breederName", breederList)
 
 
 

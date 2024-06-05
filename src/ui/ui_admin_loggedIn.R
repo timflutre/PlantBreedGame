@@ -190,10 +190,7 @@ list(
           style = "width: 100%; border-collapse: collapse;",
           tags$td(
             style = "width: 50%; vertical-align: bottom; padding: 10px;",
-            selectInput("delBreederName", "Breeder's name",
-              choices = c("", breederList()),
-              selected = "", width = "100%"
-            )
+            breeder_list_ui("admin_breeder_list_for_deletion"),
           ),
           tags$td(
             style = "width: 50%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
@@ -332,10 +329,7 @@ list(
         ),
         div(
           class = "col-sm-12 col-md-12 col-lg-6",
-          selectInput("admin_T1T2Breeder",
-            label = "Breeder",
-            choices = getBreederList(dbname = DATA_DB) # TODO breeders list can change, this is probably not good, need to check.
-          ),
+          breeder_list_ui("admin_breeder_list_gameProgress"),
           plotlyOutput("admin_T1T2GameProgress") %>% withSpinner()
         )
       ) # end fluidRow

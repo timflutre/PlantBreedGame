@@ -31,6 +31,10 @@ shinyServer(function(input, output, session) {
     getGameTime(setup)
   })
 
+  values <- reactiveValues(
+    lastDBupdate = Sys.time()
+  )
+
   source("src/server/server_information.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_id.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_plant_material.R", local = TRUE, encoding = "UTF-8")$value
