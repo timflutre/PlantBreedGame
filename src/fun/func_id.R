@@ -19,28 +19,6 @@
 
 
 ## functions for the "id part"
-
-getBreederList <- function(dbname) {
-  db <- dbConnect(SQLite(), dbname = dbname)
-  tbl <- "breeders"
-  query <- paste0("SELECT name FROM ", tbl)
-  breederNames <- dbGetQuery(conn = db, query)[, 1]
-  dbDisconnect(db)
-  return(breederNames)
-}
-
-getBreederStatus <- function(dbname, breeder.name) {
-  db <- dbConnect(SQLite(), dbname = dbname)
-  tbl <- "breeders"
-  query <- paste0(
-    "SELECT status FROM ", tbl,
-    " WHERE name = '", breeder.name, "'"
-  )
-  breeder.status <- dbGetQuery(conn = db, query)[, 1]
-  dbDisconnect(db)
-  return(breeder.status)
-}
-
 getDataFileList <- function(type, breeder) {
   # function to get the list of data file of the breeder
   # type (char) type of data (pheno or geno)

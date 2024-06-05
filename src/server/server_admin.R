@@ -108,10 +108,8 @@ observeEvent(input$deleteBreeder, {
 ## Sessions managment ----
 sessionsList <- eventReactive((input$addSession | input$deleteSession), ignoreNULL = FALSE, {
   # get session table from the data base:
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM sessions")
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
   return(res)
 })
 
@@ -138,10 +136,8 @@ observeEvent(input$addSession, {
   }
 
   # check overlaps
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- "SELECT * FROM sessions"
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   if (nrow(res) > 0) {
     overlapse <- apply(res, 1, function(session) {
@@ -171,13 +167,11 @@ observeEvent(input$addSession, {
 
 
     # complete "sessions" table
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
     query <- paste0(
       "INSERT INTO sessions", " VALUES",
       " ('", numId, "','", startDate, "','", endDate, "','", input$yearTime, "')"
     )
-    res <- dbExecute(conn = db, query)
-    dbDisconnect(db)
+    db_execute_request(query)
     showNotification("Session added.", type = c("message"))
   }
 })
@@ -186,13 +180,11 @@ observeEvent(input$addSession, {
 observeEvent(input$deleteSession, {
   if (input$delSession != "") {
     # delete entry in sessions' table
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
     query <- paste0(
       "DELETE FROM sessions",
       " WHERE num = ", input$delSession
     )
-    res <- dbExecute(conn = db, query)
-    dbDisconnect(db)
+    db_execute_request(query)
     showNotification("Session removed", type = "message")
   }
 })
@@ -220,13 +212,11 @@ observeEvent(input$admin_button_seedYearEfect, {
   # update data base
   checkDB <- 1
   if (checkOK) {
-    db <- DBI::dbConnect(RSQLite::SQLite(), dbname = DATA_DB)
     query <- paste0(
       "UPDATE constants SET value = ",
       newSeed, " WHERE item=='seed.year.effect'"
     )
-    checkDB <- DBI::dbExecute(db, query)
-    DBI::dbDisconnect(db)
+    db_execute_request(query)
   }
 
   # notification messages
@@ -350,10 +340,8 @@ observeEvent(input$updateMaxDiskUsage, {
   # so that if the admin change the value, it will affect all connected users
   maxDiskUsage <- input$admin_maxDiskUsage
 
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("UPDATE constants SET value = '", maxDiskUsage, "' WHERE item = 'max.disk.usage'")
-  dbExecute(conn = db, query)
-  dbDisconnect(db)
+  db_execute_request(query)
 })
 
 currentMaxDiskUsage <- reactive({

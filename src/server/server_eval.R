@@ -332,10 +332,8 @@ afsEval <- reactive({
 
 
   # get all individuals
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM plant_material_", breeder)
-  res <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # select sample
   sampleSize <- round(nrow(res) * prop)
@@ -429,10 +427,8 @@ genealogy <- reactive({
 
   gene <- lapply(breeders, function(b) {
     # extract all individuals
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
     query <- paste0("SELECT * FROM plant_material_", b)
-    allInds <- (dbGetQuery(conn = db, query))
-    dbDisconnect(db)
+    allInds <- db_get_request(query)
 
     # get submitted individuals
     inds <- readQryEval()$ind[readQryEval()$breeder == b]

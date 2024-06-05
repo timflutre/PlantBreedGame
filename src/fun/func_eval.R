@@ -55,7 +55,6 @@ phenotype4Eval <- function(df, nRep = 50) {
 
   ## Initialisations
   data.types <- "evaluation"
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
 
 
 
@@ -74,9 +73,8 @@ phenotype4Eval <- function(df, nRep = 50) {
   for (breeder in unique(df$breeder)) {
     if (breeder != "control") {
       tbl <- paste0("plant_material_", breeder)
-      stopifnot(tbl %in% dbListTables(db))
       query <- paste0("SELECT child FROM ", tbl)
-      res <- dbGetQuery(conn = db, query)
+      res <- db_get_request(query)
       stopifnot(all(df$ind[df$breeder == breeder] %in% res$child))
     }
   }
@@ -172,8 +170,7 @@ phenotype4Eval <- function(df, nRep = 50) {
     "', '", "evaluation", "', '",
     "1", "')"
   )
-  res <- dbExecute(db, query)
-  dbDisconnect(db)
+  db_execute_request(query)
 
   # output
   return(phenosField.df)
@@ -225,10 +222,8 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
 #' @export
 getBreederHistory <- function(breeder, setup) {
   # get data
-  db <- RSQLite::dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder, "\'")
-  res <- RSQLite::dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # manage variable class
   res$task <- as.factor(res$task)

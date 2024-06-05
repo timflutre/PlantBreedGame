@@ -32,10 +32,8 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   constants <- getBreedingGameConstants()
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   data.types <- countRequestedBreedTypes(inds.todo)
 
@@ -119,9 +117,8 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   ## 2. check that the requested individuals already exist
   flush.console()
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
+  res <- db_get_request(query)
   stopifnot(all(inds.todo$ind %in% res$child))
 
 
@@ -276,10 +273,9 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      res <- db_get_request(query)
     }
   }
-  dbDisconnect(db)
 
 
   # output
@@ -341,18 +337,13 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
 
   ## get the historic of pheno requests
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
-  historyPheno <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  historyPheno <- db_get_request(query)
 
   ## get game constants
   constants <- getBreedingGameConstants()

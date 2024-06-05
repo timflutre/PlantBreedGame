@@ -58,11 +58,8 @@ accessGranted <- eventReactive(input$submitPSW,
     status <- getBreederStatus(DATA_DB, input$breederName)
 
     # 2. check given password
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
-    tbl <- "breeders"
-    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
-    hashPsw <- dbGetQuery(conn = db, query)[, 1]
-    dbDisconnect(db)
+    query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
+    hashPsw <- db_get_request(query)
 
     if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
       goodPswd <- TRUE
@@ -108,9 +105,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
     # 4. check db (in case of "corrupted" data-base)
     if (goodPswd) {
-      db <- dbConnect(SQLite(), dbname = DATA_DB)
-      allTbls <- dbListTables(conn = db)
-      dbDisconnect(db)
+      allTbls <- db_list_tables()
       tbl_pltMat <- paste0("plant_material_", input$breederName)
       if (!tbl_pltMat %in% allTbls) {
         alert(paste(
@@ -161,11 +156,8 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
-    tbl <- "log"
-    query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
-    res <- dbGetQuery(conn = db, query)
-    dbDisconnect(db)
+    query <- paste0("SELECT * FROM log WHERE breeder='", breeder(), "'")
+    res <- db_get_request(query)
 
 
     constants <- getBreedingGameConstants()
@@ -369,13 +361,9 @@ output$UIdwnlRequest <- renderUI({
 ## My plant-material ----
 myPltMat <- reactive({
   if (input$leftMenu == "id") {
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
     tbl <- paste0("plant_material_", breeder())
-    stopifnot(tbl %in% dbListTables(db))
     query <- paste0("SELECT * FROM ", tbl)
-    res <- dbGetQuery(conn = db, query)
-    # disconnect db
-    dbDisconnect(db)
+    res <- db_get_request(query)
     res$avail_from <- strftime(res$avail_from, format = "%Y-%m-%d")
     res
   }
@@ -399,20 +387,13 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  tbl <- "breeders"
-  query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
-  hashPsw <- dbGetQuery(conn = db, query)[, 1]
-  dbDisconnect(db)
+  query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
+  hashPsw <- db_get_request(query)[, 1]
   if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
 
-    db <- dbConnect(SQLite(), dbname = DATA_DB)
-    tbl <- "breeders"
-    query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
-    dbExecute(conn = db, query)
-    dbDisconnect(db)
-
+    query <- paste0("UPDATE breeders SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
+    db_execute_request(query)
     return(TRUE)
   } else {
     return(FALSE)
@@ -539,8 +520,6 @@ observeEvent(input$id_submitInds, priority = 10, {
     breeder = breeder(),
     ind = inds
   )
-
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   query <- paste0(
     "INSERT INTO log(breeder,request_date,task,quantity)",
     " VALUES ('", breeder(),
@@ -548,8 +527,7 @@ observeEvent(input$id_submitInds, priority = 10, {
     "', 'register', '",
     nrow(submitDta), "')"
   )
-  res <- dbGetQuery(db, query)
-  dbDisconnect(db)
+  res <- db_execute_request(query)
   b <- budget()
 
   write.table(submitDta,

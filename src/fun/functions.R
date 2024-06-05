@@ -362,12 +362,10 @@ indAvailable <- function(indList, gameTime, breeder) {
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
+
   if (!all(indList %in% res$child)) {
     indExist <- FALSE
   } else {
@@ -378,12 +376,9 @@ indAvailable <- function(indList, gameTime, breeder) {
   indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")
 
   ## 3. get requested individuals information
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # compare dates
   funApply <- function(x) {
@@ -437,93 +432,4 @@ writeRequest <- function(df, breeder, fileName = NULL) {
   }
 
   write.table(df, file = fout, sep = "\t", row.names = FALSE, quote = FALSE)
-}
-
-
-
-##' Get the breeding game setup
-##'
-##' Retrieve the paths to the directories used for the breeding game.
-##' @param root.dir path to the root directory
-##' @return list
-##' @author Timothee Flutre
-getBreedingGameSetup <- function(root.dir) {
-  stopifnot(
-    is.character(root.dir),
-    length(root.dir) == 1,
-    dir.exists(root.dir)
-  )
-
-  out <- list(root.dir = root.dir)
-
-  out$truth.dir <- paste0(root.dir, "/truth")
-  out$shared.dir <- paste0(root.dir, "/shared")
-  out$init.dir <- paste0(out$shared.dir, "/initial_data")
-  tmp <- basename(Sys.glob(paste0(out$shared.dir, "/*")))
-  for (x in tmp) {
-    if (x != "initial_data") {
-      out$breeders <- c(out$breeders, x)
-    }
-  }
-
-  out$breeder.dirs <- c()
-  for (breeder in out$breeders) {
-    out$breeder.dirs[[breeder]] <-
-      paste0(out$shared.dir, "/", breeder)
-  }
-
-  out$dbname <- paste0(root.dir, "/breeding-game.sqlite")
-
-  return(out)
-}
-
-
-##' Get the breeding game constants
-##'
-##' Retrieve the constants used to parametrized the breeding game from the SQLite database.
-##' @return list
-##' @author Timothee Flutre
-getBreedingGameConstants <- function() {
-  stopifnot(file.exists(DATA_DB))
-
-  ## retrieve the content of the table
-  db <- DBI::dbConnect(RSQLite::SQLite(), dbname = DATA_DB)
-  query <- "SELECT * FROM constants"
-  out.df <- DBI::dbGetQuery(db, query)
-  DBI::dbDisconnect(db)
-
-  ## reformat
-  # suppress "NAs introduced by coercion" warning
-  withCallingHandlers(
-    {
-      out.list <- lapply(out.df$value, function(x) {
-        ifelse(!is.na(as.numeric(x)),
-          as.numeric(x),
-          x
-        )
-      })
-    },
-    warning = function(warn) {
-      warning_to_catch <- "NAs introduced by coercion"
-      if (identical(warn$message, warning_to_catch)) {
-        tryInvokeRestart("muffleWarning")
-      }
-    }
-  )
-  names(out.list) <- out.df$item
-
-  return(out.list)
-}
-
-getSNPsubset <- function() {
-  snpcoord_hd_file <- file.path(DATA_INITIAL_DATA, "snp_coords_hd.txt.gz")
-  snpcoord_ld_file <- file.path(DATA_INITIAL_DATA, "snp_coords_ld.txt.gz")
-
-  if (!file.exists(snpcoord_hd_file) || !file.exists(snpcoord_ld_file)) {
-    return(NULL)
-  }
-  subset.snps <- list()
-  subset.snps[["hd"]] <- rownames(read.table(snpcoord_hd_file))
-  subset.snps[["ld"]] <- rownames(read.table(snpcoord_ld_file))
-  return(subset.snps)
 }

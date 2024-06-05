@@ -31,15 +31,11 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
 
 
   ## Initialisation
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   stopifnot(!is.null(crosses.todo))
   cross.types <- countRequestedBreedTypes(crosses.todo)
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
 
   year <- data.table::year(gameTime)
 
@@ -81,9 +77,9 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   parent.ids <- parent.ids[!is.na(parent.ids)]
   child.ids <- crosses.todo$child
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
+  res <- db_get_request(query)
+
   stopifnot(all(parent.ids %in% res$child))
   stopifnot(all(!child.ids %in% res$child))
 
@@ -184,7 +180,6 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
 
   ## insert the requested crosses into their table
   flush.console()
-  nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
 
   constants <- getBreedingGameConstants()
   getAvailDate <- function(type) {
@@ -208,7 +203,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
     sep = "','", collapse = "'),('"
   )
   query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('", query, "')")
-  res <- dbGetQuery(conn = db, query)
+  db_execute_request(query)
 
   ## write table
   write.table(
@@ -228,10 +223,9 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
         "', '", type,
         "', '", cross.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      db_execute_request(query)
     }
   }
-  dbDisconnect(db)
 
 
 
@@ -284,17 +278,14 @@ createInvoicePltmat <- function(request.df) {
 
 
 indExist <- function(indList, breeder) {
-  # function to check if an individuals already exist
+  # function to check if any individuals n indList already exist in the DB
   # indList (character verctor), list of individuals to check
   # breeder (charracter) breeder name
 
   # get requested individuals information
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   return(any(indList %in% res$child))
 }

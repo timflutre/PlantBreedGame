@@ -82,6 +82,9 @@ test.describe("PlantBreedGame_UI", () => {
     await runEvaluation(page, registered_inds);
   });
 
+  // TODO: add a test for "Admin / GameProgress" the core function is partially checked 
+  // with the evaluation check (when we build the game report) but a 
+
   test("delete breeder", async ({ page }) => {
     await login(page, "admin", psw);
     await deleteBreeder(page, "test_UI");
@@ -189,6 +192,8 @@ async function addBreeder(
   await page.getByRole("button", { name: "Add this new breeder" }).click();
 
   await expect(page.getByText("Adding breeder Done!")).toBeVisible();
+
+  // TODO: check we cannot add already existing breeders (low priority)
 }
 
 async function deleteBreeder(page: Page, breederName: string) {

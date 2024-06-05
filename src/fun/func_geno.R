@@ -32,14 +32,10 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   data.types <- countRequestedBreedTypes(inds.todo)
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
 
   ## calculate output file names:
   fout <- list(ld = NULL, hd = NULL, "single-snps" = NULL)
@@ -86,9 +82,8 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
   ## 2. check that the requested individuals already exist
   flush.console()
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
+  res <- db_get_request(query)
   stopifnot(all(inds.todo$ind %in% res$child))
 
 
@@ -204,10 +199,9 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      res <- db_get_request(query)
     }
   }
-  dbDisconnect(db)
 
 
 

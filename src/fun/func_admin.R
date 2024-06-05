@@ -38,7 +38,6 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
   #### initialisation:
   initIndsHaplo <- list.files(DATA_TRUTH)
   initIndsHaplo <- initIndsHaplo[grep("Coll", initIndsHaplo)]
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
 
 
   #### test if new breeder already exist
@@ -49,8 +48,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     )
   }
 
-  tbl <- paste0("plant_material_", breederName)
-  if (tbl %in% dbListTables(db)) {
+  if (breederName %in% getBreederList()) {
     stop("breeder already exist")
   }
 
@@ -70,7 +68,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     "INSERT INTO ", tbl, " VALUES",
     " ('", breederName, "','", status, "','", hashed.psw, "')"
   )
-  res <- dbExecute(conn = db, query)
+  db_execute_request(query)
 
 
 
@@ -90,7 +88,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     ", child TEXT PRIMARY KEY",
     ", avail_from TEXT)"
   )
-  res <- dbExecute(conn = db, query)
+  db_execute_request(query)
 
 
 
@@ -117,8 +115,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     ),
     "')"
   )
-  res <- dbExecute(conn = db, query)
-  dbDisconnect(db)
+  db_execute_request(query)
 
 
   #### create folders of the new breeder:
@@ -194,22 +191,11 @@ deleteBreeder <- function(breederName) {
   ## clean dataBase
   # delete plant_material_oldBreeder
   tbl_pltMat <- paste0("plant_material_", breederName)
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  allTbls <- dbListTables(conn = db)
-  if (tbl_pltMat %in% allTbls) {
-    # raise error if table do not exist
-    res <- dbExecute(conn = db, paste0("DROP TABLE ", tbl_pltMat))
-  }
-  # delete entry in breeders' table
-  res <- dbExecute(
-    conn = db,
-    paste0(
-      "DELETE FROM breeders ",
-      "WHERE name = '", breederName, "'"
-    )
-  )
-  # delete entry in log table
-  dbDisconnect(db)
+  db_execute_request(paste0("DROP TABLE ", tbl_pltMat))
+  db_execute_request(paste0(
+    "DELETE FROM breeders ",
+    "WHERE name = '", breederName, "'"
+  ))
 
   # delete entry in Evaluation file:
   evalDta <- read.table("data/shared/Evaluation.txt",
@@ -315,19 +301,15 @@ calcGameProgress <- function(progBar = NULL) {
   ### GET BV of the breeders's individuals:
   progBar$set(value = progBar$getValue() + 1, detail = "BV calculation for new individuals...")
   # get the list of the breeders (without "admin" and "test")
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
-  breeders <- as.character(dbGetQuery(conn = db, query)$name)
-  dbDisconnect(db)
+  breeders <- getBreederList()
+  breeders <- breeders[breeders != "admin" & breeders != "test"]
 
 
   ### Remove deleted breeders from breedValuesDta
   breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders, "Initial collection"), ]
 
   ### Get all database tables (to avoid query to missing tables).
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
-  allTbls <- dbListTables(conn = db)
-  dbDisconnect(db)
+  allTbls <- db_list_tables()
 
   ### calculation
   # get list of all individuals with generation and BV
@@ -344,10 +326,8 @@ calcGameProgress <- function(progBar = NULL) {
         # get list of individuals
         tbl_pltMat <- paste0("plant_material_", breeder)
         if (tbl_pltMat %in% allTbls) {
-          db <- dbConnect(SQLite(), dbname = DATA_DB)
           query <- paste0("SELECT * FROM ", tbl_pltMat)
-          allInds <- (dbGetQuery(conn = db, query))
-          dbDisconnect(db)
+          allInds <- db_get_request(query)
         } else {
           return()
         }

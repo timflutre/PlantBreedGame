@@ -26,6 +26,7 @@ source("src/fun/func_time.R", local = TRUE, encoding = "UTF-8")
 source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/module_constants.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/module_breederList.R", local = TRUE, encoding = "UTF-8")
+source("./src/fun/func_dbRequests.R", local = TRUE, encoding = "UTF-8")
 
 ## -------------------------------------------------------------------
 ## parameters
