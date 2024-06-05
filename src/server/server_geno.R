@@ -187,7 +187,7 @@ output$breederBoxGeno <- renderValueBox({
   valueBox(
     value = breeder(),
     subtitle = paste("Status:", breederStatus()),
-    icon = icon("user-o"),
+    icon = icon("user"),
     color = "yellow"
   )
 })
