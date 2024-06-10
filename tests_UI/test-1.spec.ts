@@ -130,6 +130,11 @@ test.describe("PlantBreedGame_UI", () => {
 
     await runEvaluation(page, registered_inds);
   });
+
+  // TODO add tests related to  game initialisation
+
+  // TODO add tests where several requests are made with the same file
+  // this is a edge case that could happend
 });
 
 async function login(page: Page, username: string, password: string) {

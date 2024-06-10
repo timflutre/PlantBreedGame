@@ -47,20 +47,7 @@ The package can also be installed after cloning the git repository:
 git clone git@github.com:timflutre/PlantBreedGame.git
 ```
 
-2. Then, enter into the `PlantBreedGame` directory; inside, run the script `plantbreedgame_setup.Rmd` using [Rmarkdown](http://rmarkdown.rstudio.com/) to simulate the initial data set, this can be done with the command:
-
-```sh
-make data
-```
-
-> Or with R:
->  ```sh
->  R -e "rmarkdown::render('plantbreedgame_setup.Rmd')"
->  ```
-
- It also creates all the necessary files and database for the game to function, and initiate the game with two players, "test" (no password) and "admin" (password `1234`).
-
-3. Finally, open a R session, and execute the following commands:
+2. Finally, open a R session, and execute the following commands:
 
 ```
 library(shiny)
@@ -95,16 +82,10 @@ Then, create a new directory for the application (let's call it `breeding-game` 
 mkdir /srv/shiny-server/breeding-game
 ```
 
-and copy inside the content of our Shiny application you just downloaded:
+and copy inside the content of the Shiny application you just downloaded:
 
 ```
 cp -r ~/PlantBreedGame-master/* /srv/shiny-server/breeding-game
-```
-
-Generate the game data with:
-
-```sh
-R -e "rmarkdown::render('/srv/shiny-server/breeding-game/plantbreedgame_setup.Rmd')"
 ```
 
 By default, the Shiny server runs as a unix user named `shiny`.
@@ -214,8 +195,7 @@ or
 git clone --depth=1 https://github.com/timflutre/PlantBreedGame.git
 ```
 
-2. modify the file `PlantBreedGame/plantbreedgame_setup.Rmd`
-3. move in the app code folder and build a new image:
+2. move in the app code folder and build a new image:
 
 ```sh
 cd PlantBreedGame
@@ -224,7 +204,22 @@ docker build -t customplantbreedgame ./
 
 You can then run this image by using the same commands as above replacing `juliendiot/plantbreedgame` by `customplantbreedgame`
 
+
 # Usage
+
+## Game Initialisation
+
+To start playing, the game need some specific data (eg. the genotypes and haplotypes of the initial population, a data-base...). This initialisation can be done through the game.
+
+The first time you run the application, most of the game menus will show a message asking you to initialise the game. To do so you need to go to the `Admin` menue, and in `Game Initialisation` tab. There you will find a button that will start the game initialisation. Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game.
+
+The game initialisation will automatically create an `admin` breeder with the default password `1234`.
+
+If the game have already been initialise, it is also possible to re-initialise it to start a new "fresh game". However in such case **all the data of the game will be lost**.
+
+> NOTE: Currently the game do not let you choose the game initialisation parameters, in order to change them, you need to manually modify the file `plantbreedgame_setup.Rmd` befor proceding to the initialisation. In a near future, you will be able to set the intialisation parameters from the game.
+
+## How to play
 
 Once the application is installed and working, _please_ read the game rules (tab `How to play?`) and start by downloading the initial data set as well as example files showing how requests should be formatted (all files listed at the bottom of the tab `How to play?`).
 

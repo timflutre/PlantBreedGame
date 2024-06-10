@@ -365,8 +365,8 @@ output$InfoCurrentMaxDiskUsage <- renderText({
 ## Game progress ----
 
 admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
-  progressPheno <- shiny::Progress$new(session, min = 0, max = 4)
-  calcGameProgress(progressPheno)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 4)
+  calcGameProgress(progress_bar)
 })
 
 
@@ -545,4 +545,102 @@ output$admin_T1T2GameProgress <- renderPlotly({
         title = "Trait 2"
       )
     )
+})
+
+
+
+output$initialisation_button <- renderUI({
+  if (!gameInitialised()) {
+    return(
+      actionButton("initialiseGame", "Initialise Game")
+    )
+  }
+
+  return(
+    div(
+      div(
+        h3("Important!"),
+        p(
+          "The game is already initialised. Reinitialising the game",
+          strong("will erase all the current game data"),
+          ". (All the breeders will be deleted along wiht their data.)"
+        ),
+        p("To reinitialise the game, write", code("plantbreedgame"), "in the", code("Confirmation"), "field below", "and click on the", code("Re-Initialise Game"), "button below.")
+      ),
+      div(
+        style = "display: table-row",
+        div(
+          style = "display: table-cell; padding-right: 5px;",
+          textInput("initialisation_security_text", label = "Confirmation:", value = "This action will erase all the data.")
+        ),
+        div(
+          style = "display: table-cell; padding-left: 5px; vertical-align: bottom",
+          actionButton("initialiseGame", "Re-Initialise Game")
+        )
+      )
+    )
+  )
+})
+
+observe({
+  if (identical(input$initialisation_security_text, "plantbreedgame")) {
+    shinyjs::enable("initialiseGame")
+    return(TRUE)
+  }
+  shinyjs::disable("initialiseGame")
+})
+
+
+observeEvent(input$initialiseGame, {
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 1)
+
+  progress_bar$set(
+    value = 1 / 4,
+    message = "Game Initialisation:",
+    detail = "Initialisation..."
+  )
+  if (dir.exists(DATA_ROOT)) {
+    # WARN / TODO --- IMPORTANT ! ---
+    # the initialisation script do not allow its execution if "the data" folder
+    # already exists.
+    # Therefore here we will delete this folder, however, in general,
+    # IT IS QUITE RISKY to delete folder with code. For example:
+    # - if `DATA_ROOT` have been wrongly defined
+    # - if a malicious agent placed files/folder inside DATA_ROOT
+    # - if files are currently beeing created
+    #
+    # A better approach could be instead to only create a new `DATA_ROOT` folder
+    # and save in the data-base (that should only be erase, not deleted) the current
+    # `DATA_ROOT` to use.
+    # The server administrator would then responsible to safely remove the unecessary data.
+    #
+    # Here, to mitigate the risks the application will remove the files it
+    # has created (based on their names). This is not perfect as if one of this
+    # file have been is symlinked to another, the unintended file could be deleted.
+    #
+    # WARN / TODO --- IMPORTANT ! ---
+    progress_bar$set(
+      value = 1 / 4,
+      message = "Game Initialisation:",
+      detail = "Delete existing data..."
+    )
+    clean_data_root()
+  }
+  progress_bar$set(
+    value = 2 / 4,
+    message = "Game Initialisation:",
+    detail = "game setup..."
+  )
+  rmarkdown::render("./plantbreedgame_setup.Rmd",
+    output_file = "./plantbreedgame_setup.html",
+    encoding = "UTF-8"
+  )
+  progress_bar$set(
+    value = 1,
+    message = "Game Initialisation:",
+    detail = "Done"
+  )
+  alert("Game initialisation finished. This page will automatically refresh.")
+  gameInitialised()
+  shinyjs::refresh()
 })
