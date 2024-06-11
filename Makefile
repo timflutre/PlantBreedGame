@@ -1,2 +1,2 @@
 data:
-	R -e "rmarkdown::render('plantbreedgame_setup.Rmd')"
+	Rscript -e "rmarkdown::render('./src/plantbreedgame_setup.Rmd', output_file = 'plantbreedgame_setup.html', output_dir = '.')"

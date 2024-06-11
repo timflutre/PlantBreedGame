@@ -80,7 +80,7 @@ stopifnot(compareVersion(
 suppressPackageStartupMessages(library(scrm)) # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges)) # from bioconductor
 
-source("src/fun/functions.R")
+source("fun/functions.R")
 ```
 
 Set the seed:
@@ -91,7 +91,7 @@ set.seed(1993) # better to change it from one game session to the next
 
 Set up directories:
 ```{r setup_dir}
-root.dir <- file.path(getwd(), "data")
+root.dir <- file.path("../data")
 root.dir <- path.expand(root.dir)
 if (dir.exists(root.dir)) {
   stop(paste0("`data` directory (", root.dir, ") already exists. Please remove this directory before running this script."))
@@ -1688,7 +1688,7 @@ dat <- data.frame(
   breeder = character(),
   ind = character()
 )
-f <- "data/shared/Evaluation.txt"
+f <- file.path(shared.dir, "Evaluation.txt")
 suppressWarnings(write.table(
   x = dat, file = f,
   quote = FALSE, sep = "\t",
