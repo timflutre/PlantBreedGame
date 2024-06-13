@@ -31,6 +31,44 @@ shinyServer(function(input, output, session) {
     getGameTime(setup)
   })
 
+  values <- reactiveValues(
+    lastDBupdate = Sys.time()
+  )
+
+  gameInitialised <- function() {
+    (dir.exists(DATA_ROOT) &
+      dir.exists(DATA_TRUTH) &
+      dir.exists(DATA_SHARED) &
+      dir.exists(DATA_INITIAL_DATA) &
+      file.exists(DATA_DB))
+  }
+
+  observe({
+    if (!gameInitialised()) {
+      alert("Game is not initialised :-(")
+
+      # insertUI("#id_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#id_main_ui")
+
+      # insertUI("#pltmat_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#pltmat_main_ui")
+
+      # insertUI("#pheno_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#pheno_main_ui")
+
+      # insertUI("#geno_main_ui", where = "beforeBegin", {
+      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+      # })
+      # removeUI("#geno_main_ui")
+    }
+  })
+
   source("src/server/server_information.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_id.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_plant_material.R", local = TRUE, encoding = "UTF-8")$value
@@ -40,4 +78,5 @@ shinyServer(function(input, output, session) {
   source("src/server/server_theory.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_admin.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_about.R", local = TRUE, encoding = "UTF-8")$value
+  source("./src/server/server_constants.R", local = TRUE, encoding = "UTF-8")$value
 })

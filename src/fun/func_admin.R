@@ -36,9 +36,8 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
   }
 
   #### initialisation:
-  initIndsHaplo <- list.files(setup$truth.dir)
+  initIndsHaplo <- list.files(DATA_TRUTH)
   initIndsHaplo <- initIndsHaplo[grep("Coll", initIndsHaplo)]
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
 
 
   #### test if new breeder already exist
@@ -49,8 +48,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     )
   }
 
-  tbl <- paste0("plant_material_", breederName)
-  if (tbl %in% dbListTables(db)) {
+  if (breederName %in% getBreederList()) {
     stop("breeder already exist")
   }
 
@@ -70,7 +68,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     "INSERT INTO ", tbl, " VALUES",
     " ('", breederName, "','", status, "','", hashed.psw, "')"
   )
-  res <- dbExecute(conn = db, query)
+  db_execute_request(query)
 
 
 
@@ -90,7 +88,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     ", child TEXT PRIMARY KEY",
     ", avail_from TEXT)"
   )
-  res <- dbExecute(conn = db, query)
+  db_execute_request(query)
 
 
 
@@ -110,15 +108,14 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
       rep(NA, length(coll.ids)),
       coll.ids,
       rep(
-        paste0(constants$first.year, "-01-01 00:00:00"),
+        paste0(getBreedingGameConstants()$first.year, "-01-01 00:00:00"),
         length(coll.ids)
       ),
       sep = "','", collapse = "'),('"
     ),
     "')"
   )
-  res <- dbExecute(conn = db, query)
-  dbDisconnect(db)
+  db_execute_request(query)
 
 
   #### create folders of the new breeder:
@@ -128,8 +125,8 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
       detail = "create truth and shared folders"
     )
   }
-  newTruthDir <- paste0(setup$truth.dir, "/", breederName)
-  newSharedDir <- paste0(setup$shared.dir, "/", breederName)
+  newTruthDir <- paste0(DATA_TRUTH, "/", breederName)
+  newSharedDir <- paste0(DATA_SHARED, "/", breederName)
   dir.create(newTruthDir)
   dir.create(newSharedDir)
 
@@ -165,7 +162,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
             detail = paste0("Create haplo copy:", fileName)
           )
         }
-        fromFile <- paste0(setup$truth.dir, "/", fileName)
+        fromFile <- paste0(DATA_TRUTH, "/", fileName)
         toFile <- paste0(newTruthDir, "/", fileName)
         file.copy(fromFile, toFile) # copy
         return()
@@ -184,8 +181,8 @@ deleteBreeder <- function(breederName) {
   }
 
   ## delete truth and shared folders
-  sharedDir <- paste0(setup$shared.dir, "/", breederName)
-  truthDir <- paste0(setup$truth.dir, "/", breederName)
+  sharedDir <- paste0(DATA_SHARED, "/", breederName)
+  truthDir <- paste0(DATA_TRUTH, "/", breederName)
 
   unlink(sharedDir, recursive = TRUE)
   unlink(truthDir, recursive = TRUE)
@@ -194,22 +191,11 @@ deleteBreeder <- function(breederName) {
   ## clean dataBase
   # delete plant_material_oldBreeder
   tbl_pltMat <- paste0("plant_material_", breederName)
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  allTbls <- dbListTables(conn = db)
-  if (tbl_pltMat %in% allTbls) {
-    # raise error if table do not exist
-    res <- dbExecute(conn = db, paste0("DROP TABLE ", tbl_pltMat))
-  }
-  # delete entry in breeders' table
-  res <- dbExecute(
-    conn = db,
-    paste0(
-      "DELETE FROM breeders ",
-      "WHERE name = '", breederName, "'"
-    )
-  )
-  # delete entry in log table
-  dbDisconnect(db)
+  db_execute_request(paste0("DROP TABLE ", tbl_pltMat))
+  db_execute_request(paste0(
+    "DELETE FROM breeders ",
+    "WHERE name = '", breederName, "'"
+  ))
 
   # delete entry in Evaluation file:
   evalDta <- read.table("data/shared/Evaluation.txt",
@@ -234,7 +220,7 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL) {
   }
 
   # load SNP effects
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
   BV <- t(sapply(inds, function(ind.id) {
     if (!is.null(progress)) {
@@ -245,7 +231,7 @@ calcBV <- function(breeder, inds, savedBV = NULL, progress = NULL) {
       i <<- i + 1
     }
     indName <- paste0(c(breeder, ind.id), collapse = "_")
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }
@@ -282,7 +268,7 @@ calcGameProgress <- function(progBar = NULL) {
 
 
   # load breeding values data:
-  f <- paste0(setup$truth.dir, "/allBV.RData")
+  f <- paste0(DATA_TRUTH, "/allBV.RData")
   if (file.exists(f)) {
     progBar$set(detail = "Load BV...")
     load(f) # load `breedValuesDta` variable
@@ -290,10 +276,10 @@ calcGameProgress <- function(progBar = NULL) {
     ### GET BV of the initial individuals:
     progBar$set(detail = "BV calculation for initial collection...")
     # load initial collection genotypes
-    f <- paste0(setup$truth.dir, "/coll.RData")
+    f <- paste0(DATA_TRUTH, "/coll.RData")
     load(f) # load `coll` variable
     # load SNP effects
-    f <- paste0(setup$truth.dir, "/p0.RData")
+    f <- paste0(DATA_TRUTH, "/p0.RData")
     load(f) # load `p0` variable
 
     # initialisation of the breeding values data with the initial collection
@@ -315,19 +301,15 @@ calcGameProgress <- function(progBar = NULL) {
   ### GET BV of the breeders's individuals:
   progBar$set(value = progBar$getValue() + 1, detail = "BV calculation for new individuals...")
   # get the list of the breeders (without "admin" and "test")
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  query <- "SELECT name FROM breeders WHERE name!='admin' AND name!='test'"
-  breeders <- as.character(dbGetQuery(conn = db, query)$name)
-  dbDisconnect(db)
+  breeders <- getBreederList()
+  breeders <- breeders[breeders != "admin" & breeders != "test"]
 
 
   ### Remove deleted breeders from breedValuesDta
   breedValuesDta <- breedValuesDta[breedValuesDta$breeder %in% c(breeders, "Initial collection"), ]
 
   ### Get all database tables (to avoid query to missing tables).
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  allTbls <- dbListTables(conn = db)
-  dbDisconnect(db)
+  allTbls <- db_list_tables()
 
   ### calculation
   # get list of all individuals with generation and BV
@@ -344,10 +326,8 @@ calcGameProgress <- function(progBar = NULL) {
         # get list of individuals
         tbl_pltMat <- paste0("plant_material_", breeder)
         if (tbl_pltMat %in% allTbls) {
-          db <- dbConnect(SQLite(), dbname = setup$dbname)
           query <- paste0("SELECT * FROM ", tbl_pltMat)
-          allInds <- (dbGetQuery(conn = db, query))
-          dbDisconnect(db)
+          allInds <- db_get_request(query)
         } else {
           return()
         }
@@ -383,7 +363,7 @@ calcGameProgress <- function(progBar = NULL) {
   # save breeding values:
   progBar$set(value = progBar$getValue() + 1, detail = "Save breeding values...")
   save(breedValuesDta,
-    file = paste0(setup$truth.dir, "/allBV.RData")
+    file = paste0(DATA_TRUTH, "/allBV.RData")
   )
 
 

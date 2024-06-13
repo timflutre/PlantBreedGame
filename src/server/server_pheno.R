@@ -23,6 +23,12 @@ source("src/fun/func_pheno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ## server for "phenotyping"
+output$pheno_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_pheno.R", local = TRUE, encoding = "UTF-8")$value)
+})
 
 ## identification message
 output$idMessagePheno <- renderUI({
@@ -45,8 +51,10 @@ readQryPheno <- reactive({
 
   # read input file
   max.nb.plots <- ifelse(breederStatus() != "player",
-    Inf, constants$nb.plots
+    Inf, getBreedingGameConstants()$nb.plots
   )
+
+  subset.snps <- getSNPsubset()
   test <- try(df <- readCheckBreedDataFile(input$file.pheno$datapath,
     subset.snps = subset.snps,
     max.nb.plots = max.nb.plots
@@ -176,7 +184,7 @@ output$breederBoxPheno <- renderValueBox({
   valueBox(
     value = breeder(),
     subtitle = paste("Status:", breederStatus()),
-    icon = icon("user-o"),
+    icon = icon("user"),
     color = "yellow"
   )
 })

@@ -29,13 +29,11 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   # inds.todo (data frame) output of "readCheckBreedDataFile"
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
-
+  constants <- getBreedingGameConstants()
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   data.types <- countRequestedBreedTypes(inds.todo)
 
@@ -45,28 +43,28 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   for (dty in c("pheno-field", "pheno-patho")) {
     if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)) { # fileName must not contain a date
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_", dty, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
           strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
         )
       }
     } else {
       fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
           strftime(gameTime, format = "%Y-%m-%d"),
           "_", n, ".txt.gz"
         )
@@ -93,20 +91,15 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
   ## 0. load required data
   flush.console()
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f)
-  subset.snps <- list()
-  f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
-  subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
-  subset.snps[["ld"]] <- rownames(read.table(f))
+  subset.snps <- getSNPsubset()
 
   ## 1. Calculate year effect
   # get the seed from database:
-  query <- paste0("SELECT value FROM constants WHERE item=='seed.year.effect'")
-  yearEffectSeed <- as.numeric(DBI::dbGetQuery(db, query))
+  yearEffectSeed <- constants$seed.year.effect
 
   # set seed
   set.seed(yearEffectSeed + year) # seed depend of the year
@@ -123,11 +116,8 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
   ## 2. check that the requested individuals already exist
   flush.console()
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  stopifnot(all(inds.todo$ind %in% res$child))
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
 
 
   ## 3. load the haplotypes and convert to genotypes
@@ -151,7 +141,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
 
     # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }
@@ -281,10 +271,9 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      res <- db_execute_request(query)
     }
   }
-  dbDisconnect(db)
 
 
   # output
@@ -307,6 +296,12 @@ createInvoicePheno <- function(request.df) {
   # aggregate by task
   invoice.pheno <- aggregate(details ~ task, data = request.df, sum)
   names(invoice.pheno) <- c("Task", "Quantity")
+
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "pheno-field" = constants$cost.pheno.field,
+    "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field
+  )
 
   # get prices
   invoice.pheno$Unitary_Price <- as.vector(as.numeric(prices[invoice.pheno$Task]))
@@ -340,18 +335,16 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
 
   ## get the historic of pheno requests
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
   query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
-  historyPheno <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  historyPheno <- db_get_request(query)
+
+  ## get game constants
+  constants <- getBreedingGameConstants()
 
   ## Calculate the start date of the current pheno session:
   limitDate <- strptime(

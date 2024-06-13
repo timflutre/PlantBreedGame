@@ -93,9 +93,10 @@ Set up directories:
 ```{r setup_dir}
 root.dir <- file.path(getwd(), "data")
 root.dir <- path.expand(root.dir)
-if (!dir.exists(root.dir)) {
-  dir.create(root.dir)
+if (dir.exists(root.dir)) {
+  stop(paste0("`data` directory (", root.dir, ") already exists. Please remove this directory before running this script."))
 }
+dir.create(root.dir)
 truth.dir <- file.path(root.dir, "truth")
 if (!dir.exists(truth.dir)) {
   dir.create(truth.dir)

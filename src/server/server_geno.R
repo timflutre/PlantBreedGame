@@ -24,6 +24,12 @@ source("src/fun/func_geno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ###### server for "genotyping" ######
+output$geno_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_geno.R", local = TRUE, encoding = "UTF-8")$value)
+})
 
 ## identification message
 output$idMessageGeno <- renderUI({
@@ -47,8 +53,9 @@ readQryGeno <- reactive({
 
   # read input file
   max.nb.inds <- ifelse(breederStatus() != "player",
-    Inf, constants$max.nb.inds
+    Inf, getBreedingGameConstants()$max.nb.inds
   )
+  subset.snps <- getSNPsubset()
   test <- try(df <- readCheckBreedDataFile(input$file.geno$datapath,
     subset.snps = subset.snps,
     max.nb.inds = max.nb.inds
@@ -168,7 +175,7 @@ output$genoRequestResultUI <- renderUI({
     # display message
     p(
       "Great ! Your results will be available in ",
-      constants$duration.geno.hd, " months."
+      getBreedingGameConstants()$duration.geno.hd, " months."
     )
   } else if (!is.null(geno_data()) && geno_data() == "error") {
     p("Something went wrong. Please check your file.")
@@ -186,7 +193,7 @@ output$breederBoxGeno <- renderValueBox({
   valueBox(
     value = breeder(),
     subtitle = paste("Status:", breederStatus()),
-    icon = icon("user-o"),
+    icon = icon("user"),
     color = "yellow"
   )
 })

@@ -32,14 +32,10 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
 
   ## Initialisations
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   data.types <- countRequestedBreedTypes(inds.todo)
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
 
   ## calculate output file names:
   fout <- list(ld = NULL, hd = NULL, "single-snps" = NULL)
@@ -47,28 +43,28 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
     if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)) { # fileName must not contain a date
 
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_genos-", dty, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_genos-", dty, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_",
           strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
         )
       }
     } else {
       fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
       fout[dty] <- paste0(
-        setup$shared.dir, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
+        DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
         strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
       )
       n <- 0
       while (file.exists(fout[[dty]])) {
         n <- n + 1
         fout[dty] <- paste0(
-          setup$shared.dir, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
+          DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
           strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
         )
       }
@@ -78,23 +74,15 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
   ## 0. load required data
   flush.console()
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  subset.snps <- list()
-  f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
-  subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
-  subset.snps[["ld"]] <- rownames(read.table(f))
-
+  subset.snps <- getSNPsubset()
 
 
   ## 2. check that the requested individuals already exist
   flush.console()
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  stopifnot(all(inds.todo$ind %in% res$child))
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
 
 
 
@@ -103,12 +91,11 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
   X <- matrix(
     nrow = length(unique(inds.todo$ind)),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
 
   for (i in 1:length(unique(inds.todo$ind))) {
     ind.id <- unique(inds.todo$ind)[i]
-    # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
 
     if (!is.null(progressGeno)) {
       progressGeno$set(
@@ -117,7 +104,7 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
       )
     }
 
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }
@@ -209,10 +196,9 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
         "', '", type, "', '",
         data.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      res <- db_execute_request(query)
     }
   }
-  dbDisconnect(db)
 
 
 
@@ -237,6 +223,12 @@ createInvoiceGeno <- function(request.df) {
 
 
   # get prices
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
+    "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
+    "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field
+  )
   invoice.geno$Unitary_Price <- as.vector(as.numeric(prices[invoice.geno$Task]))
   invoice.geno$Total <- invoice.geno$Unitary_Price * invoice.geno$Quantity
 

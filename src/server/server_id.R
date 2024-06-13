@@ -24,14 +24,24 @@
 source("src/fun/func_id.R", local = TRUE, encoding = "UTF-8")$value
 
 
+## Call ui_id_loggedIn.R ----
+output$id_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  if (accessGranted()) {
+    return(source("./src/ui/ui_id_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_id_askForLogin.R", local = TRUE, encoding = "UTF-8")$value)
+})
+
 
 ## get breeder list and create select input ----
 breederList <- reactive({
-  getBreederList(dbname = setup$dbname)
+  values$lastDBupdate # add a dependency to the db updates
+  getBreederList(dbname = DATA_DB)
 })
-output$selectBreeder <- renderUI({
-  selectInput("breederName", "Breeder", choices = as.list(breederList()))
-})
+breeder_list_server("login_breeder_list", "breederName", breederList)
 
 
 
@@ -51,19 +61,19 @@ accessGranted <- eventReactive(input$submitPSW,
     # but the javascript "alert" will explain that the server is full.
     # * A "tester" is the only status allowed to have an empty password.
 
+    if (is.null(input$submitPSW)) { # button not yet available
+      return(FALSE)
+    }
     if (input$submitPSW == 0) { # button not pressed
       return(FALSE)
     }
 
     # 1. get breeder status
-    status <- getBreederStatus(setup$dbname, input$breederName)
+    status <- getBreederStatus(input$breederName)
 
     # 2. check given password
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
-    tbl <- "breeders"
-    query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
-    hashPsw <- dbGetQuery(conn = db, query)[, 1]
-    dbDisconnect(db)
+    query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
+    hashPsw <- db_get_request(query)
 
     if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
       goodPswd <- TRUE
@@ -77,12 +87,8 @@ accessGranted <- eventReactive(input$submitPSW,
     if (goodPswd && status != "game master") {
       withProgress(
         {
-          # get maxDiskUsage
-          db <- dbConnect(SQLite(), dbname = setup$dbname)
-          tbl <- "breeders"
-          query <- paste0("SELECT value FROM constants WHERE item = 'max.disk.usage'")
-          maxDiskUsage <- as.numeric(dbGetQuery(conn = db, query)[, 1])
-          dbDisconnect(db)
+          maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
+
 
           allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
           currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
@@ -113,9 +119,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
     # 4. check db (in case of "corrupted" data-base)
     if (goodPswd) {
-      db <- dbConnect(SQLite(), dbname = setup$dbname)
-      allTbls <- dbListTables(conn = db)
-      dbDisconnect(db)
+      allTbls <- db_list_tables()
       tbl_pltMat <- paste0("plant_material_", input$breederName)
       if (!tbl_pltMat %in% allTbls) {
         alert(paste(
@@ -155,7 +159,7 @@ breeder <- reactive({
 
 breederStatus <- reactive({
   if (accessGranted()) {
-    return(getBreederStatus(setup$dbname, input$breederName))
+    return(getBreederStatus(input$breederName))
   } else {
     return("No Identification")
   }
@@ -166,11 +170,22 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
-    tbl <- "log"
-    query <- paste0("SELECT * FROM ", tbl, " WHERE breeder='", breeder(), "'")
-    res <- dbGetQuery(conn = db, query)
-    dbDisconnect(db)
+    query <- paste0("SELECT * FROM log WHERE breeder='", breeder(), "'")
+    res <- db_get_request(query)
+
+
+    constants <- getBreedingGameConstants()
+    prices <- list(
+      "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
+      "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
+      "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
+      "pheno-field" = constants$cost.pheno.field,
+      "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
+      "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
+      "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
+      "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
+      "register" = constants$cost.register * constants$cost.pheno.field
+    )
 
     if (nrow(res) > 0) {
       funApply <- function(x) {
@@ -188,12 +203,6 @@ budget <- reactive({
 
 
 
-## Call ui_id_loggedIn.R ----
-output$userAction <- renderUI({
-  if (accessGranted()) {
-    source("src/ui/ui_id_loggedIn.R", local = TRUE, encoding = "UTF-8")$value
-  }
-})
 
 
 
@@ -360,13 +369,9 @@ output$UIdwnlRequest <- renderUI({
 ## My plant-material ----
 myPltMat <- reactive({
   if (input$leftMenu == "id") {
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
     tbl <- paste0("plant_material_", breeder())
-    stopifnot(tbl %in% dbListTables(db))
     query <- paste0("SELECT * FROM ", tbl)
-    res <- dbGetQuery(conn = db, query)
-    # disconnect db
-    dbDisconnect(db)
+    res <- db_get_request(query)
     res$avail_from <- strftime(res$avail_from, format = "%Y-%m-%d")
     res
   }
@@ -390,20 +395,13 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  tbl <- "breeders"
-  query <- paste0("SELECT h_psw FROM ", tbl, " WHERE name = '", input$breederName, "'")
-  hashPsw <- dbGetQuery(conn = db, query)[, 1]
-  dbDisconnect(db)
+  query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
+  hashPsw <- db_get_request(query)[, 1]
   if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
 
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
-    tbl <- "breeders"
-    query <- paste0("UPDATE ", tbl, " SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
-    dbExecute(conn = db, query)
-    dbDisconnect(db)
-
+    query <- paste0("UPDATE breeders SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
+    db_execute_request(query)
     return(TRUE)
   } else {
     return(FALSE)
@@ -425,7 +423,7 @@ output$breederBoxID <- renderValueBox({
   valueBox(
     value = breeder(),
     subtitle = paste("Status:", breederStatus()),
-    icon = icon("user-o"),
+    icon = icon("user"),
     color = "yellow"
   )
 })
@@ -514,6 +512,7 @@ observeEvent(input$id_submitInds, priority = 10, {
     }
   }
 
+  constants <- getBreedingGameConstants()
   if (length(inds) > constants$maxEvalInds - nSubmitted) {
     alert(paste("Sorry, you have already submitted", nSubmitted, "individuals, on a total of", constants$maxEvalInds, ". You can only submit", constants$maxEvalInds - nSubmitted, "more individuals."))
     return(subIndsDta)
@@ -529,8 +528,6 @@ observeEvent(input$id_submitInds, priority = 10, {
     breeder = breeder(),
     ind = inds
   )
-
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
   query <- paste0(
     "INSERT INTO log(breeder,request_date,task,quantity)",
     " VALUES ('", breeder(),
@@ -538,8 +535,7 @@ observeEvent(input$id_submitInds, priority = 10, {
     "', 'register', '",
     nrow(submitDta), "')"
   )
-  res <- dbGetQuery(db, query)
-  dbDisconnect(db)
+  res <- db_execute_request(query)
   b <- budget()
 
   write.table(submitDta,

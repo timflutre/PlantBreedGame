@@ -55,21 +55,16 @@ phenotype4Eval <- function(df, nRep = 50) {
 
   ## Initialisations
   data.types <- "evaluation"
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
 
 
 
   ## 0. load required data
   flush.console()
-  f <- paste0(setup$truth.dir, "/p0.RData")
+  f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f)
-  subset.snps <- list()
-  f <- paste0(setup$init.dir, "/snp_coords_hd.txt.gz")
-  subset.snps[["hd"]] <- rownames(read.table(f))
-  f <- paste0(setup$init.dir, "/snp_coords_ld.txt.gz")
-  subset.snps[["ld"]] <- rownames(read.table(f))
+  subset.snps <- getSNPsubset()
 
 
 
@@ -77,11 +72,8 @@ phenotype4Eval <- function(df, nRep = 50) {
   flush.console()
   for (breeder in unique(df$breeder)) {
     if (breeder != "control") {
-      tbl <- paste0("plant_material_", breeder)
-      stopifnot(tbl %in% dbListTables(db))
-      query <- paste0("SELECT child FROM ", tbl)
-      res <- dbGetQuery(conn = db, query)
-      stopifnot(all(df$ind[df$breeder == breeder] %in% res$child))
+      all_breeder_inds <- getBreedersIndividuals(breeder)
+      stopifnot(all(df$ind[df$breeder == breeder] %in% all_breeder_inds$child))
     }
   }
 
@@ -102,9 +94,9 @@ phenotype4Eval <- function(df, nRep = 50) {
       # message(paste0(i, "/", length(inds.todo), " ", ind.id))
 
       if (breeder == "control") {
-        f <- paste0(setup$truth.dir, "/", ind.id, "_haplos.RData")
+        f <- paste0(DATA_TRUTH, "/", ind.id, "_haplos.RData")
       } else {
-        f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+        f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
       }
 
 
@@ -176,8 +168,7 @@ phenotype4Eval <- function(df, nRep = 50) {
     "', '", "evaluation", "', '",
     "1", "')"
   )
-  res <- dbExecute(db, query)
-  dbDisconnect(db)
+  db_execute_request(query)
 
   # output
   return(phenosField.df)
@@ -190,7 +181,7 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
   # pop (character verctor) names of individuals
   X <- matrix(
     nrow = length(pop),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
   rownames(X) <- pop
 
@@ -206,7 +197,7 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
     }
 
     # message(paste0(i, "/", length(pop), " ", ind.id))
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     load(f)
 
     ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
@@ -229,10 +220,8 @@ getAFs <- function(pop, breeder, progressAFS = NULL) {
 #' @export
 getBreederHistory <- function(breeder, setup) {
   # get data
-  db <- RSQLite::dbConnect(SQLite(), dbname = setup$dbname)
   query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder, "\'")
-  res <- RSQLite::dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # manage variable class
   res$task <- as.factor(res$task)
@@ -251,19 +240,18 @@ getBreederHistory <- function(breeder, setup) {
 #' @param query \code{data.frame} containing individuals list
 #' (\code{ind} column is required)
 #' @param setup game's setup.
-#' @param constants game's constants
 #' @param progressBar (optional) a \code{shiny} progress bar
 #'
 #' @return
 #' @export
 #'
 #' @examples
-calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar = NULL) {
+calcAdditiveRelation <- function(breeder, query, setup, progressBar = NULL) {
   query <- query[query$breeder == breeder, ]
   ## 1. load the haplotypes and convert to genotypes
   X <- matrix(
     nrow = length(unique(query$ind)),
-    ncol = constants$nb.snps
+    ncol = getBreedingGameConstants()$nb.snps
   )
 
   for (i in 1:length(unique(query$ind))) {
@@ -276,7 +264,7 @@ calcAdditiveRelation <- function(breeder, query, setup, constants, progressBar =
       )
     }
 
-    f <- paste0(setup$truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }

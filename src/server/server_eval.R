@@ -27,14 +27,22 @@ source("src/fun/func_eval.R", local = TRUE, encoding = "UTF-8")$value
 
 ## Main UI ----
 output$evalUI <- renderUI({
+  if (!gameInitialised()) {
+    return(
+      source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
+    )
+  }
+
   if (breeder() != "No Identification" & breederStatus() != "player") {
-    source("src/ui/ui_eval_loggedIn.R", local = TRUE, encoding = "UTF-8")$value
-  } else {
+    return(source("src/ui/ui_eval_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+
+  return(
     shinydashboard::box(
       width = 12, title = "Content unavailable",
       div(p("Sorry, you need the 'game-master' status or the 'tester' status to access this."))
     )
-  }
+  )
 })
 
 
@@ -50,7 +58,7 @@ readQryEval <- reactive({
   df <- evalRawFile()
 
   # add controls in the data.frame
-  df.controls <- read.table(paste0(setup$init.dir, "/controls.txt"), col.names = "ind")
+  df.controls <- read.table(paste0(DATA_INITIAL_DATA, "/controls.txt"), col.names = "ind")
   df.controls$breeder <- rep("control", length(df.controls))
   df <- rbind(df, df.controls)
   df <- df[order(df$breeder), ]
@@ -89,7 +97,7 @@ evalGraphT1 <- reactive({
     unique(as.character(dfPheno$ind[dfPheno$breeder != "control"]))
   )
 
-  target <- median(dfPheno$trait1[dfPheno$breeder == "control"]) * constants$register.min.trait1
+  target <- median(dfPheno$trait1[dfPheno$breeder == "control"]) * getBreedingGameConstants()$register.min.trait1
 
 
   ## Plot
@@ -141,7 +149,7 @@ evalGraphT2 <- reactive({
     unique(as.character(dfPheno$ind[dfPheno$breeder != "control"]))
   )
 
-  target <- constants$register.min.trait2
+  target <- getBreedingGameConstants()$register.min.trait2
 
 
   ## Plot
@@ -239,7 +247,7 @@ evalGraphT1vT2 <- reactive({
   dfPheno <- dfPheno[(as.numeric(dfPheno$plot) %% input$nRep) == 1, ]
 
   # get the data for the initial collection
-  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  f <- paste0(DATA_TRUTH, "/", "p0.RData")
   load(f)
   dfInitColl <- data.frame(GAT1 = p0$G.A[, 1], GAT2 = p0$G.A[, 2], ind = names(p0$G.A[, 2]))
 
@@ -327,15 +335,13 @@ afsEval <- reactive({
   # get parameters
   prop <- input$propAFS / 100
   breeder <- input$afsBreeder
-  f <- paste0(setup$truth.dir, "/afs0.RData")
+  f <- paste0(DATA_TRUTH, "/afs0.RData")
   load(f) # afs0
 
 
   # get all individuals
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
   query <- paste0("SELECT * FROM plant_material_", breeder)
-  res <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # select sample
   sampleSize <- round(nrow(res) * prop)
@@ -429,10 +435,8 @@ genealogy <- reactive({
 
   gene <- lapply(breeders, function(b) {
     # extract all individuals
-    db <- dbConnect(SQLite(), dbname = setup$dbname)
     query <- paste0("SELECT * FROM plant_material_", b)
-    allInds <- (dbGetQuery(conn = db, query))
-    dbDisconnect(db)
+    allInds <- db_get_request(query)
 
     # get submitted individuals
     inds <- readQryEval()$ind[readQryEval()$breeder == b]
@@ -479,7 +483,6 @@ output$addRelTable <- renderTable(
       breeder = input$addRelBreeder,
       query = readQryEval(),
       setup = setup,
-      constants = constants
     )
   },
   rownames = TRUE,
@@ -548,6 +551,8 @@ breederHistoryTimeLines <- reactive({
     colorHaplo <- "#47db25"
     colorPhenoF <- "#ed8b3b"
     colorPhenoP <- "#ed9e5c"
+
+    constants <- getBreedingGameConstants()
 
     dta$duration[dta$task == "geno-hd"] <- constants$duration.geno.hd
     dta$color[dta$task == "geno-hd"] <- colorGenoHD
@@ -707,13 +712,12 @@ output$evalUI_t2penalty <- renderUI({
 
 scoreTable <- eventReactive(input$calcScore, {
   # get intercepts for T1 and T2
-  f <- paste0(setup$truth.dir, "/", "p0.RData")
+  f <- paste0(DATA_TRUTH, "/", "p0.RData")
   load(f)
 
   dfPheno <- dfPhenoEval()
   dfPheno$GAT1 <- dfPheno$GAT1 + p0$mu["trait1"]
   dfPheno$GAT2 <- dfPheno$GAT2 + p0$mu["trait2"]
-  # browser()
 
   scoreTable <- dfPheno %>%
     group_by(ind, breeder) %>%
@@ -728,7 +732,7 @@ scoreTable <- eventReactive(input$calcScore, {
   } else if (input$scoreType == "T1_minimalT2") {
     scoreTable$score <- scoreTable$GAT1
 
-    targetQuality <- constants$register.min.trait2
+    targetQuality <- getBreedingGameConstants()$register.min.trait2
     lowQuality <- scoreTable$GAT2 < targetQuality
     scoreTable$score[lowQuality] <- scoreTable$score[lowQuality] * (1 - input$T2_penalty / 100)
   }
@@ -777,7 +781,4 @@ output$scoreTable <- renderTable(
 
 ## debug ----
 output$evalDebug <- renderPrint({
-  print("---------")
-  print(constants$register.min.trait2)
-  print(scoreTable())
 })

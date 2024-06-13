@@ -31,43 +31,39 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
 
 
   ## Initialisation
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  query <- paste0("SELECT name FROM breeders")
-  breederList <- (dbGetQuery(conn = db, query))
-  dbDisconnect(db)
-  stopifnot(breeder %in% breederList$name)
+  breederList <- getBreederList()
+  stopifnot(breeder %in% breederList)
 
   stopifnot(!is.null(crosses.todo))
   cross.types <- countRequestedBreedTypes(crosses.todo)
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
 
   year <- data.table::year(gameTime)
 
   ## file name
   if (is.null(fileName)) {
     fout <- paste0(
-      setup$shared.dir, "/", breeder, "/", "IndList_",
+      DATA_SHARED, "/", breeder, "/", "IndList_",
       strftime(gameTime, format = "%Y-%m-%d"), ".txt"
     )
     n <- 0
     while (file.exists(fout)) {
       n <- n + 1
       fout <- paste0(
-        setup$shared.dir, "/", breeder, "/", "IndList_",
+        DATA_SHARED, "/", breeder, "/", "IndList_",
         strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt"
       )
     }
   } else {
     fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
     fout <- paste0(
-      setup$shared.dir, "/", breeder, "/", "IndList_", fileName, "_",
+      DATA_SHARED, "/", breeder, "/", "IndList_", fileName, "_",
       strftime(gameTime, format = "%Y-%m-%d"), ".txt"
     )
     n <- 0
     while (file.exists(fout)) {
       n <- n + 1
       fout <- paste0(
-        setup$shared.dir, "/", breeder, "/", "IndList_", fileName, "_",
+        DATA_SHARED, "/", breeder, "/", "IndList_", fileName, "_",
         strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt"
       )
     }
@@ -80,12 +76,11 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   parent.ids <- unique(c(crosses.todo$parent1, crosses.todo$parent2))
   parent.ids <- parent.ids[!is.na(parent.ids)]
   child.ids <- crosses.todo$child
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  stopifnot(all(parent.ids %in% res$child))
-  stopifnot(all(!child.ids %in% res$child))
+
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+
+  stopifnot(all(parent.ids %in% all_breeder_inds$child))
+  stopifnot(all(!child.ids %in% all_breeder_inds$child))
 
 
   ## load the haplotypes of all parents
@@ -94,7 +89,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   # initialise parent haplotypes
   parents <- list(haplos = list())
   f <- list.files(
-    path = setup$truth.dir,
+    path = DATA_TRUTH,
     pattern = "*_haplos.RData",
     full.names = T
   )[1]
@@ -129,7 +124,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
     if ("ind" %in% ls()) {
       rm(ind)
     }
-    f <- paste0(setup$truth.dir, "/", breeder, "/", parent.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", parent.id, "_haplos.RData")
     if (!file.exists(f)) {
       stop(paste0(f, " doesn't exist"))
     }
@@ -176,7 +171,7 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
     }
     # message(new.ind.id)
     ind <- list(haplos = getHaplosInd(new.inds$haplos, new.ind.id))
-    f <- paste0(setup$truth.dir, "/", breeder, "/", new.ind.id, "_haplos.RData")
+    f <- paste0(DATA_TRUTH, "/", breeder, "/", new.ind.id, "_haplos.RData")
     save(ind, file = f)
   }
 
@@ -184,8 +179,8 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
 
   ## insert the requested crosses into their table
   flush.console()
-  nrow(res <- dbGetQuery(db, paste0("SELECT * FROM ", tbl)))
 
+  constants <- getBreedingGameConstants()
   getAvailDate <- function(type) {
     if (type == "allofecundation") {
       availableDate <- seq(from = gameTime, by = paste0(constants$duration.allof, " month"), length.out = 2)[2]
@@ -206,8 +201,9 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
     (crosses.todo$availableDate),
     sep = "','", collapse = "'),('"
   )
+  tbl <- paste0("plant_material_", breeder)
   query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('", query, "')")
-  res <- dbGetQuery(conn = db, query)
+  db_execute_request(query)
 
   ## write table
   write.table(
@@ -227,10 +223,9 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
         "', '", type,
         "', '", cross.types[type], "')"
       )
-      res <- dbGetQuery(db, query)
+      db_execute_request(query)
     }
   }
-  dbDisconnect(db)
 
 
 
@@ -253,6 +248,13 @@ createInvoicePltmat <- function(request.df) {
 
 
   # get prices
+  constants <- getBreedingGameConstants()
+  prices <- list(
+    "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
+    "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
+    "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field
+  )
+
   invoice.pltmat$Unitary_Price <- as.vector(as.numeric(prices[invoice.pltmat$Task]))
   invoice.pltmat$Total <- invoice.pltmat$Unitary_Price * invoice.pltmat$Quantity
 
@@ -276,17 +278,12 @@ createInvoicePltmat <- function(request.df) {
 
 
 indExist <- function(indList, breeder) {
-  # function to check if an individuals already exist
+  # function to check if any individuals in indList already exist in the DB
   # indList (character verctor), list of individuals to check
   # breeder (charracter) breeder name
 
   # get requested individuals information
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  all_breeder_inds <- getBreedersIndividuals(breeder)
 
-  return(any(indList %in% res$child))
+  return(any(indList %in% all_breeder_inds$child))
 }

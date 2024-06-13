@@ -102,6 +102,8 @@
             initialise-data = pkgs.writeShellApplication {
               name = "initialise-data";
               text = ''
+                rm -rf data
+                rm  data.zip || echo "no data.zip file"
                 make data
               '';
             };

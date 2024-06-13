@@ -46,13 +46,6 @@ getCodeVersion <- function(url.repo = "") {
   return(code.version)
 }
 
-checkDbFile <- function(db.file) {
-  stopifnot(
-    file.exists(db.file),
-    file.access(db.file, mode = 2) == 0
-  )
-}
-
 ##' Simul breeding game
 ##'
 ##' Make the structure of the data.frame that will be given to the players when they request phenotyping during the game.
@@ -369,28 +362,17 @@ indAvailable <- function(indList, gameTime, breeder) {
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
-  tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
-  query <- paste0("SELECT child FROM ", tbl)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
-  if (!all(indList %in% res$child)) {
-    indExist <- FALSE
-  } else {
-    indExist <- TRUE
-  }
+  all_breeder_inds <- getBreedersIndividuals(breeder)
+
+  indExist <- all(indList %in% all_breeder_inds$child)
 
   ## 2. check available date
   indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")
 
   ## 3. get requested individuals information
-  db <- dbConnect(SQLite(), dbname = setup$dbname)
   tbl <- paste0("plant_material_", breeder)
-  stopifnot(tbl %in% dbListTables(db))
   query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
-  res <- dbGetQuery(conn = db, query)
-  dbDisconnect(db)
+  res <- db_get_request(query)
 
   # compare dates
   funApply <- function(x) {
@@ -436,11 +418,11 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 
   # fileName
   fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
-  fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType, "_", fileName, ".txt")
+  fout <- paste0(DATA_SHARED, "/", breeder, "/", "Request-", reqType, "_", fileName, ".txt")
   n <- 0
   while (file.exists(fout)) {
     n <- n + 1
-    fout <- paste0(setup$shared.dir, "/", breeder, "/", "Request-", reqType, "_", fileName, "_", n, ".txt")
+    fout <- paste0(DATA_SHARED, "/", breeder, "/", "Request-", reqType, "_", fileName, "_", n, ".txt")
   }
 
   write.table(df, file = fout, sep = "\t", row.names = FALSE, quote = FALSE)

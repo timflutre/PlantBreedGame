@@ -25,6 +25,13 @@ source("src/fun/func_plant_material.R", local = TRUE, encoding = "UTF-8")$value
 
 ## server for "plant material"
 
+output$pltmat_main_UI <- renderUI({
+  if (!gameInitialised()) {
+    return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
+  }
+  return(source("./src/ui/ui_plant_material.R", local = TRUE, encoding = "UTF-8")$value)
+})
+
 ## identification message
 output$idMessagePltMat <- renderUI({
   if (breeder() == "No Identification") {
@@ -47,6 +54,7 @@ readQryPlmat <- reactive({
 
 
   # read input file
+  constants <- getBreedingGameConstants()
   maxHD <- ifelse(breederStatus() != "player",
     Inf, constants$max.nb.haplodiplos
   )
@@ -194,7 +202,7 @@ output$breederBoxPltMat <- renderValueBox({
   valueBox(
     value = breeder(),
     subtitle = paste("Status:", breederStatus()),
-    icon = icon("user-o"),
+    icon = icon("user"),
     color = "yellow"
   )
 })

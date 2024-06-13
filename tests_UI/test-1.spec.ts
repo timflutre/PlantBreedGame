@@ -5,13 +5,24 @@ import { join } from "path";
 import gunzip from "gunzip-file";
 
 const psw: string = "1234";
+const page_root: string = "http://127.0.0.1:3000";
 interface Registerd_indsList {
   [key: string]: string[];
 }
 
 test.describe("PlantBreedGame_UI", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto(page_root);
+  });
+
+  test("basicLogin", async ({ page }) => {
+    await login(page, "admin", psw);
+  });
+
+  test("add and delete breeder", async ({ page }) => {
+    await login(page, "admin", psw);
+    await addBreeder(page, "toto", psw, "tester");
+    await deleteBreeder(page, "toto");
   });
 
   test("addBreeder", async ({ page }) => {
@@ -63,13 +74,16 @@ test.describe("PlantBreedGame_UI", () => {
 
     // register individuals:
     for (let breeder in registered_inds) {
-      await page.goto("http://127.0.0.1:3000/");
+      await page.goto(page_root);
       await login(page, breeder, psw);
       await registerIndividuals(page, registered_inds[breeder], false);
     }
 
     await runEvaluation(page, registered_inds);
   });
+
+  // TODO: add a test for "Admin / GameProgress" the core function is partially checked
+  // with the evaluation check (when we build the game report) but a
 
   test("delete breeder", async ({ page }) => {
     await login(page, "admin", psw);
@@ -109,17 +123,22 @@ test.describe("PlantBreedGame_UI", () => {
 
     // register individuals:
     for (let breeder in registered_inds) {
-      await page.goto("http://127.0.0.1:3000/");
+      await page.goto(page_root);
       await login(page, breeder, psw);
       await registerIndividuals(page, registered_inds[breeder], false);
     }
 
     await runEvaluation(page, registered_inds);
   });
+
+  // TODO add tests related to  game initialisation
+
+  // TODO add tests where several requests are made with the same file
+  // this is a edge case that could happend
 });
 
 async function login(page: Page, username: string, password: string) {
-  await page.goto("http://127.0.0.1:3000/");
+  await page.goto(page_root);
   await page
     .getByRole("link", { name: "house-user icon Identification / Home" })
     .click();
@@ -135,7 +154,25 @@ async function login(page: Page, username: string, password: string) {
   await page.getByLabel("Password").click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
+
+  // top bar visible ?
+  await expect(page.locator("#breederBoxID")).toBeVisible();
   await expect(page.getByRole("heading", { name: username })).toBeVisible();
+  await expect(page.locator("#dateBoxID")).toBeVisible();
+  await expect(page.locator("#budgetBoxID")).toBeVisible();
+  await expect(page.locator("#serverIndicID")).toBeVisible();
+
+  // content
+  await expect(
+    page.getByRole("heading", { name: "Phenotyping data:" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Genotyping data:" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Plant material data:" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Other:" })).toBeVisible();
 }
 
 async function addBreeder(
@@ -160,6 +197,8 @@ async function addBreeder(
   await page.getByRole("button", { name: "Add this new breeder" }).click();
 
   await expect(page.getByText("Adding breeder Done!")).toBeVisible();
+
+  // TODO: check we cannot add already existing breeders (low priority)
 }
 
 async function deleteBreeder(page: Page, breederName: string) {
@@ -168,11 +207,7 @@ async function deleteBreeder(page: Page, breederName: string) {
     page.getByRole("link", { name: "Manage breeders" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Manage breeders" }).click();
-  await page
-    .locator(
-      "div:nth-child(2) > table > tbody > tr > td > .form-group > div > .selectize-control > .selectize-input",
-    )
-    .click();
+  await page.locator("#delBreederName-selectized").click();
   await page.getByRole("option", { name: breederName, exact: true }).click();
   await page
     .getByRole("button", {
@@ -195,10 +230,10 @@ async function requestPlantMaterial(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("tab", { name: "Check" }).click();
+  await page.getByRole("link", { name: "Check" }).click();
   await expect(page.locator("#plmatUploaded")).toContainText("GOOD");
 
-  await page.getByRole("tab", { name: "Summary" }).click();
+  await page.getByRole("link", { name: "Summary" }).click();
   await expect(
     page.locator("#PltmatInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -212,7 +247,7 @@ async function requestPlantMaterial(
     page.locator("#PltmatInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Data" }).click();
+  await page.getByRole("link", { name: "Data" }).click();
   await expect(
     page
       .locator("#qryPlmat")
@@ -234,7 +269,7 @@ async function requestPlantMaterial(
       .getByLabel("explanations: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Request" }).click();
+  await page.getByRole("link", { name: "Request", exact: true }).click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Create Plant Material: Done !")).toBeVisible({
@@ -275,10 +310,10 @@ async function requestPhenotyping(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("tab", { name: "Check" }).click();
+  await page.getByRole("link", { name: "Check" }).click();
   await expect(page.locator("#PhenoUploaded")).toContainText("GOOD");
 
-  await page.getByRole("tab", { name: "Summary" }).click();
+  await page.getByRole("link", { name: "Summary" }).click();
   await expect(
     page.locator("#PhenoInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -292,7 +327,7 @@ async function requestPhenotyping(
     page.locator("#PhenoInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Data" }).click();
+  await page.getByRole("link", { name: "Data" }).click();
   await expect(
     page
       .locator("#qryPheno")
@@ -309,7 +344,7 @@ async function requestPhenotyping(
       .getByLabel("details: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Request" }).click();
+  await page.getByRole("link", { name: "Request", exact: true }).click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Process Pheno request: Done")).toBeVisible({
@@ -336,10 +371,10 @@ async function requestGenotyping(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("tab", { name: "Check" }).click();
+  await page.getByRole("link", { name: "Check" }).click();
   await expect(page.locator("#GenoUploaded")).toContainText("GOOD");
 
-  await page.getByRole("tab", { name: "Summary" }).click();
+  await page.getByRole("link", { name: "Summary" }).click();
   await expect(
     page.locator("#GenoInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -353,7 +388,7 @@ async function requestGenotyping(
     page.locator("#GenoInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Data" }).click();
+  await page.getByRole("link", { name: "Data" }).click();
   await expect(
     page
       .locator("#qryGeno")
@@ -370,7 +405,7 @@ async function requestGenotyping(
       .getByLabel("details: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Request" }).click();
+  await page.getByRole("link", { name: "Request", exact: true }).click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Process Geno request: Done")).toBeVisible({
