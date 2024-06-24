@@ -1522,11 +1522,11 @@ if (tbl %in% dbListTables(db)) {
 }
 query <- paste0(
   "CREATE TABLE ", tbl,
-  " (num INT",
+  " (id INT",
   ", start TEXT",
   ", end TEXT",
-  ", year_time INT)"
-) # in minutes
+  ", year_time INT", # in minute
+  ", time_zone TEXT)")
 res <- dbExecute(conn = db, query)
 ```
 
@@ -1537,7 +1537,8 @@ query <- paste0(
   " ('1'",
   ", '2018-02-15 09:00:00'",
   ", '2018-02-15 12:00:00'",
-  ", '60')"
+  ", '60'",
+  ", 'UTC')"
 )
 res <- dbExecute(conn = db, query)
 query <- paste0(
@@ -1545,7 +1546,8 @@ query <- paste0(
   " ('2'",
   ", '2018-02-15 14:00:00'",
   ", '2018-02-15 17:00:00'",
-  ", '60')"
+  ", '60'",
+  ", 'UTC')"
 )
 res <- dbExecute(conn = db, query)
 query <- paste0(
@@ -1553,7 +1555,8 @@ query <- paste0(
   " ('3'",
   ", '2018-02-16 09:00:00'",
   ", '2018-02-16 11:40:00'",
-  ", '40')"
+  ", '40'",
+  ", 'UTC')"
 )
 res <- dbExecute(conn = db, query)
 ```

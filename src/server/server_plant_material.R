@@ -84,7 +84,7 @@ readQryPlmat <- reactive({
   # list individuals
   indList <- unique(c(as.character(df$parent1), as.character(df$parent2)))
   indList <- indList[!is.na(indList)]
-  indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+  indAvail <- indAvailable(indList, getGameTime(), breeder())
 
   # check if individuals are available
   if ((indAvail$indGrown | breederStatus() != "player") &
@@ -157,7 +157,7 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     res <- try(create_plant_material(
       breeder(),
       readQryPlmat(),
-      getGameTime(setup),
+      getGameTime(),
       progressPltMat
     ))
 

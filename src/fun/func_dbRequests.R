@@ -39,6 +39,21 @@ db_execute_request <- function(query, dbname = DATA_DB) {
   })
   return(TRUE)
 }
+db_execute_request_safe <- function(query, dbname = DATA_DB, ...) {
+  conn <- dbConnect(SQLite(), dbname = dbname)
+  tryCatch({
+    safe_query <- DBI::sqlInterpolate(conn, query, ...)
+    dbExecute(conn = conn, safe_query)
+  }, error = function(err) {
+    stop(err)
+  }, finally = {
+    dbDisconnect(conn)
+  })
+  return(TRUE)
+
+
+}
+
 
 db_list_tables <- function(dbname = DATA_DB) {
   conn <- dbConnect(SQLite(), dbname = dbname)
@@ -264,3 +279,34 @@ clean_data_root <- function(data_root = DATA_ROOT) {
     stop(paste("can't remove", data_root, "folder not empty."))
   }
 }
+
+
+getGameSessions <- function() {
+  query <- paste0("SELECT * FROM sessions")
+  res <- db_get_request(query)
+  return(res)
+}
+
+addGameSession <- function(id, startDate, endDate, yearTime, timeZone) {
+
+    query <- paste0(
+      "INSERT INTO sessions", " VALUES",
+      # " ('", id, "','", startDate, "','", endDate, "','", yearTime, "','", timeZone,"')"
+      "(?id,?startDate,?endDate,?yearTime,?timeZone)"
+    )
+  db_execute_request_safe(query,
+    id = id,
+    startDate = startDate,
+    endDate = endDate,
+    yearTime = yearTime,
+    timeZone = timeZone
+  )
+
+
+}
+
+delGameSession <- function(id) {
+  query <- "DELETE FROM sessions WHERE id = ?id"
+  db_execute_request_safe(query, id = id)
+}
+

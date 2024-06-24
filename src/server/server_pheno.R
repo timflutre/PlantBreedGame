@@ -69,10 +69,10 @@ readQryPheno <- reactive({
 
     # list individuals
     indList <- unique(as.character(df$ind))
-    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+    indAvail <- indAvailable(indList, getGameTime(), breeder())
 
     # check if plot are available
-    plotAvail <- plotAvailable(breeder(), df, getGameTime(setup))
+    plotAvail <- plotAvailable(breeder(), df, getGameTime())
 
     # check if individuals are available
     if (((indAvail$indGrown & plotAvail) | breederStatus() != "player") &
@@ -145,7 +145,7 @@ pheno_data <- eventReactive(input$requestPheno, {
     res <- try(phenotype(
       breeder(),
       readQryPheno(),
-      getGameTime(setup),
+      getGameTime(),
       progressPheno,
       input$file.pheno$name
     ))

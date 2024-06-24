@@ -531,7 +531,7 @@ observeEvent(input$id_submitInds, priority = 10, {
   query <- paste0(
     "INSERT INTO log(breeder,request_date,task,quantity)",
     " VALUES ('", breeder(),
-    "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
+    "', '", strftime(getGameTime(), format = "%Y-%m-%d %H:%M:%S"),
     "', 'register', '",
     nrow(submitDta), "')"
   )

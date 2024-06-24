@@ -37,29 +37,27 @@ if (gameInitialised()) {
         style = "margin-bottom: 20px;", # inputs
         h3("Add a new session:"),
         div(
+          uiOutput("sessionTimeZoneUI")
+        ),
+        div(
           style = "display: inline-block; vertical-align:top; width: 33%; min-width:300px;", # start
           h4("Start"),
           tags$table(
             style = "width: 300px; border-collapse: collapse;", # start table 1
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              dateInput("startDate", "date",
-                width = "100px"
+              dateInput("startDate", "Date",
+                width = "120px"
               )
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              numericInput("startHour", "hour",
-                value = 9, min = 0, max = 23, step = 1,
-                width = "75px"
-              )
+              selectInput("startHour", "Hour (24h)", choices = as.list(seq(0,23)), selected = "9", width = "75px")
+
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              numericInput("startMin", "minute",
-                value = 0, min = 0, max = 59, step = 1,
-                width = "75px"
-              )
+              selectInput("startMin", "Minute", choices = seq(0,59), width = "75px")
             )
           ) # end table 1
         ), # end div "start"
@@ -71,23 +69,17 @@ if (gameInitialised()) {
             style = "width: 300px; border-collapse: collapse;", # start table 2
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              dateInput("endDate", "date",
-                width = "100px"
+              dateInput("endDate", "Date",
+                width = "120px"
               )
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              numericInput("endHour", "hour",
-                value = 9, min = 0, max = 23, step = 1,
-                width = "75px"
-              )
+              selectInput("endHour", "Hour (24h)", choices = as.list(seq(0,23)), selected = "12", width = "75px")
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              numericInput("endMin", "minute",
-                value = 0, min = 0, max = 59, step = 1,
-                width = "75px"
-              )
+              selectInput("endMin", "Minute", choices = seq(0,59), width = "75px")
             )
           ) # end table 2
         ), # end div "end"
@@ -120,10 +112,7 @@ if (gameInitialised()) {
         style = "width: 100%; border-collapse: collapse;",
         tags$td(
           style = "width: 50%; vertical-align: bottom; padding: 10px;",
-          selectInput("delSession", "Session's number",
-            choices = c("", sessionsList()$num),
-            selected = "", width = "100%"
-          )
+          uiOutput("deleteSessionUI")
         ),
         tags$td(
           style = "width: 50%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",

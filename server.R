@@ -28,7 +28,7 @@ shinyServer(function(input, output, session) {
     ## send a "tic" message to the client to get information about the server status (busy or not)
     invalidateLater(250)
     session$sendCustomMessage("serverTic", "tic")
-    getGameTime(setup)
+    getGameTime()
   })
 
   values <- reactiveValues(

@@ -69,7 +69,7 @@ readQryGeno <- reactive({
 
     # list individuals
     indList <- unique(as.character(df$ind))
-    indAvail <- indAvailable(indList, getGameTime(setup), breeder())
+    indAvail <- indAvailable(indList, getGameTime(), breeder())
 
     # check if individuals are available
     if ((indAvail$indGrown | breederStatus() != "player") &
@@ -143,7 +143,7 @@ geno_data <- eventReactive(input$requestGeno, {
     res <- try(genotype(
       breeder(),
       readQryGeno(),
-      getGameTime(setup),
+      getGameTime(),
       progressGeno,
       input$file.geno$name
     ))

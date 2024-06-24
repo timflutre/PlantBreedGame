@@ -106,43 +106,123 @@ observeEvent(input$deleteBreeder, {
 
 
 ## Sessions managment ----
-sessionsList <- eventReactive((input$addSession | input$deleteSession), ignoreNULL = FALSE, {
+output$sessionTimeZoneUI <- renderUI({
+  default = "UTC"
+  if (input$client_time_zone %in% OlsonNames())  {
+    default = input$client_time_zone
+  }
+  selectInput(
+    "sessionTimeZone",
+    "Time zone",
+    choices = as.list(OlsonNames()),
+    selected = default)
+})
+
+output$deleteSessionUI <- renderUI({
+  selectInput("delSession", "Session's id",
+    choices = c("", sessionsList()$id),
+    selected = "", width = "100%"
+  )
+})
+
+
+
+sessionsList <- reactive({
   # get session table from the data base:
-  query <- paste0("SELECT * FROM sessions")
-  res <- db_get_request(query)
-  return(res)
+  values$lastDBupdate
+  getGameSessions()
 })
 
 output$sessionsTable <- renderTable({
-  sessionsList()
+  data <- sessionsList()
+
+  if (nrow(data) == 0) {
+    return(
+      structure(list(
+        "id" = character(0),
+        "Session start time" = character(0),
+        "Session end time" = character(0),
+        "Session time zone" = character(0),
+        "Year duration (mins)" = character(0),
+        "Game time start" = character(0),
+        "Game time end" = character(0),
+        "Session duration" = character(0)
+      ),
+      class = "data.frame")
+    )
+  }
+
+  data$Game_Time_start <- sapply(seq(1, nrow(data)), function(line){
+    start <- getGameTime(time_irl = strptime(data[line, "start"],
+                                    format = "%Y-%m-%d %H:%M",
+                                    tz = data[line, "time_zone"])
+                )
+
+  })
+
+  data$Game_Time_end <- sapply(seq(1, nrow(data)), function(line){
+    end <- getGameTime(time_irl = strptime(data[line, "end"],
+                                    format = "%Y-%m-%d %H:%M",
+                                    tz = data[line, "time_zone"])
+                )
+
+  })
+
+  game_duration_days <- difftime(data$Game_Time_end, data$Game_Time_start, units = "days")
+  game_duration_year <- game_duration_days / 365.2425
+  data$Session_duration <- paste("~", round(game_duration_year, 2), "years")
+
+  data$Game_Time_start <- strftime(data$Game_Time_start, format = "%Y-%m-%d")
+  data$Game_Time_end <- strftime(data$Game_Time_end, format = "%Y-%m-%d")
+
+  colnames(data) <- c(
+    "id",
+    "Session start time",
+    "Session end time",
+    "Year duration (mins)",
+    "Session time zone",
+    "Game time start",
+    "Game time end",
+    "Session duration"
+  )
+  data <- data[,c(
+    "id",
+    "Session start time",
+    "Session end time",
+    "Session time zone",
+    "Year duration (mins)",
+    "Game time start",
+    "Game time end",
+    "Session duration"
+  )]
+  return(data)
 })
 
 
 # add session
 observeEvent(input$addSession, {
   startDate <- strptime(paste0(input$startDate, " ", input$startHour, ":", input$startMin),
-    format = "%Y-%m-%d %H:%M"
+    format = "%Y-%m-%d %H:%M",
+    tz = input$sessionTimeZone
   )
   endDate <- strptime(paste0(input$endDate, " ", input$endHour, ":", input$endMin),
-    format = "%Y-%m-%d %H:%M"
+    format = "%Y-%m-%d %H:%M",
+    tz = input$sessionTimeZone
   )
-
-  error <- 0
 
   # check start date before end date
   if (startDate >= endDate) {
-    error <- error + 1
     showNotification("Error: Start date must be earlier than end date.", type = c("error"))
+    return(NULL)
   }
 
   # check overlaps
-  query <- "SELECT * FROM sessions"
-  res <- db_get_request(query)
+  gameSessions <- getGameSessions()
 
-  if (nrow(res) > 0) {
-    overlapse <- apply(res, 1, function(session) {
-      sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M")
-      sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M")
+  if (nrow(gameSessions) > 0) {
+    overlapse <- apply(gameSessions, 1, function(session) {
+      (sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
+      (sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
       if ((startDate < sessionStart & endDate <= sessionStart) |
         (startDate >= sessionEnd & endDate > sessionEnd)) {
         return(FALSE)
@@ -152,39 +232,36 @@ observeEvent(input$addSession, {
     })
 
     if (any(overlapse)) {
-      error <- error + 1
-      showNotification("Error: Sessions must not be overlapped.", type = c("error"))
+      showNotification("Error: Sessions must not overlap.", type = c("error"))
+      return(NULL)
     }
   }
 
   # calculate id number:
-  if (error == 0) {
-    if (nrow(sessionsList()) != 0) {
-      numId <- max(sessionsList()$num) + 1
-    } else {
-      numId <- 1
-    }
-
-
-    # complete "sessions" table
-    query <- paste0(
-      "INSERT INTO sessions", " VALUES",
-      " ('", numId, "','", startDate, "','", endDate, "','", input$yearTime, "')"
-    )
-    db_execute_request(query)
-    showNotification("Session added.", type = c("message"))
+  id <- 1
+  if (nrow(sessionsList()) != 0) {
+    id <- max(sessionsList()$id) + 1
   }
+
+
+  # complete "sessions" table
+  addGameSession(
+    id = id,
+    startDate = as.character(startDate),
+    endDate = as.character(endDate),
+    yearTime = input$yearTime,
+    timeZone = input$sessionTimeZone
+  )
+  values$lastDBupdate <- Sys.time()
+  showNotification("New session added.", type = c("message"))
 })
 
 # delete session
 observeEvent(input$deleteSession, {
   if (input$delSession != "") {
     # delete entry in sessions' table
-    query <- paste0(
-      "DELETE FROM sessions",
-      " WHERE num = ", input$delSession
-    )
-    db_execute_request(query)
+    delGameSession(input$delSession)
+    values$lastDBupdate <- Sys.time()
     showNotification("Session removed", type = "message")
   }
 })

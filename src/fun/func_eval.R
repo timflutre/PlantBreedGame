@@ -164,7 +164,7 @@ phenotype4Eval <- function(df, nRep = 50) {
   query <- paste0(
     "INSERT INTO log(breeder,request_date,task,quantity)",
     " VALUES ('", "evaluation",
-    "', '", strftime(getGameTime(setup), format = "%Y-%m-%d %H:%M:%S"),
+    "', '", strftime(getGameTime(), format = "%Y-%m-%d %H:%M:%S"),
     "', '", "evaluation", "', '",
     "1", "')"
   )

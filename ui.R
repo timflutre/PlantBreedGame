@@ -85,6 +85,7 @@ shinyUI(
       ## javascript function
       tags$head(
         tags$script(src = "busyServer.js"),
+        tags$script(src = "clientTimeZone.js"),
         tags$script("Shiny.addCustomMessageHandler(
                                   'resetValue',function(variableName){
                                   Shiny.onInputChange(variableName, null);});"),

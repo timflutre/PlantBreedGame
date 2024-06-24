@@ -98,6 +98,18 @@
             program = "${test_ui}/bin/test_ui";
           };
 
+          unit_tests = let
+            unit_tests = pkgs.writeShellApplication {
+              name = "unit_tests";
+              text = ''
+                Rscript --vanilla ${./tests/testthat.R}
+              '';
+            };
+          in {
+            type = "app";
+            program = "${unit_tests}/bin/unit_tests";
+          };
+
           initialise-data = let
             initialise-data = pkgs.writeShellApplication {
               name = "initialise-data";
