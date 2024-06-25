@@ -45,27 +45,12 @@ shinyServer(function(input, output, session) {
 
   observe({
     if (!gameInitialised()) {
-      alert("Game is not initialised :-(")
-
-      # insertUI("#id_main_ui", where = "beforeBegin", {
-      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
-      # })
-      # removeUI("#id_main_ui")
-
-      # insertUI("#pltmat_main_ui", where = "beforeBegin", {
-      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
-      # })
-      # removeUI("#pltmat_main_ui")
-
-      # insertUI("#pheno_main_ui", where = "beforeBegin", {
-      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
-      # })
-      # removeUI("#pheno_main_ui")
-
-      # insertUI("#geno_main_ui", where = "beforeBegin", {
-      #   source("src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value
-      # })
-      # removeUI("#geno_main_ui")
+      msg <- paste(
+        "The game have not been initialised. It is therefore currently impossible to play.",
+        '\nTo initialise the game, go to the "Admin" menu and in the "Game setup" tab.',
+        "From there you will be able to initialise a new game."
+      )
+      alert(msg)
     }
   })
 
