@@ -4,12 +4,15 @@
 .Rhistory
 .RData
 .Ruserdata
-data
+
+/data/*
+!/data/.gitkeep
 data.zip
+
 .direnv
+
 node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-plantbreedgame_setup.html

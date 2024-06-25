@@ -36,8 +36,7 @@ shinyServer(function(input, output, session) {
   )
 
   gameInitialised <- function() {
-    (dir.exists(DATA_ROOT) &
-      dir.exists(DATA_TRUTH) &
+    (dir.exists(DATA_TRUTH) &
       dir.exists(DATA_SHARED) &
       dir.exists(DATA_INITIAL_DATA) &
       file.exists(DATA_DB))

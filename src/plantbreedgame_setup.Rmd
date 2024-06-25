@@ -93,22 +93,33 @@ Set up directories:
 ```{r setup_dir}
 root.dir <- file.path("../data")
 root.dir <- path.expand(root.dir)
-if (dir.exists(root.dir)) {
-  stop(paste0("`data` directory (", root.dir, ") already exists. Please remove this directory before running this script."))
-}
-dir.create(root.dir)
 truth.dir <- file.path(root.dir, "truth")
+shared.dir <- file.path(root.dir, "shared")
+init.dir <- file.path(shared.dir, "initial_data")
+reports.dir <- file.path(root.dir, "reports")
+dbname <- file.path(root.dir, "breeding-game.sqlite")
+
+if (dir.exists(root.dir)) {
+  if (length(list.files(root.dir)) != 0) {
+    stop(paste0("`data` directory (", root.dir, ") is not empty. Please empty this directory before running this script."))
+  }
+} else {
+  dir.create(root.dir)
+}
+
 if (!dir.exists(truth.dir)) {
   dir.create(truth.dir)
 }
-shared.dir <- file.path(root.dir, "shared")
 if (!dir.exists(shared.dir)) {
   dir.create(shared.dir)
 }
-init.dir <- file.path(shared.dir, "initial_data")
 if (!dir.exists(init.dir)) {
   dir.create(init.dir)
 }
+if (!dir.exists(reports.dir)) {
+  dir.create(reports.dir)
+}
+
 ```
 
 Create the "admin" and "test" players (other players are created via the interface):
@@ -126,12 +137,6 @@ for (breeder in breeders) {
   }
 }
 ```
-
-Set up the name of the database:
-```{r}
-dbname <- paste0(root.dir, "/breeding-game.sqlite")
-```
-
 
 # Simulate haplotypes and genotypes
 

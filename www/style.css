@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright 2015,2016,2017,2018,2019 Institut National de la Recherche Agronomique
 and Montpellier SupAgro.
 
@@ -18,91 +18,102 @@ You should have received a copy of the GNU Affero General Public
 License along with PlantBreedGame.  If not, see
 <http://www.gnu.org/licenses/>. */
 
-
-
 :root {
-    --box-bg-color:#00a65a; /* input box color */
-    --box-color:#000; /* box title color */
-    --tabbox-top-color: #cacad4; /* top color of selected tab (for tabbox) */
-    --bg-color: #4b4b4b; /* background color */
-    /* --links-color: #446692;*/
-    /* --slider-color: #444492;*/
-    /* --tooltip-bg-color: #444492;*/
-    /*--tooltip-color: #fff;*/
-  }
+  --box-bg-color: #00a65a; /* input box color */
+  --box-color: #000; /* box title color */
+  --tabbox-top-color: #cacad4; /* top color of selected tab (for tabbox) */
+  --bg-color: #4b4b4b; /* background color */
+  /* --links-color: #446692;*/
+  /* --slider-color: #444492;*/
+  /* --tooltip-bg-color: #444492;*/
+  /*--tooltip-color: #fff;*/
+}
 
 /* set box-sizing to border-box for the whole app */
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
-
 
 /* ---------- font-familly ---------- */
 body {
-    font-family: /*'Lato'*/'Nunito', 'Proxima Nova Soft', 'Helvetica Neue', sans-serif;
+  font-family: /*'Lato'*/ "Nunito", "Proxima Nova Soft", "Helvetica Neue",
+    sans-serif;
 }
-.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
-    font-family: inherit;
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: inherit;
 }
 .main-header .logo {
-    font-family: inherit;
+  font-family: inherit;
 }
-
 
 /* ---------- background-color ---------- */
-.content-wrapper, .right-side {
-    background-color: #4b4b4b;
+.content-wrapper,
+.right-side {
+  background-color: #4b4b4b;
 }
-
 
 /* ---------- header ---------- */
 .main-header .logo {
   text-align: left;
 }
 
-
 /*  ---------- Box ---------- */
 
 /* border*/
 .box {
-    border-radius: 20px;
-    border-top: 3px solid #00a65a;
+  border-radius: 20px;
+  border-top: 3px solid #00a65a;
 }
 .box-header {
-    border-radius: 18px 18px 0px 0;
-    padding: 10px 20px 10px 20px 
+  border-radius: 18px 18px 0px 0;
+  padding: 10px 20px 10px 20px;
 }
 
 .box-body {
-    padding: 15px 20px 15px 20px 
+  padding: 15px 20px 15px 20px;
 }
 
 .small-box {
-    border-radius: 20px;
+  border-radius: 20px;
 }
-
 
 /* color */
 .box.box-solid.box-primary {
-    border: 0px solid #00a65a; /* remove border */
+  border: 0px solid #00a65a; /* remove border */
 }
 .box.box-solid.box-primary > .box-header {
-    color: #000;
-    background:  #00a65a;
-    background-color: #00a65a;
+  color: #000;
+  background: #00a65a;
+  background-color: #00a65a;
 }
 
 .nav-tabs-custom > .nav-tabs > li.active {
-    border-top-color: #008749;
+  border-top-color: #008749;
 }
 
 /* shadow */
-.box, .nav-tabs-custom{
-    box-shadow: 5px 5px 10px rgba(0,0,0,0.40);
+.box,
+.nav-tabs-custom {
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.4);
 }
-
 
 /*  ---------- validation message ---------- */
 .shiny-output-error-validation {
-        color: red;
-      }
+  color: red;
+}
+
+#game_init_report {
+  border-color: #00a65a;
+  border-radius: 10px;
+}

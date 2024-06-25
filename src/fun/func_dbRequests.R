@@ -139,7 +139,15 @@ getBreedersIndividuals <- function(breeder) {
   return(db_get_request(query))
 }
 
-clean_data_root <- function(data_root = DATA_ROOT) {
+clean_data_root <- function(
+  data_root = DATA_ROOT,
+  data_truth = DATA_TRUTH,
+  data_shared = DATA_SHARED,
+  data_initial_data = DATA_INITIAL_DATA,
+  data_db = DATA_DB,
+  data_reports = DATA_REPORTS,
+  game_initialisation_report = GAME_INIT_REPORT
+) {
   # WARN / TODO --- IMPORTANT ! ---
   # the initialisation script do not allow its execution if "the data" folder
   # already exists.
@@ -158,11 +166,6 @@ clean_data_root <- function(data_root = DATA_ROOT) {
   # has created (based on their names) and the folders if they are empty.
   #
   # WARN / TODO --- IMPORTANT ! ---
-
-  data_truth <- file.path(data_root, "truth")
-  data_shared <- file.path(data_root, "shared")
-  data_initial_data <- file.path(data_shared, "initial_data")
-  data_db <- file.path(data_root, "breeding-game.sqlite")
 
 
   # initial files.
@@ -241,10 +244,10 @@ clean_data_root <- function(data_root = DATA_ROOT) {
   all_files <- c(
     initial_files_truth,
     initial_files_shared,
+    game_initialisation_report,
     breeders_files
   )
-  browser()
-  file.remove(all_files[file.exists(all_files)])
+  file.remove(all_files)
 
   lapply(getBreederList(data_db), function(breeder) {
     if (length(list.files(file.path(data_shared, breeder))) == 0) {
@@ -274,13 +277,16 @@ clean_data_root <- function(data_root = DATA_ROOT) {
   } else {
     stop(paste("can't remove", data_shared, "folder not empty."))
   }
+  if (length(list.files(data_reports)) == 0) {
+    file.remove(data_reports)
+  } else {
+    stop(paste("can't remove", data_reports, "folder not empty."))
+  }
 
   file.remove(data_db)
 
-  if (length(list.files(data_root)) == 0) {
-    file.remove(data_root)
-  } else {
-    stop(paste("can't remove", data_root, "folder not empty."))
+  if (length(list.files(data_root)) != 0) {
+    stop(paste0("Problem occured when cleaning `", data_root, "`, folder is not empty."))
   }
 }
 

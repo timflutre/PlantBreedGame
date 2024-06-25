@@ -625,6 +625,11 @@ output$admin_T1T2GameProgress <- renderPlotly({
 })
 
 
+output$download_game_init_report <- downloadHandler(
+  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%M-%d"), ".html"), # lambda function
+  content = function(file) file.copy(GAME_INIT_REPORT, file),
+  contentType = "text/html"
+)
 
 output$initialisation_button <- renderUI({
   if (!gameInitialised()) {
@@ -676,7 +681,7 @@ observeEvent(input$initialiseGame, {
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
-  if (dir.exists(DATA_ROOT)) {
+  if (gameInitialised()) {
     # WARN / TODO --- IMPORTANT ! ---
     # the initialisation script do not allow its execution if "the data" folder
     # already exists.
@@ -702,16 +707,27 @@ observeEvent(input$initialiseGame, {
       detail = "Delete existing data..."
     )
     clean_data_root()
+  } else {
+    # even when the game is not initialised, the data-base can be created if
+    # any request is attempted. This is the case when the user is on the app's
+    # welcome page.
+    file.remove(DATA_DB)
   }
+
   progress_bar$set(
     value = 2 / 4,
     message = "Game Initialisation:",
     detail = "game setup..."
   )
-  rmarkdown::render("./plantbreedgame_setup.Rmd",
-    output_file = "./plantbreedgame_setup.html",
+
+  out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
+    output_file = tempfile(),
     encoding = "UTF-8"
   )
+  file.copy(from = out_report, to = GAME_INIT_REPORT)
+
+  addResourcePath("reports", DATA_REPORTS)
+
   progress_bar$set(
     value = 1,
     message = "Game Initialisation:",

@@ -46,11 +46,17 @@ if (Sys.info()["sysname"] == "Windows") {
 ## -------------------------------------------------------------------
 ## variables
 
-DATA_ROOT <- "data"
+DATA_ROOT <- normalizePath("./data", mustWork = TRUE)
 DATA_TRUTH <- file.path(DATA_ROOT, "truth")
 DATA_SHARED <- file.path(DATA_ROOT, "shared")
 DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
 DATA_DB <- file.path(DATA_ROOT, "breeding-game.sqlite")
+DATA_REPORTS <- file.path(DATA_ROOT, "reports")
+GAME_INIT_REPORT <- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
+
+if (dir.exists(DATA_REPORTS)) {
+  addResourcePath("reports", DATA_REPORTS)
+}
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)

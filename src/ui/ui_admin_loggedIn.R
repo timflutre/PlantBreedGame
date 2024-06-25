@@ -26,6 +26,7 @@
 
 
 if (gameInitialised()) {
+  default_tab <- "Manage sessions"
   manage_sessions_tab_content <- div(
     div(
       style = "margin-bottom:50px;",
@@ -303,7 +304,29 @@ if (gameInitialised()) {
   )
 
 
+  game_initialisation_report_part <- div(
+    h2("Game initialisation report"),
+
+    p("The game is initialised. You can download the related report that contains",
+    "some informations about the game intialisation by clicking on the button bellow.",
+    "Below this button you can preview this report."),
+
+    downloadButton("download_game_init_report", "Download game's initialisation report (html)"),
+
+    h3("Preview:"),
+
+    tags$iframe(seamless = "seamless",
+                src = file.path("reports", basename(GAME_INIT_REPORT)),
+                height = 700,
+                width = "90%",
+                id = "game_init_report")
+  )
+
+
 } else {
+
+  default_tab <- "Game Initialisation"
+
   game_not_initialised_msg <- div(
     h3("Game not initialised"),
     p("The game have not been initialised. It is therefore currently impossible to play.")
@@ -313,28 +336,35 @@ if (gameInitialised()) {
   manage_constants_tab_content <- game_not_initialised_msg
   disk_usage_tab_content <- game_not_initialised_msg
   game_progress_tab_content <- game_not_initialised_msg
+
+
+  game_initialisation_report_part <- div()
 }
 
 
 game_initialisation_tab_content <- div(
-  p("By pressing the button below, you can initialise the game."),
-  p("Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game."),
-  div(
-    h2("Information:"),
-    p("Some breeders accounts will be automatically created:"),
-    tags$ul(
-      tags$li(code("Admin"), "with the default password", code("1234")),
-      tags$li(code("Tester"), "(this breeder do not have a password, you can leave the password field empty to connect)")
-    )
-  ),
-  uiOutput("initialisation_button")
+  game_initialisation_report_part,
+  div (
+    h2("Game (re)-initialisation"),
+    p("By pressing the button below, you can initialise the game."),
+    p("Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game."),
+    div(
+      h3("Information:"),
+      p("Some breeders accounts will be automatically created:"),
+      tags$ul(
+        tags$li(code("Admin"), "with the default password", code("1234")),
+        tags$li(code("Tester"), "(this breeder do not have a password, you can leave the password field empty to connect)")
+      )
+    ),
+    uiOutput("initialisation_button")
+  )
 )
 
 
 
 list(
   shinydashboard::tabBox(
-    width = 12, title = "Admin", id = "admin_tabset", side = "left",
+    width = 13, title = "Admin", id = "admin_tabset", side = "left", selected = default_tab,
     tabPanel(
       "Manage sessions",
       manage_sessions_tab_content

@@ -114,9 +114,11 @@
             initialise-data = pkgs.writeShellApplication {
               name = "initialise-data";
               text = ''
-                rm -rf data
+                rm -rf data/*
+                touch data/.gitkeep
                 rm  data.zip || echo "no data.zip file"
                 make data
+
               '';
             };
           in {

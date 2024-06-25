@@ -15,23 +15,19 @@ RUN apt-get update && apt-get install -y \
 # remove sample-apps
 RUN rm -rf /srv/shiny-server/*
 
-# get app code
-# from host
-COPY ./tools/ /srv/shiny-server/PlantBreedGame/tools
 # install packages dependencies
+COPY ./tools/ /srv/shiny-server/PlantBreedGame/tools
 RUN Rscript /srv/shiny-server/PlantBreedGame/tools/installDeps.R
+
+# copy app code
 COPY ./src/ /srv/shiny-server/PlantBreedGame/src
 COPY ./www/ /srv/shiny-server/PlantBreedGame/www
 COPY ./global.R /srv/shiny-server/PlantBreedGame/.
 COPY ./ui.R /srv/shiny-server/PlantBreedGame/.
 COPY ./server.R /srv/shiny-server/PlantBreedGame/.
-COPY ./plantbreedgame_setup.Rmd /srv/shiny-server/PlantBreedGame/.
 
-# build data folder
+RUN mkdir srv/shiny-server/PlantBreedGame/data
 
-RUN R -e "rmarkdown::render('/srv/shiny-server/PlantBreedGame/plantbreedgame_setup.Rmd')"
-
-RUN chmod 664 srv/shiny-server/PlantBreedGame/data/breeding-game.sqlite
 RUN chown -R shiny.shiny srv/shiny-server/PlantBreedGame
 
 USER shiny
