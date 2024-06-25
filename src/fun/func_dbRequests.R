@@ -19,9 +19,13 @@
 
 ## Functions related to data file / data-base requests
 
+connect_to_db <- function(dbname = dbname) {
+  dbConnect(SQLite(), dbname = dbname)
+}
+
 db_get_request <- function(query, dbname = DATA_DB) {
   # for SELECT query only
-  conn <- dbConnect(SQLite(), dbname = dbname)
+  conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     out <- dbGetQuery(conn = conn, query)
   }, finally = {
@@ -31,7 +35,7 @@ db_get_request <- function(query, dbname = DATA_DB) {
 }
 
 db_execute_request <- function(query, dbname = DATA_DB) {
-  conn <- dbConnect(SQLite(), dbname = dbname)
+  conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     dbExecute(conn = conn, query)
   }, finally = {
@@ -40,7 +44,7 @@ db_execute_request <- function(query, dbname = DATA_DB) {
   return(TRUE)
 }
 db_execute_request_safe <- function(query, dbname = DATA_DB, ...) {
-  conn <- dbConnect(SQLite(), dbname = dbname)
+  conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
     dbExecute(conn = conn, safe_query)
@@ -56,7 +60,7 @@ db_execute_request_safe <- function(query, dbname = DATA_DB, ...) {
 
 
 db_list_tables <- function(dbname = DATA_DB) {
-  conn <- dbConnect(SQLite(), dbname = dbname)
+  conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     allTbls <- dbListTables(conn = conn)
   }, finally = {
