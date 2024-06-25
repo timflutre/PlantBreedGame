@@ -47,8 +47,10 @@ if (gameInitialised()) {
             style = "width: 300px; border-collapse: collapse;", # start table 1
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              dateInput("startDate", "Date",
-                width = "120px"
+              div(style = "padding-bottom: 5px;",
+                dateInput("startDate", "Date",
+                  width = "120px"
+                )
               )
             ),
             tags$td(
@@ -70,8 +72,10 @@ if (gameInitialised()) {
             style = "width: 300px; border-collapse: collapse;", # start table 2
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              dateInput("endDate", "Date",
-                width = "120px"
+              div(style = "padding-bottom: 5px;",
+                dateInput("endDate", "Date",
+                  width = "120px"
+                )
               )
             ),
             tags$td(
@@ -364,7 +368,7 @@ game_initialisation_tab_content <- div(
 
 list(
   shinydashboard::tabBox(
-    width = 13, title = "Admin", id = "admin_tabset", side = "left", selected = default_tab,
+    width = 12, title = "Admin", id = "admin_tabset", side = "left", selected = default_tab,
     tabPanel(
       "Manage sessions",
       manage_sessions_tab_content
