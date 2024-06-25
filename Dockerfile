@@ -21,6 +21,7 @@ COPY ./tools/ /srv/shiny-server/PlantBreedGame/tools
 # install packages dependencies
 RUN Rscript /srv/shiny-server/PlantBreedGame/tools/installDeps.R
 COPY ./src/ /srv/shiny-server/PlantBreedGame/src
+COPY ./www/ /srv/shiny-server/PlantBreedGame/www
 COPY ./global.R /srv/shiny-server/PlantBreedGame/.
 COPY ./ui.R /srv/shiny-server/PlantBreedGame/.
 COPY ./server.R /srv/shiny-server/PlantBreedGame/.
