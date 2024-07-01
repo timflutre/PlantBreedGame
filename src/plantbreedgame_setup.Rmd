@@ -91,8 +91,8 @@ set.seed(1993) # better to change it from one game session to the next
 
 Set up directories:
 ```{r setup_dir}
-root.dir <- file.path("../data")
-root.dir <- path.expand(root.dir)
+root.dir <- file.path("..", "data")
+root.dir <- normalizePath(root.dir)
 truth.dir <- file.path(root.dir, "truth")
 shared.dir <- file.path(root.dir, "shared")
 init.dir <- file.path(shared.dir, "initial_data")
@@ -107,18 +107,10 @@ if (dir.exists(root.dir)) {
   dir.create(root.dir)
 }
 
-if (!dir.exists(truth.dir)) {
-  dir.create(truth.dir)
-}
-if (!dir.exists(shared.dir)) {
-  dir.create(shared.dir)
-}
-if (!dir.exists(init.dir)) {
-  dir.create(init.dir)
-}
-if (!dir.exists(reports.dir)) {
-  dir.create(reports.dir)
-}
+dir.create(truth.dir)
+dir.create(shared.dir)
+dir.create(init.dir)
+dir.create(reports.dir)
 
 ```
 
