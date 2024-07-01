@@ -15,6 +15,20 @@ test.describe("PlantBreedGame_UI", () => {
     await page.goto(page_root);
   });
 
+  test("game_initialisation", async ({ page }) => {
+    test.setTimeout(200_000);
+    await page.goto(page_root);
+    await page.getByRole("link", { name: "gears icon Admin" }).click();
+    await page.getByRole("button", { name: "Initialise Game" }).click();
+    await expect(
+      page.getByRole("heading", {
+        name: "Apimeta simulans , a species with a bright future!",
+      }),
+    ).toBeVisible({
+      timeout: 200_000, // game initialisation can be quite long
+    });
+  });
+
   test("basicLogin", async ({ page }) => {
     await login(page, "admin", psw);
   });
@@ -62,6 +76,9 @@ test.describe("PlantBreedGame_UI", () => {
       "Coll0105",
     ]);
   });
+
+  // TODO add tests where several requests are made with the same file
+  // this is a edge case that could happend
 
   test("evaluation", async ({ page }) => {
     test.setTimeout(120_000);
@@ -131,10 +148,38 @@ test.describe("PlantBreedGame_UI", () => {
     await runEvaluation(page, registered_inds);
   });
 
-  // TODO add tests related to  game initialisation
+  test("game re-initialisation", async ({ page }) => {
+    test.setTimeout(200_000);
+    await login(page, "admin", psw);
+    await page.getByRole("link", { name: "gears icon Admin" }).click();
+    await page.getByRole("link", { name: "Game Initialisation" }).click();
+    await page.getByLabel("Confirmation:").fill("plantbreedgame");
+    await page.getByRole("button", { name: "Initialise Game" }).click();
+    await expect(
+      page.getByRole("heading", {
+        name: "Apimeta simulans , a species with a bright future!",
+      }),
+    ).toBeVisible({
+      timeout: 200_000, // game initialisation can be quite long
+    });
 
-  // TODO add tests where several requests are made with the same file
-  // this is a edge case that could happend
+    // simple game actions
+    await login(page, "admin", psw);
+    await addBreeder(page, "test_UI", psw, "tester");
+    await login(page, "test_UI", psw);
+
+    await requestPhenotyping(page, "pheno_init_2_allMethods.txt");
+    await requestPlantMaterial(page, "pltMat_init_set1.txt");
+    await requestGenotyping(page, "geno_init_3_allMethods.txt");
+
+    var registered_inds: Registerd_indsList = {
+      test_UI: ["Coll0101", "Coll0102", "Coll0103", "Coll0104", "Coll0105"],
+    };
+    for (let breeder in registered_inds) {
+      await registerIndividuals(page, registered_inds[breeder], false);
+    }
+    await runEvaluation(page, registered_inds);
+  });
 });
 
 async function login(page: Page, username: string, password: string) {
