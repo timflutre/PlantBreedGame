@@ -2,6 +2,8 @@
 title: "PlantBreedGame: setup"
 author: "Timothée Flutre (INRA)"
 date: "`r format(Sys.time(), '%d/%m/%Y %H:%M:%S')`"
+params:
+  progressBar: NULL
 colorlinks: true
 output:
   html_document:
@@ -19,6 +21,17 @@ output:
 This R chunk is used to set up important options and load required packages.
 -->
 ```{r setup, include=FALSE}
+progressBar <- params$progressBar
+
+if (is.null(progressBar)) {
+  progressBar <- list(
+    set = function(...){return(NULL)},
+    getValue = function(...){return(NULL)}
+  )
+}
+
+
+
 R.v.maj <- as.numeric(R.version$major)
 R.v.min.1 <- as.numeric(strsplit(R.version$minor, "\\.")[[1]][1])
 if (R.v.maj < 2 || (R.v.maj == 2 && R.v.min.1 < 15)) {
@@ -51,6 +64,11 @@ t0 <- proc.time()
 
 Load the packages:
 ```{r load_pkg}
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Load R packages..."
+)
+
 suppressPackageStartupMessages(library(parallel))
 nb.cores <- 1
 if (Sys.info()["sysname"] != "Windows") {
@@ -91,6 +109,10 @@ set.seed(1993) # better to change it from one game session to the next
 
 Set up directories:
 ```{r setup_dir}
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Setup directories..."
+)
 root.dir <- file.path("..", "data")
 root.dir <- normalizePath(root.dir)
 truth.dir <- file.path(root.dir, "truth")
@@ -192,6 +214,12 @@ Enhancement: simulate two sub-populations, quite differenciated (by crossing ind
 
 Simulate genotypes via the coalescent:
 ```{r simul_geno_coalescent}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Genotype simulation..."
+)
+
 f <- paste0(truth.dir, "/g0.RData")
 if (!file.exists(f)) {
   g0 <- simulCoalescent(
@@ -223,6 +251,10 @@ g0$genos[1:2, 1:6]
 
 Look at the AFs and MAFs:
 ```{r look_mafs}
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "AF calculation..."
+)
 afs <- estimSnpAf(X = g0$genos, allow.updating = TRUE)
 summary(afs)
 plotHistAllelFreq(
@@ -252,6 +284,12 @@ plotHaplosMatrix(g0$haplos$chr1[
 
 Estimate and plot pairwise LD per chromosome:
 ```{r estim_plot_ld}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Generate LD plot..."
+)
+
 chr <- "chr1"
 min.maf <- 0.2
 min.pos <- 0
@@ -289,6 +327,12 @@ abline(v = 500, lty = 2)
 
 Look at distances between consecutive SNPs:
 ```{r dist_btw_snps}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "SNP distances calculation..."
+)
+
 chr <- "chr3"
 system.time(
   tmp <- distConsecutiveSnps(snp.coords = g0$snp.coords, only.chr = chr)
@@ -368,6 +412,12 @@ write.table(
 
 Make collection of lines via haplodiploidization:
 ```{r coll_lines}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Generate initial collection's genotype..."
+)
+
 f <- paste0(truth.dir, "/coll.RData")
 coll <- list()
 crosses <- data.frame(
@@ -413,6 +463,12 @@ gc()
 
 Make data frame encoding the design for the initial phenotypes given to the players:
 ```{r init_pheno}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Simulate initial phenotypes..."
+)
+
 nb.lines.per.year <- 150
 nb.plots.per.line.per.year <- 2
 nb.years <- 10
@@ -914,6 +970,12 @@ Enhancement: add missing data
 
 Save data:
 ```{r save_phenos}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Save initial phenotypes..."
+)
+
 f <- paste0(truth.dir, "/p0.RData")
 save(p0, file = f)
 tools::md5sum(path.expand(f))
@@ -1107,6 +1169,12 @@ gc()
 
 Create a database:
 ```{r setup_db}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Initialise data-base..."
+)
+
 db <- dbConnect(SQLite(), dbname = dbname)
 dbListTables(db)
 ```
@@ -1643,6 +1711,12 @@ dbDisconnect(db)
 
 For each individual initially given to the players, save its haplotypes into a file (slow):
 ```{r save_haplos_in_files}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Save initial haplotypes..."
+)
+
 system.time(
   tmp <- mclapply(1:length(ind.ids), function(i) {
     ind.id <- ind.ids[i]
@@ -1699,6 +1773,12 @@ suppressWarnings(write.table(
 
 Make a zip archive of the whole directory:
 ```{r make_zip}
+
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Create zip archive..."
+)
+
 cwd <- getwd()
 setwd(dirname(root.dir))
 system.time(

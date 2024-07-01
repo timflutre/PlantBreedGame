@@ -676,10 +676,10 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 1)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 15)
 
   progress_bar$set(
-    value = 1 / 4,
+    value = 1,
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
@@ -704,7 +704,7 @@ observeEvent(input$initialiseGame, {
     #
     # WARN / TODO --- IMPORTANT ! ---
     progress_bar$set(
-      value = 1 / 4,
+      value = 1,
       message = "Game Initialisation:",
       detail = "Delete existing data..."
     )
@@ -717,21 +717,27 @@ observeEvent(input$initialiseGame, {
   }
 
   progress_bar$set(
-    value = 2 / 4,
+    value = 2,
     message = "Game Initialisation:",
     detail = "game setup..."
   )
 
+  params <- list(
+      progressBar = progress_bar
+  )
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
     output_file = tempfile(),
-    encoding = "UTF-8"
+    encoding = "UTF-8",
+    params = params,
+    envir = new.env(parent = globalenv()),
   )
   file.copy(from = out_report, to = GAME_INIT_REPORT)
 
   addResourcePath("reports", DATA_REPORTS)
 
+  print(progress_bar$getValue())
   progress_bar$set(
-    value = 1,
+    value = progress_bar$max,
     message = "Game Initialisation:",
     detail = "Done"
   )
