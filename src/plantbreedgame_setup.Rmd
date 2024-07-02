@@ -17,9 +17,6 @@ output:
     number_sections: TRUE
 ---
 
-<!--
-This R chunk is used to set up important options and load required packages.
--->
 ```{r setup, include=FALSE}
 progressBar <- params$progressBar
 
@@ -30,8 +27,6 @@ if (is.null(progressBar)) {
   )
 }
 
-
-
 R.v.maj <- as.numeric(R.version$major)
 R.v.min.1 <- as.numeric(strsplit(R.version$minor, "\\.")[[1]][1])
 if (R.v.maj < 2 || (R.v.maj == 2 && R.v.min.1 < 15)) {
@@ -39,9 +34,19 @@ if (R.v.maj < 2 || (R.v.maj == 2 && R.v.min.1 < 15)) {
 }
 
 suppressPackageStartupMessages(library(knitr))
-opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE, cache = FALSE, fig.align = "center")
+opts_chunk$set(
+  echo = TRUE,
+  warning = TRUE,
+  message = TRUE,
+  cache = FALSE,
+  fig.align = "center",
+  results = "hold",
+  strip.white = TRUE
+)
 
 options(stringsAsFactors = TRUE) # R-4.0.0 compatibility
+
+t0 <- proc.time()
 ```
 
 
@@ -57,13 +62,8 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 
 # Set up the environment
 
-This R chunk is used to assess how much time it takes to execute the R code in this document until the end:
-```{r time_0}
-t0 <- proc.time()
-```
+```{r load_pkgs}
 
-Load the packages:
-```{r load_pkg}
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = "Load R packages..."
@@ -136,6 +136,8 @@ dir.create(reports.dir)
 
 ```
 
+# Create initial breeders
+
 Create the "admin" and "test" players (other players are created via the interface):
 ```{r}
 breeders <- c("admin", "test")
@@ -164,15 +166,16 @@ ind.ids <- sprintf(fmt = paste0("ind%0", floor(log10(I)) + 1, "i"), 1:I)
 
 Simulate haplotypes and genotypes of initial individuals:
 
-* hyp: single pop
+- hypothesis: single pop
 
-* hyp: no inter-chrom LD
+- hypothesis: no inter-chrom LD
 
-* hyp: all chroms have the same length
+- hypothesis: all chroms have the same length
 
-* hyp: individuals are diploids
+- hypothesis: individuals are diploids
 
-* scaling: measure time in units of 4 x N_e generations
+- scaling: measure time in units of `4 * N_e` generations
+
 
 ```{r init_chrs}
 nb.chrs <- 10
@@ -379,7 +382,7 @@ Enhancement: panmixia with, say, 40 genotypes for 3 generations
 
 Ascertain SNPs for the genotyping arrays (high and low density):
 
-* hyp: mimick de novo sequencing of a few individuals
+- hypothesis: mimick de novo sequencing of a few individuals
 
 ```{r ascertain_snps}
 nb.inds.denovo <- 20

@@ -16,8 +16,6 @@ constants_server <- function(const, constantsReactive) {
         tryCatch(
           {
             constants <- constantsReactive()
-            if (const == "") {
-            }
             if (const == "generations.per.year") {
               return(12 / constants$duration.allof)
             }
