@@ -4,6 +4,7 @@ author: "Timothée Flutre (INRA)"
 date: "`r format(Sys.time(), '%d/%m/%Y %H:%M:%S')`"
 params:
   progressBar: NULL
+  rng_seed: 1993
 colorlinks: true
 output:
   html_document:
@@ -11,6 +12,7 @@ output:
     toc_depth: 4
     toc_float: true
     number_sections: TRUE
+    code_folding: hide
   pdf_document:
     toc: true
     toc_depth: 4
@@ -99,15 +101,28 @@ suppressPackageStartupMessages(library(scrm)) # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges)) # from bioconductor
 
 source("fun/functions.R")
+source("fun/module_gameInit_params.R")
+source("fun/func_gameInit_validation.R")
+
 ```
 
-Set the seed:
+# Parameters
+
+Validation and overview of the parameters used to initialised this game session.
+
 ```{r}
-RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
-set.seed(1993) # better to change it from one game session to the next
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Parameter validation..."
+)
+
+valid_rng_seed(params$rng_seed, accept_null = FALSE, raise_error = TRUE)
+
+print(params[names(params) != "progressBar"])
 ```
 
-Set up directories:
+# Set up data directories and RNG seed
+
 ```{r setup_dir}
 progressBar$set(
   value = progressBar$getValue() + 1,
@@ -133,7 +148,12 @@ dir.create(truth.dir)
 dir.create(shared.dir)
 dir.create(init.dir)
 dir.create(reports.dir)
+```
 
+
+```{r}
+RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
+set.seed(params$rng_seed)
 ```
 
 # Create initial breeders

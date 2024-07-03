@@ -666,8 +666,25 @@ output$initialisation_button <- renderUI({
   )
 })
 
+
+
+
+gameInit_input_validator <- InputValidator$new()
+
+gameInit_seed <- gameInit_seed_server("gameInit_seed", gameInit_input_validator)
+
+
+gameInit_input_validator$add_rule("initialisation_security_text", function(x) {
+  if (is.null(x)) return(NULL)
+  if (x != "plantbreedgame") return("")
+  }
+)
+
+gameInit_input_validator$enable()
+
+
 observe({
-  if (identical(input$initialisation_security_text, "plantbreedgame")) {
+  if (gameInit_input_validator$is_valid()) {
     shinyjs::enable("initialiseGame")
     return(TRUE)
   }
@@ -676,13 +693,23 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 15)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 16)
 
   progress_bar$set(
     value = 1,
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
+
+  if (!gameInit_input_validator$is_valid()) {
+    progress_bar$set(
+      value = 1,
+      message = "Game Initialisation:",
+      detail = "ERROR, invalid parameters"
+    )
+    return(NULL)
+  }
+
   if (gameInitialised()) {
     # WARN / TODO --- IMPORTANT ! ---
     # the initialisation script do not allow its execution if "the data" folder
@@ -723,8 +750,10 @@ observeEvent(input$initialiseGame, {
   )
 
   params <- list(
-      progressBar = progress_bar
+    progressBar = progress_bar,
+    rng_seed = gameInit_seed$value()
   )
+
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
     output_file = tempfile(),
     encoding = "UTF-8",
@@ -735,12 +764,12 @@ observeEvent(input$initialiseGame, {
 
   addResourcePath("reports", DATA_REPORTS)
 
-  print(progress_bar$getValue())
   progress_bar$set(
     value = progress_bar$max,
     message = "Game Initialisation:",
     detail = "Done"
   )
+
   alert("Game initialisation finished. This page will automatically refresh.")
   gameInitialised()
   shinyjs::refresh()

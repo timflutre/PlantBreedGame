@@ -1,4 +1,8 @@
 
+library(testthat)
+source("../../src/fun/func_time.R", local = TRUE, encoding = "UTF-8")
+
+
 firstYear = 2000
 game_first_day = strptime(paste0(firstYear, "-01-01 00:00"), format = "%Y-%m-%d %H:%M")
 

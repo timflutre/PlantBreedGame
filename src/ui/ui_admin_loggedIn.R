@@ -360,6 +360,10 @@ game_initialisation_tab_content <- div(
         tags$li(code("Tester"), "(this breeder do not have a password, you can leave the password field empty to connect)")
       )
     ),
+    div(
+      h3("Game Initialisation Parameters:"),
+      gameInit_seed_ui("gameInit_seed")
+    ),
     uiOutput("initialisation_button")
   )
 )

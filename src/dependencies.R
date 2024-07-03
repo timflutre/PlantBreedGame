@@ -27,6 +27,7 @@ suppressPackageStartupMessages({
   library(shinydashboard)
   library(shinycssloaders)
   library(shinyjs)
+  library(shinyvalidate)
   library(RSQLite)
   library(MASS)
   library(digest)

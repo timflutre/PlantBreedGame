@@ -19,6 +19,7 @@
           shinydashboard
           shinycssloaders
           shinyjs
+          shinyvalidate
           RSQLite
           MASS
           digest
