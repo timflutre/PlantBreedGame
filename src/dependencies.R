@@ -37,6 +37,7 @@ suppressPackageStartupMessages({
   library(lubridate)
   library(vistime)
   library(tidyr)
+  library(bsicons)
 
   ## required packages NOT available on the CRAN
   ## R> devtools::install_github("timflutre/rutilstimflutre")

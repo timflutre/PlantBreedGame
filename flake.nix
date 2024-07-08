@@ -30,6 +30,7 @@
           vistime
           scrm
           GenomicRanges
+          bsicons
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";

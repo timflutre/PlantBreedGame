@@ -16,4 +16,5 @@ test_that("dependencies", {
   expect_no_error({library(shinyjs)})
   expect_no_error({library(shinyvalidate)})
   expect_no_error({library(vistime)})
+  expect_no_error({library(bsicons)})
 })

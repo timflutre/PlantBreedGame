@@ -12,10 +12,33 @@
 
 library(shinyvalidate)
 
+tooltip_label <- function(label, description){
+
+  tooltip <- tags$details(
+    tags$summary(style = "cursor: pointer;",
+     label, bsicons::bs_icon("question-circle")
+    ),
+    tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+      description
+    )
+  )
+}
 
 gameInit_seed_ui <- function(id) {
   ns <- NS(id)
-  numericInput(ns("seed"), "RNG seed", value = 1993, step = 1)
+
+  label <- tooltip_label(
+    "RNG seed",
+    div(
+      p("Random number generation seed."),
+      p("A positive integer used as a seed for random generation.",
+        "This ensures reproducibility of the game initialisation")
+    )
+  )
+  div(
+    # shiny::numericInput(ns("seed"), span("RNG seed", tooltip), value = 1993, step = 1)
+    shiny::numericInput(ns("seed"), label = label, value = 1993, step = 1)
+  )
 }
 
 gameInit_seed_server <- function(id, iv) {
