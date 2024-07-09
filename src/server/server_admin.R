@@ -673,6 +673,10 @@ gameInit_input_validator <- InputValidator$new()
 
 gameInit_seed <- gameInit_seed_server("gameInit_seed", gameInit_input_validator)
 
+gameInit_costs <- gameInit_costs_server("gameInit_costs", gameInit_input_validator)
+
+
+
 
 gameInit_input_validator$add_rule("initialisation_security_text", function(x) {
   if (is.null(x)) return(NULL)
@@ -751,7 +755,17 @@ observeEvent(input$initialiseGame, {
 
   params <- list(
     progressBar = progress_bar,
-    rng_seed = gameInit_seed$value()
+    rng_seed = gameInit_seed$value(),
+    cost.pheno.field = gameInit_costs$value()$cost.pheno.field,
+    cost.pheno.patho = gameInit_costs$value()$cost.pheno.patho,
+    cost.allof = gameInit_costs$value()$cost.allof,
+    cost.autof = gameInit_costs$value()$cost.autof,
+    cost.haplodiplo = gameInit_costs$value()$cost.haplodiplo,
+    cost.geno.hd = gameInit_costs$value()$cost.geno.hd,
+    cost.geno.ld = gameInit_costs$value()$cost.geno.ld,
+    cost.geno.single = gameInit_costs$value()$cost.geno.single,
+    cost.register = gameInit_costs$value()$cost.register,
+    initialBudget = gameInit_costs$value()$initialBudget
   )
 
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",

@@ -117,3 +117,12 @@ h6 {
   border-color: #00a65a;
   border-radius: 10px;
 }
+
+details > summary {
+  cursor: pointer;
+  display: list-item;
+}
+
+.has-error {
+  color: #dd4b39;
+}

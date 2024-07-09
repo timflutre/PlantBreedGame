@@ -20,3 +20,24 @@ test_that("valid_rng_seed", {
   expect_error(valid_rng_seed(24.234, FALSE, TRUE))
 
 })
+
+
+test_that("valid_positive_number", {
+
+  # OK cases
+  expect_null(valid_positive_number(42))
+  expect_null(valid_positive_number(42.42))
+  expect_null(valid_positive_number(0))
+  expect_null(valid_positive_number(NULL))
+
+  # invalid cases (no error)
+  expect_type(valid_positive_number(NA), "character")
+  expect_type(valid_positive_number(-42), "character")
+  expect_error(valid_positive_number("24.234", FALSE, TRUE))
+  expect_type(valid_positive_number("abc"), "character")
+  expect_type(valid_positive_number(NULL, FALSE), "character")
+
+  # invalid cases (error)
+  expect_error(valid_positive_number("abc", FALSE, TRUE))
+
+})

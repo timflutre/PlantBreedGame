@@ -44,5 +44,33 @@ valid_rng_seed <- function(seed, accept_null = TRUE, raise_error = FALSE) {
   return(NULL)
 }
 
+valid_positive_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
+
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  if (is.na(x)) {
+    error("Mandatory and should be a positive number")
+  }
+
+  if (!is.numeric(x)) {
+    error("Should be a positive number")
+  }
+
+  if (x < 0) {
+    error("Should be a positive number")
+  }
+
+  return(NULL)
+}
 
 

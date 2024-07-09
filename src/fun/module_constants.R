@@ -26,8 +26,7 @@ constants_server <- function(const, constantsReactive) {
               return(format(constants$cost.register * constants$cost.pheno.field, digits = 2))
             }
             if (const == "initial.budget") {
-              # TODO, better to calculate this initial budget at game setup and save it in the db
-              return(format(constants$cost.pheno.field * constants$nb.plots * 10 * 1.3, digits = 2, scientific = F))
+              return(format(constants$initialBudget, digits = 2, scientific = F))
             }
             if (const == "cost.geno.single.mendels") {
               return(format(constants$cost.geno.single * constants$cost.pheno.field, digits = 2))
