@@ -26,7 +26,7 @@
 
 
 if (gameInitialised()) {
-  default_tab <- "Manage sessions"
+  default_tab <- "Game setup"
   manage_sessions_tab_content <- div(
     div(
       style = "margin-bottom:50px;",
@@ -308,7 +308,7 @@ if (gameInitialised()) {
   )
 
 
-  game_initialisation_report_part <- div(
+  game_setup_tab_content <- div(
     h2("Game initialisation report"),
 
     p("The game is initialised. You can download the related report that contains",
@@ -321,8 +321,8 @@ if (gameInitialised()) {
 
     tags$iframe(seamless = "seamless",
                 src = file.path("reports", basename(GAME_INIT_REPORT)),
-                height = 700,
-                width = "90%",
+                height = 900,
+                width = "95%",
                 id = "game_init_report")
   )
 
@@ -340,16 +340,13 @@ if (gameInitialised()) {
   manage_constants_tab_content <- game_not_initialised_msg
   disk_usage_tab_content <- game_not_initialised_msg
   game_progress_tab_content <- game_not_initialised_msg
-
-
-  game_initialisation_report_part <- div()
+  game_setup_tab_content <- game_not_initialised_msg
 }
 
 
 game_initialisation_tab_content <- div(
-  game_initialisation_report_part,
   div (
-    h2("Game (re)-initialisation"),
+    h1("Game Initialisation"),
     p("By pressing the button below, you can initialise the game."),
     p("Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game."),
     div(
@@ -361,8 +358,8 @@ game_initialisation_tab_content <- div(
       )
     ),
     div(
-      h3("Game Initialisation Parameters:"),
-      gameInit_seed_ui("gameInit_seed")
+      h2("Game Initialisation Parameters:"),
+      gameInit_seed_ui("gameInit_seed"),
     ),
     uiOutput("initialisation_button")
   )
@@ -373,6 +370,10 @@ game_initialisation_tab_content <- div(
 list(
   shinydashboard::tabBox(
     width = 12, title = "Admin", id = "admin_tabset", side = "left", selected = default_tab,
+    tabPanel(
+      "Game setup",
+      game_setup_tab_content
+    ),
     tabPanel(
       "Manage sessions",
       manage_sessions_tab_content
