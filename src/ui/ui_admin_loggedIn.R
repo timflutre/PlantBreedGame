@@ -193,7 +193,7 @@ if (gameInitialised()) {
 
   manage_constants_tab_content <- div(
     div(
-      id = "admin_seedYearEffect",
+      id = "admin_const_seedYearEffect",
       style = "margin: 0px 0px 40px 0px;",
 
       # input:
@@ -201,7 +201,7 @@ if (gameInitialised()) {
         id = "admin_div_numInput_seedYearEfect",
         style = "display: inline-block;
         vertical-align: top;",
-        numericInput("admin_seedYearEfect", "seed.year.effect",
+        numericInput("admin_seedYearEfect", "RNG Seed for year effect",
           value = 4321,
           min = 0,
           max = NA,
@@ -215,15 +215,47 @@ if (gameInitialised()) {
         style = "display: inline-block;
         vertical-align: top;
         padding-top: 25px", # button align with numInput
-        actionButton("admin_button_seedYearEfect", "update seed.year.effect")
+        actionButton("admin_button_seedYearEfect", "update year effect RNG seed")
       ),
 
       # current value:
       div(
         id = "admin_currentSYE",
-        "Current", code("seed.year.effect"), ":", textOutput("admin_currentSYE", container = span)
+        "Current", code("year effect RNG seed"), ":", textOutput("admin_currentSYE", container = span)
       )
-    ) # end div "admin_seedYearEffect"
+    ), # end div "admin_seedYearEffect"
+
+    div(
+      id = "admin_const_initialBudget",
+      style = "margin: 0px 0px 40px 0px;",
+
+      # input:
+      div(
+        id = "admin_div_numInput_initialBudget",
+        style = "display: inline-block;
+        vertical-align: top;",
+        numericInput("admin_const_initialBudget", "Initial budget (relative to phenotyping plot)",
+          value = constantsReactive()$initialBudget / constantsReactive()$cost.pheno.field,
+          min = 0,
+          max = NA,
+          step = 100
+        )
+      ),
+
+      div(
+        id = "admin_div_button_const_initialBudget",
+        style = "display: inline-block;
+        vertical-align: top;
+        padding-top: 25px", # button align with numInput
+        actionButton("admin_button_const_initialBudget", "update initial budget")
+      ),
+
+      # current value:
+      div(
+        id = "admin_current_initial_budget",
+        "Current", code("initial budget"), ":", textOutput("admin_current_initial_budget", container = span)
+      )
+    )
   )
 
   disk_usage_tab_content <- div(

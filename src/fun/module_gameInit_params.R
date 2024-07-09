@@ -82,6 +82,17 @@ gameInit_costs_ui <- function(id) {
 
   width_numInput <- "90%"
 
+  initBudget_label <- tooltip_label(
+    "Initial budget",
+    div(
+      p("The budget is not limiting for players.",
+        "If a player make a request without sufficient budget, the request",
+        "will be processed and player's remaining budget will be negative."
+      ),
+      p('This value can be changed durring the game in "Manage constant" tab.')
+    )
+  )
+
   div(
 
     collapible_section(
@@ -112,7 +123,7 @@ gameInit_costs_ui <- function(id) {
 
             h4("Other:", style = "margin-top: 20px;"),
             shiny::numericInput(ns("cost.register"), label = 'Final evaluation registration', value = 4, step = 0.1, width = width_numInput),
-            shiny::numericInput(ns("initialBudget"), label = "Initial budget", value = 3900, step = 100, width = width_numInput)
+            shiny::numericInput(ns("initialBudget"), label = initBudget_label, value = 3900, step = 100, width = width_numInput)
             # 3900 = 300 plots * 10 years + 30%
           ),
 

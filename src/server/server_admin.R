@@ -272,54 +272,74 @@ observeEvent(input$deleteSession, {
 
 ## Constant managment ----
 
-# 1. seed.year.effect:
 # get the current value
 output$admin_currentSYE <- renderText({
   input$admin_button_seedYearEfect # take depedency
-  yearEffectSeed <- getBreedingGameConstants()$seed.year.effect
-  yearEffectSeed
+  getBreedingGameConstants()$seed.year.effect
+})
+output$admin_current_initial_budget <- renderText({
+  input$admin_button_const_initialBudget # take depedency
+  game_constants <- getBreedingGameConstants()
+  game_constants$initialBudget / game_constants$cost.pheno.field
 })
 
 # update new value
 observeEvent(input$admin_button_seedYearEfect, {
   newSeed <- input$admin_seedYearEfect
 
-  # check input value (must be a numeric)
-  checkOK <- TRUE
-  if (is.na(newSeed)) checkOK <- FALSE
-
-  # update data base
-  checkDB <- 1
-  if (checkOK) {
+  error <- valid_rng_seed(newSeed)
+  if (is.null(error)) {
     query <- paste0(
       "UPDATE constants SET value = ",
       newSeed, " WHERE item=='seed.year.effect'"
     )
     db_execute_request(query)
-  }
 
-  # notification messages
-  if (checkOK & checkDB == 1) {
-    notifMessage <- paste("seed.year.effect updated.")
+    notifMessage <- paste("Year effect seed updated.")
     showNotification(notifMessage,
       duration = 2, closeButton = TRUE,
       type = "default"
     )
-  } else if (!checkOK) { # !checkOK
-    notifMessage <- paste("ERROR: Submitted value is not an integer.")
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-  } else { # checkOK & checkDB!=1
-    notifMessage <- paste("ERROR during SQL execution")
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
+
+    return(NULL)
   }
+
+    notifMessage <- paste("ERROR:", error)
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "error"
+    )
+
 })
 
+observeEvent(input$admin_button_const_initialBudget, {
+
+  new_initial_budget <- input$admin_const_initialBudget * getBreedingGameConstants()$cost.pheno.field
+
+  error <- valid_positive_number(new_initial_budget)
+  if (is.null(error)) {
+    query <- paste0(
+      "UPDATE constants SET value = ",
+      new_initial_budget, " WHERE item=='initialBudget'"
+    )
+    db_execute_request(query)
+
+    notifMessage <- paste("Initial budget updated.")
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "default"
+    )
+
+    return(NULL)
+  }
+
+    notifMessage <- paste("ERROR:", seed_error)
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "error"
+    )
+
+})
 
 
 
