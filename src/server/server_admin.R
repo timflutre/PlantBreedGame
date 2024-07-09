@@ -648,7 +648,7 @@ output$admin_T1T2GameProgress <- renderPlotly({
 
 
 output$download_game_init_report <- downloadHandler(
-  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%M-%d"), ".html"), # lambda function
+  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%m-%d"), ".html"), # lambda function
   content = function(file) file.copy(GAME_INIT_REPORT, file),
   contentType = "text/html"
 )
