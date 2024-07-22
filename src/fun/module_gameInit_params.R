@@ -259,7 +259,7 @@ gameInit_traits_ui <- function(id) {
         p(HTML("Approximately 99% of the phenotypes of the initial population",
           "will be above this value.",
           "<br/>It will be used to calculate the variance of the phenotypes:",
-          "\\({\\sigma_p}^2 = ((\\mu - {Min_t}^T) / 3)^2\\)")
+          "\\({\\sigma_p}^2 = ((\\mu - {Min_T}) / 3)^2\\)")
         )
       )
     )
@@ -359,7 +359,7 @@ gameInit_traits_ui <- function(id) {
 
         div(style = "display: flex;",
           div(style = "flex: 1;",
-            h4("Trait 1 (Yield):", style = "margin-top: 20px;"),
+            h4("Trait 1 (Yield):", style = "margin-top: 20px;", id = ns("inputs_T1")),
             shiny::numericInput(ns("t1_mu"), value = 100, step = 0.5, width = width_numInput,
               label = tooltip_label_mu(1)
             ),
@@ -373,7 +373,7 @@ gameInit_traits_ui <- function(id) {
               label = tooltip_label_h2(1)
             ),
 
-            h4("Trait 2 (Quality):", style = "margin-top: 20px;"),
+            h4("Trait 2 (Quality):", style = "margin-top: 20px;", id = ns("inputs_T2")),
             shiny::numericInput(ns("t2_mu"), value = 15, step = 0.5, width = width_numInput,
               label = tooltip_label_mu(2)
             ),
@@ -401,26 +401,33 @@ gameInit_traits_ui <- function(id) {
                 div(style = "flex: 1;",
                   h5("Trait 1:"),
                   tags$ul(
-                    tags$li("\\(\\mu =\\)", textOutput(ns("T1_mu"), inline = T)),
-                    tags$li("\\({\\sigma_p}^2 =\\)", textOutput(ns("T1_sig_p"), inline = T)),
-                    tags$li("\\({\\sigma_a}^2 =\\)", textOutput(ns("T1_sig_a"), inline = T)),
-                    tags$li("\\({\\sigma}^2 =\\)", textOutput(ns("T1_sig"), inline = T)),
-                    tags$li("\\({\\sigma_y}^2 =\\)", textOutput(ns("T1_sig_y"), inline = T))
+                    tags$li(id = ns("prev_t1_mu"), "\\(\\mu =\\)", textOutput(ns("T1_mu"), inline = T)),
+                    tags$li(id = ns("prev_t1_sp2"), "\\({\\sigma_p}^2 =\\)", textOutput(ns("T1_sig_p2"), inline = T)),
+                    tags$li(id = ns("prev_t1_sa2"), "\\({\\sigma_a}^2 =\\)", textOutput(ns("T1_sig_a2"), inline = T)),
+                    tags$li(id = ns("prev_t1_s2"), "\\({\\sigma}^2 =\\)", textOutput(ns("T1_sig2"), inline = T)),
+                    tags$li(id = ns("prev_t1_sy2"), "\\({\\sigma_y}^2 =\\)", textOutput(ns("T1_sig_y2"), inline = T))
                   )
                 ),
                 div(style = "flex: 1;",
                   h5("Trait 2:"),
                   tags$ul(
-                    tags$li("\\(\\mu =\\)", textOutput(ns("T2_mu"), inline = T)),
-                    tags$li("\\({\\sigma_p}^2 =\\)", textOutput(ns("T2_sig_p"), inline = T)),
-                    tags$li("\\({\\sigma_a}^2 =\\)", textOutput(ns("T2_sig_a"), inline = T)),
-                    tags$li("\\({\\sigma}^2 =\\)", textOutput(ns("T2_sig"), inline = T)),
-                    tags$li("\\({\\sigma_y}^2 =\\)", textOutput(ns("T2_sig_y"), inline = T))
+                    tags$li(id = ns("prev_t2_mu"), "\\(\\mu =\\)", textOutput(ns("T2_mu"), inline = T)),
+                    tags$li(id = ns("prev_t2_sp2"), "\\({\\sigma_p}^2 =\\)", textOutput(ns("T2_sig_p2"), inline = T)),
+                    tags$li(id = ns("prev_t2_sa2"), "\\({\\sigma_a}^2 =\\)", textOutput(ns("T2_sig_a2"), inline = T)),
+                    tags$li(id = ns("prev_t2_s2"), "\\({\\sigma}^2 =\\)", textOutput(ns("T2_sig2"), inline = T)),
+                    tags$li(id = ns("prev_t2_sy2"), "\\({\\sigma_y}^2 =\\)", textOutput(ns("T2_sig_y2"), inline = T))
                   )
                 )
               )
             ),
-            plotlyOutput(ns("pheno_plot"), width = "100%")
+            plotlyOutput(ns("pheno_plot"), width = "100%"),
+            tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+              "Note: The graphs above show an example of what the phenotypic values of",
+              "the initial population will look like. The actual values",
+              "generated durring the game initialisation will have a similar",
+              "structure but will be different."
+            )
+
           )
         )
       )
@@ -428,18 +435,18 @@ gameInit_traits_ui <- function(id) {
   )
 }
 
-quick_pheno_simul <- function(mu, min, cv_g, h2) {
+quick_pheno_simul <- function(mu, min, cv_g, h2, seed = 1993) {
 
   saved_seed <- .Random.seed
-  set.seed(1993)
+  set.seed(seed)
   n_inds <- 100
   n_years <- 5
   first_year <- 1
 
-  sig_p <- calc_sigma_p(mu, min)
-  sig_a <- calc_sigma_a(cv_g, mu)
-  sig <- calc_sigma(h2, sig_a)
-  sig_y <- calc_sigma_y(sig_p, sig_a, sig)
+  sig_p <- calc_sigma_p2(mu, min)
+  sig_a <- calc_sigma_a2(cv_g, mu)
+  sig <- calc_sigma2(h2, sig_a)
+  sig_y <- calc_sigma_y2(sig_p, sig_a, sig)
 
   df <- data.frame(
     i = seq(1, n_inds),
@@ -459,51 +466,181 @@ quick_pheno_simul <- function(mu, min, cv_g, h2) {
   return(df)
 }
 
-calc_sigma_p <- function(mu, min) {((mu - min)/3)^2}
-calc_sigma_a <- function(cv_g, mu) {(cv_g * mu)^2}
-calc_sigma <- function(h2, sigma_a) {((1 - h2) / h2) * sigma_a}
-calc_sigma_y <-  function(sigma_p, sigma_a, sigma) {sigma_p - sigma_a - sigma}
 
 gameInit_traits_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
 
 
     pheno_params_validator <- InputValidator$new()
-    # pheno_params_validator$add_rule("t1_mu", sv_integer())
+    pheno_params_validator_T1 <- InputValidator$new()
+    pheno_params_validator_T1$add_rule("t1_mu", valid_mu)
+    pheno_params_validator_T1$add_rule("t1_min", function(x){valid_Tmin(x, input$t1_mu)})
+    pheno_params_validator_T1$add_rule("t1_cv_g", valid_cv_g)
+    pheno_params_validator_T1$add_rule("t1_h2", valid_h2)
+    valid_T1_sigma_y2 <- function(x) {
+      valid_variance(T1_sig_y2(), "year effects", accept_na = TRUE)
+    }
+    pheno_params_validator_T1$add_rule("t1_min", valid_T1_sigma_y2)
+    pheno_params_validator_T1$add_rule("t1_cv_g", valid_T1_sigma_y2)
+    pheno_params_validator_T1$add_rule("t1_h2", valid_T1_sigma_y2)
 
+    pheno_params_validator_T2 <- InputValidator$new()
+    pheno_params_validator_T2$add_rule("t2_mu", valid_mu)
+    pheno_params_validator_T2$add_rule("t2_min", function(x){valid_Tmin(x, input$t2_mu)})
+    pheno_params_validator_T2$add_rule("t2_cv_g", valid_cv_g)
+    pheno_params_validator_T2$add_rule("t2_h2", valid_h2)
+    valid_T2_sigma_y2 <- function(x) {
+      valid_variance(T2_sig_y2(), "year effects", accept_na = TRUE)
+    }
+    pheno_params_validator_T2$add_rule("t2_min", valid_T2_sigma_y2)
+    pheno_params_validator_T2$add_rule("t2_cv_g", valid_T2_sigma_y2)
+    pheno_params_validator_T2$add_rule("t2_h2", valid_T2_sigma_y2)
+
+    pheno_params_validator$add_validator(pheno_params_validator_T1)
+    pheno_params_validator$add_validator(pheno_params_validator_T2)
     iv$add_validator(pheno_params_validator)
 
 
-    output$T1_mu <- renderText({input$t1_mu})
-    output$T1_sig_p <- renderText({
-      round(calc_sigma_p(input$t1_mu, input$t1_min), 4)
+    observe({
+      id_t1 = session$ns("inputs_T1")
+      if (pheno_params_validator_T1$is_valid()) {
+        # shinyjs::removeClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_t1, '").removeClass("has-error");'))
+      } else {
+        # shinyjs::addClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_t1, '").addClass("has-error");'))
+      }
+
+      id_t2 = session$ns("inputs_T2")
+      if (pheno_params_validator_T2$is_valid()) {
+        # shinyjs::removeClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_t2, '").removeClass("has-error");'))
+      } else {
+        # shinyjs::addClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_t2, '").addClass("has-error");'))
+      }
+
+      id_mainTitle = session$ns("pheno_simul_title")
+      if (pheno_params_validator$is_valid()) {
+        # shinyjs::removeClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_mainTitle, '").removeClass("has-error");'))
+      } else {
+        # shinyjs::addClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_mainTitle, '").addClass("has-error");'))
+      }
     })
-    output$T1_sig_a <- renderText({calc_sigma_a(input$t1_cv_g, input$t1_mu)})
-    output$T1_sig <- renderText({
-      T1_sig_a <- calc_sigma_a(input$t1_cv_g, input$t1_mu)
-      round(calc_sigma(input$t1_h2, T1_sig_a), 4)
+
+
+    T1_sig_p2 <- reactive({
+      T1_sig_p2<- calc_sigma_p2(input$t1_mu, input$t1_min)
+      id = session$ns("prev_t1_sp2")
+      if (is.null(valid_variance(T1_sig_p2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T1_sig_p2
     })
-    output$T1_sig_y <- renderText({
-      T1_sig_p <- calc_sigma_p(input$t1_mu, input$t1_min)
-      T1_sig_a <- calc_sigma_a(input$t1_cv_g, input$t1_mu)
-      T1_sig <- calc_sigma(input$t1_h2, T1_sig_a)
-      round(calc_sigma_y(T1_sig_p, T1_sig_a, T1_sig), 4)
+    T1_sig_a2 <- reactive({
+      T1_sig_a2 <- calc_sigma_a2(input$t1_cv_g, input$t1_mu)
+      id = session$ns("prev_t1_sa2")
+      if (is.null(valid_variance(T1_sig_a2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T1_sig_a2
     })
-    output$T2_mu <- renderText({input$t2_mu})
-    output$T2_sig_p <- renderText({
-      round(calc_sigma_p(input$t2_mu, input$t2_min), 4)
+    T1_sig2 <- reactive({
+      T1_sig2 <- calc_sigma2(input$t1_h2, T1_sig_a2())
+      id = session$ns("prev_t1_s2")
+      if (is.null(valid_variance(T1_sig2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T1_sig2
     })
-    output$T2_sig_a <- renderText({calc_sigma_a(input$t2_cv_g, input$t2_mu)})
-    output$T2_sig <- renderText({
-      T2_sig_a <- calc_sigma_a(input$t2_cv_g, input$t2_mu)
-      round(calc_sigma(input$t2_h2, T2_sig_a), 4)
+    T1_sig_y2 <- reactive({
+      T1_sig_y2 <- calc_sigma_y2(T1_sig_p2(), T1_sig_a2(), T1_sig2())
+      id = session$ns("prev_t1_sy2")
+      if (is.null(valid_variance(T1_sig_y2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T1_sig_y2
     })
-    output$T2_sig_y <- renderText({
-      T2_sig_p <- calc_sigma_p(input$t2_mu, input$t2_min)
-      T2_sig_a <- calc_sigma_a(input$t2_cv_g, input$t2_mu)
-      T2_sig <- calc_sigma(input$t2_h2, T2_sig_a)
-      round(calc_sigma_y(T2_sig_p, T2_sig_a, T2_sig), 4)
+
+    T2_sig_p2 <- reactive({
+      T2_sig_p2<- calc_sigma_p2(input$t2_mu, input$t2_min)
+      id = session$ns("prev_t2_sp2")
+      if (is.null(valid_variance(T2_sig_p2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T2_sig_p2
     })
+    T2_sig_a2 <- reactive({
+      T2_sig_a2 <- calc_sigma_a2(input$t2_cv_g, input$t2_mu)
+      id = session$ns("prev_t2_sa2")
+      if (is.null(valid_variance(T2_sig_a2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T2_sig_a2
+    })
+    T2_sig2 <- reactive({
+      T2_sig2 <- calc_sigma2(input$t2_h2, T2_sig_a2())
+      id = session$ns("prev_t2_s2")
+      if (is.null(valid_variance(T2_sig2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T2_sig2
+    })
+    T2_sig_y2 <- reactive({
+      T2_sig_y2 <- calc_sigma_y2(T2_sig_p2(), T2_sig_a2(), T2_sig2())
+      id = session$ns("prev_t2_sy2")
+      if (is.null(valid_variance(T2_sig_y2))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      T2_sig_y2
+    })
+
+
+    output$T1_mu <- renderText({
+      id = session$ns("prev_t1_mu")
+      if (is.null(valid_mu(input$t1_mu))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      input$t1_mu
+    })
+    output$T1_sig_p2 <- renderText({round(T1_sig_p2(), 4)})
+    output$T1_sig_a2 <- renderText({round(T1_sig_a2(), 4)})
+    output$T1_sig2 <- renderText({round(T1_sig2(), 4)})
+    output$T1_sig_y2 <- renderText({round(T1_sig_y2(), 4)})
+
+    output$T2_mu <- renderText({
+      id = session$ns("prev_t2_mu")
+      if (is.null(valid_mu(input$t2_mu))) {
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+      input$t2_mu
+    })
+    output$T2_sig_p2 <- renderText({round(T2_sig_p2(), 4)})
+    output$T2_sig_a2 <- renderText({round(T2_sig_a2(), 4)})
+    output$T2_sig2 <- renderText({round(T2_sig2(), 4)})
+    output$T2_sig_y2 <- renderText({round(T2_sig_y2(), 4)})
 
 
     output$pheno_plot <- renderPlotly({
@@ -517,8 +654,8 @@ gameInit_traits_server <- function(id, iv) {
       T2_cv_g <- input$t2_cv_g
       T2_h2 <- input$t2_h2
 
-      data_t1 <- quick_pheno_simul(T1_mu, T1_min, T1_cv_g, T1_h2)
-      data_t2 <- quick_pheno_simul(T2_mu, T2_min, T2_cv_g, T2_h2)
+      data_t1 <- quick_pheno_simul(T1_mu, T1_min, T1_cv_g, T1_h2, seed = 1993)
+      data_t2 <- quick_pheno_simul(T2_mu, T2_min, T2_cv_g, T2_h2, seed = 42)
 
       fig_T1 <- plot_ly(
         data_t1,
@@ -555,7 +692,7 @@ gameInit_traits_server <- function(id, iv) {
         )
 
       fig <- subplot(fig_T1, fig_T2, nrows = 2, titleX = TRUE, titleY = TRUE, margin = 0.1) %>% layout(
-        title = "Simulated phenotypic values for the initial population"
+        title = "Example of phenotypic values\nfor the initial population"
       )
 
       return(fig)

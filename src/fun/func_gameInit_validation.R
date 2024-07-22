@@ -44,7 +44,45 @@ valid_rng_seed <- function(seed, accept_null = TRUE, raise_error = FALSE) {
   return(NULL)
 }
 
-valid_positive_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
+valid_positive_number <- function(x, strict = FALSE, accept_null = TRUE, raise_error = FALSE) {
+
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  strictly <- ""
+  if (strict) {
+    strictly <- "strictly "
+  }
+
+  if (is.na(x)) {
+    error(paste0("Mandatory and should be a ", strictly, "positive number"))
+  }
+
+  if (!is.numeric(x)) {
+    error(paste0("Should be a ", strictly, "positive number"))
+  }
+
+  if (x < 0) {
+    error(paste0("Should be a ", strictly, "positive number"))
+  }
+
+  if (strict && x == 0) {
+    error(paste0("Should be a ", strictly, "positive number"))
+  }
+
+  return(NULL)
+}
+
+valid_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
 
   error <- return
   if (raise_error) {
@@ -59,18 +97,114 @@ valid_positive_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
   }
 
   if (is.na(x)) {
-    error("Mandatory and should be a positive number")
-  }
-
-  if (!is.numeric(x)) {
-    error("Should be a positive number")
-  }
-
-  if (x < 0) {
-    error("Should be a positive number")
+    error("Mandatory and should be a number")
   }
 
   return(NULL)
 }
 
+valid_mu <- function(x, accept_null = TRUE, raise_error = FALSE) {
+  valid_number(x, accept_null, raise_error)
+}
+
+valid_Tmin <- function(x, mu, accept_null = TRUE, raise_error = FALSE) {
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  if (is.na(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  if (is.na(mu)) {
+    return(NULL)
+  }
+
+  if (x >= mu) {
+    error(paste("Must be strictly lower than μ =", mu))
+  }
+
+  return(NULL)
+}
+
+valid_cv_g <- function(x, accept_null = TRUE, raise_error = FALSE) {
+  valid_positive_number(x, strict = TRUE, accept_null, raise_error)
+}
+
+valid_h2 <- function(x, accept_null = TRUE, raise_error = FALSE) {
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  if (x <= 0) {
+    error("Should be strictly between 0 and 1")
+  }
+  if (x >= 1) {
+    error("Should be strictly between 0 and 1")
+  }
+  return(NULL)
+}
+
+
+calc_sigma_p2 <- function(mu, min) {((mu - min)/3)^2}
+calc_sigma_a2 <- function(cv_g, mu) {(cv_g * mu)^2}
+calc_sigma2 <- function(h2, sigma_a2) {((1 - h2) / h2) * sigma_a2}
+calc_sigma_y2 <- function(sigma_p2, sigma_a2, sigma2) {sigma_p2 - sigma_a2 - sigma2}
+
+valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE, raise_error = FALSE) {
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (length(x) == 0) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("No variance provided")
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  var_name = ""
+  if (!is.null(name)) {
+    var_name = paste(" for", name)
+  }
+
+  if (is.na(x)) {
+    if (accept_na) {
+      return(NULL)
+    }
+    error(paste0("variance is NA", var_name))
+  }
+
+  if (x <= 0) {
+    error(paste0("This value leads to negative variance", var_name))
+  }
+  if (x == Inf) {
+    error(paste0("This value leads to an infinite variance", var_name))
+  }
+  return(NULL)
+}
 
