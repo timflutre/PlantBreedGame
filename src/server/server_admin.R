@@ -695,7 +695,7 @@ gameInit_seed <- gameInit_seed_server("gameInit_seed", gameInit_input_validator)
 
 gameInit_costs <- gameInit_costs_server("gameInit_costs", gameInit_input_validator)
 
-
+gameInit_traits <- gameInit_traits_server("gameInit_geno_pheno_simul", gameInit_input_validator)
 
 
 gameInit_input_validator$add_rule("initialisation_security_text", function(x) {

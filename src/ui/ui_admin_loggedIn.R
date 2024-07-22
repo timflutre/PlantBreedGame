@@ -392,6 +392,7 @@ game_initialisation_tab_content <- div(
     div(
       h2("Game Initialisation Parameters:"),
       gameInit_seed_ui("gameInit_seed"),
+      gameInit_traits_ui("gameInit_geno_pheno_simul"),
       gameInit_costs_ui("gameInit_costs")
     ),
     uiOutput("initialisation_button")
