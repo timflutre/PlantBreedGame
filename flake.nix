@@ -19,6 +19,7 @@
           shinydashboard
           shinycssloaders
           shinyjs
+          shinyvalidate
           RSQLite
           MASS
           digest
@@ -29,6 +30,7 @@
           vistime
           scrm
           GenomicRanges
+          bsicons
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";

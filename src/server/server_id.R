@@ -196,8 +196,8 @@ budget <- reactive({
       expenses <- 0
     }
 
-    iniTialBuget <- constants$initialBudget
-    return(round(iniTialBuget - expenses, 2))
+    initialBuget <- constants$initialBudget
+    return(round(initialBuget - expenses, 2))
   }
 })
 

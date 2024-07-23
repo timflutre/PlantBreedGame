@@ -4,6 +4,27 @@ author: "Timothée Flutre (INRA)"
 date: "`r format(Sys.time(), '%d/%m/%Y %H:%M:%S')`"
 params:
   progressBar: NULL
+  rng_seed: 1993
+  cost.pheno.field: 50
+  cost.pheno.patho: 0.1
+  cost.allof: 0.1
+  cost.autof: 0.25
+  cost.haplodiplo: 1
+  cost.geno.hd: 1
+  cost.geno.ld: 0.5
+  cost.geno.single: 0.02
+  cost.register: 4
+  initialBudget: 3900
+  t1_mu: 20
+  t1_min: 100
+  t1_cv_g: 0.1
+  t1_h2: 0.3
+  t2_mu: 15
+  t2_min: 5
+  t2_cv_g: 0.06
+  t2_h2: 0.6
+  prop_pleio: 0.4
+  cor_pleio: -0.7
 colorlinks: true
 output:
   html_document:
@@ -11,26 +32,23 @@ output:
     toc_depth: 4
     toc_float: true
     number_sections: TRUE
+    code_folding: hide
+    self_contained: yes
   pdf_document:
     toc: true
     toc_depth: 4
     number_sections: TRUE
 ---
 
-<!--
-This R chunk is used to set up important options and load required packages.
--->
 ```{r setup, include=FALSE}
 progressBar <- params$progressBar
 
 if (is.null(progressBar)) {
   progressBar <- list(
-    set = function(...){return(NULL)},
-    getValue = function(...){return(NULL)}
+    set = function(...){return(invisible(NULL))},
+    getValue = function(...){return(invisible(NULL))}
   )
 }
-
-
 
 R.v.maj <- as.numeric(R.version$major)
 R.v.min.1 <- as.numeric(strsplit(R.version$minor, "\\.")[[1]][1])
@@ -39,9 +57,19 @@ if (R.v.maj < 2 || (R.v.maj == 2 && R.v.min.1 < 15)) {
 }
 
 suppressPackageStartupMessages(library(knitr))
-opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE, cache = FALSE, fig.align = "center")
+opts_chunk$set(
+  echo = TRUE,
+  warning = TRUE,
+  message = TRUE,
+  cache = FALSE,
+  fig.align = "center",
+  results = "hold",
+  strip.white = TRUE
+)
 
 options(stringsAsFactors = TRUE) # R-4.0.0 compatibility
+
+t0 <- proc.time()
 ```
 
 
@@ -57,13 +85,8 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 
 # Set up the environment
 
-This R chunk is used to assess how much time it takes to execute the R code in this document until the end:
-```{r time_0}
-t0 <- proc.time()
-```
+```{r load_pkgs}
 
-Load the packages:
-```{r load_pkg}
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = "Load R packages..."
@@ -99,15 +122,73 @@ suppressPackageStartupMessages(library(scrm)) # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges)) # from bioconductor
 
 source("fun/functions.R")
+source("fun/module_gameInit_params.R")
+source("fun/func_gameInit_validation.R")
+
 ```
 
-Set the seed:
+# Parameters
+
+Validation and overview of the parameters used to initialised this game session.
+
 ```{r}
-RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
-set.seed(1993) # better to change it from one game session to the next
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = "Parameter validation..."
+)
+
+invisible({
+  valid_rng_seed(params$rng_seed, accept_null = FALSE, raise_error = TRUE)
+
+  valid_positive_number(params$cost.pheno.field, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.pheno.patho, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.allof, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.autof, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.haplodiplo, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.geno.hd, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.geno.ld, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.geno.single, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$cost.register, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_number(params$initialBudget, accept_null = FALSE, raise_error = TRUE)
+
+  valid_mu(params$t1_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_Tmin(params$t1_min, params$t1_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_cv_g(params$t1_cv_g, accept_null = FALSE, raise_error = TRUE)
+  valid_h2(params$t1_h2, accept_null = FALSE, raise_error = TRUE)
+
+  valid_mu(params$t2_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_Tmin(params$t2_min, params$t2_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_cv_g(params$t2_cv_g, accept_null = FALSE, raise_error = TRUE)
+  valid_h2(params$t2_h2, accept_null = FALSE, raise_error = TRUE)
+
+  t1_sig_p2 <- calc_sigma_p2(params$t1_mu, params$t1_min)
+  valid_variance(t1_sig_p2, "phenotypes T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig_a2 <- calc_sigma_a2(params$t1_cv_g, params$t1_mu)
+  valid_variance(t1_sig_a2, "genetic values T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig2 <- calc_sigma2(params$t1_h2, t1_sig_a2)
+  valid_variance(t1_sig2, "noise T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig_y2 <- calc_sigma_y2(t1_sig_p2, t1_sig_a2, t1_sig2 )
+  valid_variance(t1_sig_y2, "year effects T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+
+  t2_sig_p2 <- calc_sigma_p2(params$t2_mu, params$t2_min)
+  valid_variance(t2_sig_p2, "phenotypes T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig_a2 <- calc_sigma_a2(params$t2_cv_g, params$t2_mu)
+  valid_variance(t2_sig_a2, "genetic values T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig2 <- calc_sigma2(params$t2_h2, t2_sig_a2)
+  valid_variance(t2_sig2, "noise T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig_y2 <- calc_sigma_y2(t2_sig_p2, t2_sig_a2, t2_sig2 )
+  valid_variance(t2_sig_y2, "year effects T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+
+  valid_prop_pleio(params$prop_pleio, accept_null = FALSE, raise_error = TRUE)
+  valid_cor_pleio(params$cor_pleio, accept_null = FALSE, raise_error = TRUE)
+
+})
+
+print(params[names(params) != "progressBar"])
 ```
 
-Set up directories:
+# Set up data directories and RNG seed
+
 ```{r setup_dir}
 progressBar$set(
   value = progressBar$getValue() + 1,
@@ -133,8 +214,15 @@ dir.create(truth.dir)
 dir.create(shared.dir)
 dir.create(init.dir)
 dir.create(reports.dir)
-
 ```
+
+
+```{r}
+RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
+set.seed(params$rng_seed)
+```
+
+# Create initial breeders
 
 Create the "admin" and "test" players (other players are created via the interface):
 ```{r}
@@ -164,15 +252,16 @@ ind.ids <- sprintf(fmt = paste0("ind%0", floor(log10(I)) + 1, "i"), 1:I)
 
 Simulate haplotypes and genotypes of initial individuals:
 
-* hyp: single pop
+- hypothesis: single pop
 
-* hyp: no inter-chrom LD
+- hypothesis: no inter-chrom LD
 
-* hyp: all chroms have the same length
+- hypothesis: all chroms have the same length
 
-* hyp: individuals are diploids
+- hypothesis: individuals are diploids
 
-* scaling: measure time in units of 4 x N_e generations
+- scaling: measure time in units of `4 * N_e` generations
+
 
 ```{r init_chrs}
 nb.chrs <- 10
@@ -379,7 +468,7 @@ Enhancement: panmixia with, say, 40 genotypes for 3 generations
 
 Ascertain SNPs for the genotyping arrays (high and low density):
 
-* hyp: mimick de novo sequencing of a few individuals
+- hypothesis: mimick de novo sequencing of a few individuals
 
 ```{r ascertain_snps}
 nb.inds.denovo <- 20
@@ -695,13 +784,13 @@ Here is the procedure for trait 1 of setting the variances required by the gener
 We set the initial phenotypic mean, $\mu_p$, to a global intercept which will be held constant during the whole game: $\mu_p = \mu$.
 
 ```{r simul_proc_t1_mu}
-(mu <- 100)
+(mu <- params$t1_mu)
 ```
 
 We set the individual-plant phenotypic variance so that approximately 99% of all the phenotypes are above a minimal value: $\mu - 3 \sigma_p \ge y_{\text{min}}$.
 
 ```{r simul_proc_t1_sigma_p2}
-y.min <- 20
+y.min <- params$t1_min
 (sigma.p2 <- ((mu - y.min) / 3)^2)
 sqrt(sigma.p2)
 ```
@@ -730,7 +819,7 @@ We deduce the genotypic coef of variation:
 
 However, because the previous computations don't account for the negative correlation between traits, we still fix the CVg by hand at this point:
 ```{r}
-CV.g <- 0.10
+CV.g <- params$t1_cv_g
 ```
 
 We deduce the (additive) genotypic variance:
@@ -744,7 +833,7 @@ stopifnot(sigma.a2 < sigma.p2)
 We deduce the error variance given that the intra-annual, individual-plant heritability is set at a particular value: $h^2 = \frac{\sigma_a^2}{\sigma_a^2 + \sigma^2}$.
 
 ```{r simul_proc_t1_sigma2}
-h2 <- 0.3
+h2 <- params$t1_h2
 (sigma2 <- ((1 - h2) / h2) * sigma.a2)
 sqrt(sigma2)
 stopifnot(sigma2 + sigma.a2 < sigma.p2)
@@ -792,13 +881,13 @@ Here is the procedure for trait 2 of setting the variances required by the gener
 We fix the initial phenotypic mean, $\mu_p$, to a global intercept which will be held constant during the whole game: $\mu_p = \mu$.
 
 ```{r simul_proc_t2_mu}
-(mu <- 15)
+(mu <- params$t2_mu)
 ```
 
 We deduce the individual-plant phenotypic variance so that approximately 99% of all the phenotypes are above a minimal value: $\mu - 3 \sigma_p \ge y_{\text{min}}$.
 
 ```{r simul_proc_t2_sigma_p2}
-y.min <- 5
+y.min <- params$t2_min
 (sigma.p2 <- ((mu - y.min) / 3)^2)
 sqrt(sigma.p2)
 ```
@@ -812,7 +901,7 @@ register.min.trait2 <- mu
 We deduce the (additive) genotypic variance given that the genotypic coef of variation is set at a particular value:
 
 ```{r simul_proc_t2_sigma_a2}
-CV.g <- 0.06
+CV.g <- params$t2_cv_g
 (sigma.a2 <- (CV.g * mu)^2)
 sqrt(sigma.a2)
 stopifnot(sigma.a2 < sigma.p2)
@@ -821,7 +910,7 @@ stopifnot(sigma.a2 < sigma.p2)
 We deduce the error variance given that the intra-annual, individual-plant heritability is set at a particular value: $h^2 = \frac{\sigma_a^2}{\sigma_a^2 + \sigma^2}$.
 
 ```{r simul_proc_t2_sigma2}
-h2 <- 0.6
+h2 <- params$t2_h2
 (sigma2 <- ((1 - h2) / h2) * sigma.a2)
 sqrt(sigma2)
 stopifnot(sigma2 + sigma.a2 < sigma.p2)
@@ -873,7 +962,7 @@ Simulate the SNP effects for traits 1 and 2 jointly:
 snp.effects12 <- simulSnpEffectsTraits12(
   snp.ids = thin.snps,
   sigma.beta2 = sigma.beta2,
-  prop.pleio = 0.4, cor.pleio = -0.7
+  prop.pleio = params$prop_pleio, cor.pleio = params$cor_pleio
 )
 ```
 
@@ -1489,45 +1578,44 @@ res <- dbExecute(conn = db, query)
 
 Fill the table with the constants specifying the costs:
 ```{r table_constants_fill_costs}
-cost.pheno.field <- 50
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.pheno.field', '", cost.pheno.field, "')"
+  " ('cost.pheno.field', '", params$cost.pheno.field, "')"
 ) # in Mendels
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.pheno.patho', '", 1 / 10, "')"
+  " ('cost.pheno.patho', '", params$cost.pheno.patho, "')"
 ) # compare to one plot
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.allof', '", 1 / 10, "')"
+  " ('cost.allof', '", params$cost.allof, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.autof', '", 1 / 25, "')"
+  " ('cost.autof', '", params$cost.autof, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.haplodiplo', '", 1, "')"
+  " ('cost.haplodiplo', '", params$cost.haplodiplo, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.hd', '", 1, "')"
+  " ('cost.geno.hd', '", params$cost.geno.hd, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.ld', '", 1 / 2, "')"
+  " ('cost.geno.ld', '", params$cost.geno.ld, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.single', '", 1 / 50, "')"
+  " ('cost.geno.single', '", params$cost.geno.single, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 query <- paste0(
@@ -1538,7 +1626,7 @@ res <- dbExecute(conn = db, query)
 
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('initialBudget', '", cost.pheno.field * nb.plots * 10 * 1.3, "')"
+  " ('initialBudget', '", params$initialBudget * params$cost.pheno.field, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 ```

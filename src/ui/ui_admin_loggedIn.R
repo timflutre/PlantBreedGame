@@ -26,7 +26,7 @@
 
 
 if (gameInitialised()) {
-  default_tab <- "Manage sessions"
+  default_tab <- "Game setup"
   manage_sessions_tab_content <- div(
     div(
       style = "margin-bottom:50px;",
@@ -193,7 +193,7 @@ if (gameInitialised()) {
 
   manage_constants_tab_content <- div(
     div(
-      id = "admin_seedYearEffect",
+      id = "admin_const_seedYearEffect",
       style = "margin: 0px 0px 40px 0px;",
 
       # input:
@@ -201,7 +201,7 @@ if (gameInitialised()) {
         id = "admin_div_numInput_seedYearEfect",
         style = "display: inline-block;
         vertical-align: top;",
-        numericInput("admin_seedYearEfect", "seed.year.effect",
+        numericInput("admin_seedYearEfect", "RNG Seed for year effect",
           value = 4321,
           min = 0,
           max = NA,
@@ -215,15 +215,47 @@ if (gameInitialised()) {
         style = "display: inline-block;
         vertical-align: top;
         padding-top: 25px", # button align with numInput
-        actionButton("admin_button_seedYearEfect", "update seed.year.effect")
+        actionButton("admin_button_seedYearEfect", "update year effect RNG seed")
       ),
 
       # current value:
       div(
         id = "admin_currentSYE",
-        "Current", code("seed.year.effect"), ":", textOutput("admin_currentSYE", container = span)
+        "Current", code("year effect RNG seed"), ":", textOutput("admin_currentSYE", container = span)
       )
-    ) # end div "admin_seedYearEffect"
+    ), # end div "admin_seedYearEffect"
+
+    div(
+      id = "admin_const_initialBudget",
+      style = "margin: 0px 0px 40px 0px;",
+
+      # input:
+      div(
+        id = "admin_div_numInput_initialBudget",
+        style = "display: inline-block;
+        vertical-align: top;",
+        numericInput("admin_const_initialBudget", "Initial budget (relative to phenotyping plot)",
+          value = constantsReactive()$initialBudget / constantsReactive()$cost.pheno.field,
+          min = 0,
+          max = NA,
+          step = 100
+        )
+      ),
+
+      div(
+        id = "admin_div_button_const_initialBudget",
+        style = "display: inline-block;
+        vertical-align: top;
+        padding-top: 25px", # button align with numInput
+        actionButton("admin_button_const_initialBudget", "update initial budget")
+      ),
+
+      # current value:
+      div(
+        id = "admin_current_initial_budget",
+        "Current", code("initial budget"), ":", textOutput("admin_current_initial_budget", container = span)
+      )
+    )
   )
 
   disk_usage_tab_content <- div(
@@ -308,7 +340,7 @@ if (gameInitialised()) {
   )
 
 
-  game_initialisation_report_part <- div(
+  game_setup_tab_content <- div(
     h2("Game initialisation report"),
 
     p("The game is initialised. You can download the related report that contains",
@@ -321,8 +353,8 @@ if (gameInitialised()) {
 
     tags$iframe(seamless = "seamless",
                 src = file.path("reports", basename(GAME_INIT_REPORT)),
-                height = 700,
-                width = "90%",
+                height = 900,
+                width = "95%",
                 id = "game_init_report")
   )
 
@@ -340,16 +372,13 @@ if (gameInitialised()) {
   manage_constants_tab_content <- game_not_initialised_msg
   disk_usage_tab_content <- game_not_initialised_msg
   game_progress_tab_content <- game_not_initialised_msg
-
-
-  game_initialisation_report_part <- div()
+  game_setup_tab_content <- game_not_initialised_msg
 }
 
 
 game_initialisation_tab_content <- div(
-  game_initialisation_report_part,
   div (
-    h2("Game (re)-initialisation"),
+    h1("Game Initialisation"),
     p("By pressing the button below, you can initialise the game."),
     p("Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game."),
     div(
@@ -360,6 +389,12 @@ game_initialisation_tab_content <- div(
         tags$li(code("Tester"), "(this breeder do not have a password, you can leave the password field empty to connect)")
       )
     ),
+    div(
+      h2("Game Initialisation Parameters:"),
+      gameInit_seed_ui("gameInit_seed"),
+      gameInit_traits_ui("gameInit_geno_pheno_simul"),
+      gameInit_costs_ui("gameInit_costs")
+    ),
     uiOutput("initialisation_button")
   )
 )
@@ -369,6 +404,10 @@ game_initialisation_tab_content <- div(
 list(
   shinydashboard::tabBox(
     width = 12, title = "Admin", id = "admin_tabset", side = "left", selected = default_tab,
+    tabPanel(
+      "Game setup",
+      game_setup_tab_content
+    ),
     tabPanel(
       "Manage sessions",
       manage_sessions_tab_content

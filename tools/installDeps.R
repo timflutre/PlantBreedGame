@@ -20,7 +20,9 @@ install.packages(
     "shinyjs",
     "rmarkdown",
     "lubridate",
-    "vistime"
+    "vistime",
+    "shinyvalidate",
+    "bsicons"
   )
 )
 

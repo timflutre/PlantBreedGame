@@ -73,8 +73,7 @@ module.exports = defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    // command: "rm -r data; unzip data.zip -d .; nix run",
-    command: "nix run",
+    command: "rm -rf data/*; rm  data.zip; nix run",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: true,
   },

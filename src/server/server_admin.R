@@ -272,54 +272,74 @@ observeEvent(input$deleteSession, {
 
 ## Constant managment ----
 
-# 1. seed.year.effect:
 # get the current value
 output$admin_currentSYE <- renderText({
   input$admin_button_seedYearEfect # take depedency
-  yearEffectSeed <- getBreedingGameConstants()$seed.year.effect
-  yearEffectSeed
+  getBreedingGameConstants()$seed.year.effect
+})
+output$admin_current_initial_budget <- renderText({
+  input$admin_button_const_initialBudget # take depedency
+  game_constants <- getBreedingGameConstants()
+  game_constants$initialBudget / game_constants$cost.pheno.field
 })
 
 # update new value
 observeEvent(input$admin_button_seedYearEfect, {
   newSeed <- input$admin_seedYearEfect
 
-  # check input value (must be a numeric)
-  checkOK <- TRUE
-  if (is.na(newSeed)) checkOK <- FALSE
-
-  # update data base
-  checkDB <- 1
-  if (checkOK) {
+  error <- valid_rng_seed(newSeed)
+  if (is.null(error)) {
     query <- paste0(
       "UPDATE constants SET value = ",
       newSeed, " WHERE item=='seed.year.effect'"
     )
     db_execute_request(query)
-  }
 
-  # notification messages
-  if (checkOK & checkDB == 1) {
-    notifMessage <- paste("seed.year.effect updated.")
+    notifMessage <- paste("Year effect seed updated.")
     showNotification(notifMessage,
       duration = 2, closeButton = TRUE,
       type = "default"
     )
-  } else if (!checkOK) { # !checkOK
-    notifMessage <- paste("ERROR: Submitted value is not an integer.")
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-  } else { # checkOK & checkDB!=1
-    notifMessage <- paste("ERROR during SQL execution")
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
+
+    return(NULL)
   }
+
+    notifMessage <- paste("ERROR:", error)
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "error"
+    )
+
 })
 
+observeEvent(input$admin_button_const_initialBudget, {
+
+  new_initial_budget <- input$admin_const_initialBudget * getBreedingGameConstants()$cost.pheno.field
+
+  error <- valid_positive_number(new_initial_budget)
+  if (is.null(error)) {
+    query <- paste0(
+      "UPDATE constants SET value = ",
+      new_initial_budget, " WHERE item=='initialBudget'"
+    )
+    db_execute_request(query)
+
+    notifMessage <- paste("Initial budget updated.")
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "default"
+    )
+
+    return(NULL)
+  }
+
+    notifMessage <- paste("ERROR:", seed_error)
+    showNotification(notifMessage,
+      duration = 2, closeButton = TRUE,
+      type = "error"
+    )
+
+})
 
 
 
@@ -628,7 +648,7 @@ output$admin_T1T2GameProgress <- renderPlotly({
 
 
 output$download_game_init_report <- downloadHandler(
-  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%M-%d"), ".html"), # lambda function
+  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%m-%d"), ".html"), # lambda function
   content = function(file) file.copy(GAME_INIT_REPORT, file),
   contentType = "text/html"
 )
@@ -666,8 +686,29 @@ output$initialisation_button <- renderUI({
   )
 })
 
+
+
+
+gameInit_input_validator <- InputValidator$new()
+
+gameInit_seed <- gameInit_seed_server("gameInit_seed", gameInit_input_validator)
+
+gameInit_costs <- gameInit_costs_server("gameInit_costs", gameInit_input_validator)
+
+gameInit_traits <- gameInit_traits_server("gameInit_geno_pheno_simul", gameInit_input_validator)
+
+
+gameInit_input_validator$add_rule("initialisation_security_text", function(x) {
+  if (is.null(x)) return(NULL)
+  if (x != "plantbreedgame") return("")
+  }
+)
+
+gameInit_input_validator$enable()
+
+
 observe({
-  if (identical(input$initialisation_security_text, "plantbreedgame")) {
+  if (gameInit_input_validator$is_valid()) {
     shinyjs::enable("initialiseGame")
     return(TRUE)
   }
@@ -676,13 +717,23 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 15)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 16)
 
   progress_bar$set(
     value = 1,
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
+
+  if (!gameInit_input_validator$is_valid()) {
+    progress_bar$set(
+      value = 1,
+      message = "Game Initialisation:",
+      detail = "ERROR, invalid parameters"
+    )
+    return(NULL)
+  }
+
   if (gameInitialised()) {
     # WARN / TODO --- IMPORTANT ! ---
     # the initialisation script do not allow its execution if "the data" folder
@@ -723,8 +774,34 @@ observeEvent(input$initialiseGame, {
   )
 
   params <- list(
-      progressBar = progress_bar
+    progressBar = progress_bar,
+    rng_seed = gameInit_seed$value(),
+
+    cost.pheno.field = gameInit_costs$value()$cost.pheno.field,
+    cost.pheno.patho = gameInit_costs$value()$cost.pheno.patho,
+    cost.allof = gameInit_costs$value()$cost.allof,
+    cost.autof = gameInit_costs$value()$cost.autof,
+    cost.haplodiplo = gameInit_costs$value()$cost.haplodiplo,
+    cost.geno.hd = gameInit_costs$value()$cost.geno.hd,
+    cost.geno.ld = gameInit_costs$value()$cost.geno.ld,
+    cost.geno.single = gameInit_costs$value()$cost.geno.single,
+    cost.register = gameInit_costs$value()$cost.register,
+    initialBudget = gameInit_costs$value()$initialBudget,
+
+    t1_mu = gameInit_traits$value()$t1_mu,
+    t1_min = gameInit_traits$value()$t1_min,
+    t1_cv_g = gameInit_traits$value()$t1_cv_g,
+    t1_h2 = gameInit_traits$value()$t1_h2,
+
+    t2_mu = gameInit_traits$value()$t2_mu,
+    t2_min = gameInit_traits$value()$t2_min,
+    t2_cv_g = gameInit_traits$value()$t2_cv_g,
+    t2_h2 = gameInit_traits$value()$t2_h2,
+
+    prop_pleio = gameInit_traits$value()$prop_pleio,
+    cor_pleio = gameInit_traits$value()$cor_pleio
   )
+
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
     output_file = tempfile(),
     encoding = "UTF-8",
@@ -735,12 +812,12 @@ observeEvent(input$initialiseGame, {
 
   addResourcePath("reports", DATA_REPORTS)
 
-  print(progress_bar$getValue())
   progress_bar$set(
     value = progress_bar$max,
     message = "Game Initialisation:",
     detail = "Done"
   )
+
   alert("Game initialisation finished. This page will automatically refresh.")
   gameInitialised()
   shinyjs::refresh()
