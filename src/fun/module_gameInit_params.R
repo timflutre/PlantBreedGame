@@ -12,6 +12,7 @@
 
 library(shinyvalidate)
 library(shiny)
+library(plotly)
 
 tooltip_label <- function(label, description){
 
@@ -683,52 +684,81 @@ gameInit_traits_server <- function(id, iv) {
 
 
     output$pheno_plot <- renderPlotly({
-      T1_mu <- input$t1_mu
-      T1_min <- input$t1_min
-      T1_cv_g <- input$t1_cv_g
-      T1_h2 <- input$t1_h2
+      colors_T1 <- c("#1f77b4", "#ff7f0e")
+      colors_T2 <- c("#2ca02c", "#e12a2a")
+      if (!pheno_params_validator_T1$is_valid()) {
+        fig_T1 <- plot_ly(type = "box") %>%
+          add_annotations(
+            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            text = "Error with trait 1",
+            xanchor = 'center',
+            showarrow = FALSE
+          )
+      } else {
+        T1_mu <- input$t1_mu
+        T1_min <- input$t1_min
+        T1_cv_g <- input$t1_cv_g
+        T1_h2 <- input$t1_h2
 
-      T2_mu <- input$t2_mu
-      T2_min <- input$t2_min
-      T2_cv_g <- input$t2_cv_g
-      T2_h2 <- input$t2_h2
+        data_t1 <- quick_pheno_simul(T1_mu, T1_min, T1_cv_g, T1_h2, seed = 1993)
 
-      data_t1 <- quick_pheno_simul(T1_mu, T1_min, T1_cv_g, T1_h2, seed = 1993)
-      data_t2 <- quick_pheno_simul(T2_mu, T2_min, T2_cv_g, T2_h2, seed = 42)
+        fig_T1 <- plot_ly(
+          data_t1,
+          x = ~year,
+          y = ~pheno,
+          type = 'box',
+          name = "Trait 1",
+          color = "a",
+          colors = colors_T1) %>% add_lines(
+            data = NULL,
+            type = "scatter",
+            y = T1_mu,
+            mode = "lines",
+            name = "μ T1",
+            color = "b")
+      }
+      fig_T1 <- fig_T1 %>% layout(
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Phenotypes Trait 1")
+      )
 
-      fig_T1 <- plot_ly(
-        data_t1,
-        x = ~year,
-        y = ~pheno,
-        type = 'box',
-        name = "Trait 1") %>% add_lines(
-          data = NULL,
-          type = "scatter",
-          y = T1_mu,
-          mode = "lines",
-          name = "μ T1") %>% layout(
-          xaxis = list(
-            title = "Year"
-          ),
-          yaxis = list(title = "Phenotypes Trait 1")
-        )
+      if (!pheno_params_validator_T2$is_valid()) {
+        fig_T2 <- plot_ly(type = "box") %>%
+          add_annotations(
+            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            text = "Error with trait 2",
+            xanchor = 'center',
+            showarrow = F
+          )
+      } else {
+        T2_mu <- input$t2_mu
+        T2_min <- input$t2_min
+        T2_cv_g <- input$t2_cv_g
+        T2_h2 <- input$t2_h2
 
-      fig_T2 <- plot_ly(
-        data_t2,
-        x = ~year,
-        y = ~pheno,
-        type = 'box',
-        name = "Trait 2") %>% add_lines(
-          data = NULL,
-          type = "scatter",
-          y = T2_mu,
-          mode = "lines",
-          name = "μ T2") %>% layout(
-          xaxis = list(
-            title = "Year"
-          ),
-          yaxis = list(title = "Phenotypes Trait 2")
-        )
+        data_t2 <- quick_pheno_simul(T2_mu, T2_min, T2_cv_g, T2_h2, seed = 42)
+
+
+        fig_T2 <- plot_ly(
+          data_t2,
+          x = ~year,
+          y = ~pheno,
+          type = 'box',
+          name = "Trait 2",
+          color = "a",
+          colors = colors_T2) %>% add_lines(
+            data = NULL,
+            type = "scatter",
+            y = T2_mu,
+            mode = "lines",
+            name = "μ T2",
+            color = "b")
+      }
+
+      fig_T2 <- fig_T2 %>% layout(
+        xaxis = list(title = "Year"),
+        yaxis = list(title = "Phenotypes Trait 2")
+      )
 
       fig <- subplot(fig_T1, fig_T2, nrows = 2, titleX = TRUE, titleY = TRUE, margin = 0.1) %>% layout(
         title = "Example of phenotypic values\nfor the initial population"
