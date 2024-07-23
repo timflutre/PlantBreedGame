@@ -15,6 +15,16 @@ params:
   cost.geno.single: 0.02
   cost.register: 4
   initialBudget: 3900
+  t1_mu: 20
+  t1_min: 100
+  t1_cv_g: 0.1
+  t1_h2: 0.3
+  t2_mu: 15
+  t2_min: 5
+  t2_cv_g: 0.06
+  t2_h2: 0.6
+  prop_pleio: 0.4
+  cor_pleio: -0.7
 colorlinks: true
 output:
   html_document:
@@ -140,6 +150,38 @@ invisible({
   valid_positive_number(params$cost.geno.single, accept_null = FALSE, raise_error = TRUE)
   valid_positive_number(params$cost.register, accept_null = FALSE, raise_error = TRUE)
   valid_positive_number(params$initialBudget, accept_null = FALSE, raise_error = TRUE)
+
+  valid_mu(params$t1_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_Tmin(params$t1_min, params$t1_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_cv_g(params$t1_cv_g, accept_null = FALSE, raise_error = TRUE)
+  valid_h2(params$t1_h2, accept_null = FALSE, raise_error = TRUE)
+
+  valid_mu(params$t2_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_Tmin(params$t2_min, params$t2_mu, accept_null = FALSE, raise_error = TRUE)
+  valid_cv_g(params$t2_cv_g, accept_null = FALSE, raise_error = TRUE)
+  valid_h2(params$t2_h2, accept_null = FALSE, raise_error = TRUE)
+
+  t1_sig_p2 <- calc_sigma_p2(params$t1_mu, params$t1_min)
+  valid_variance(t1_sig_p2, "phenotypes T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig_a2 <- calc_sigma_a2(params$t1_cv_g, params$t1_mu)
+  valid_variance(t1_sig_a2, "genetic values T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig2 <- calc_sigma2(params$t1_h2, t1_sig_a2)
+  valid_variance(t1_sig2, "noise T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t1_sig_y2 <- calc_sigma_y2(t1_sig_p2, t1_sig_a2, t1_sig2 )
+  valid_variance(t1_sig_y2, "year effects T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+
+  t2_sig_p2 <- calc_sigma_p2(params$t2_mu, params$t2_min)
+  valid_variance(t2_sig_p2, "phenotypes T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig_a2 <- calc_sigma_a2(params$t2_cv_g, params$t2_mu)
+  valid_variance(t2_sig_a2, "genetic values T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig2 <- calc_sigma2(params$t2_h2, t2_sig_a2)
+  valid_variance(t2_sig2, "noise T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+  t2_sig_y2 <- calc_sigma_y2(t2_sig_p2, t2_sig_a2, t2_sig2 )
+  valid_variance(t2_sig_y2, "year effects T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
+
+  valid_prop_pleio(params$prop_pleio, accept_null = FALSE, raise_error = TRUE)
+  valid_cor_pleio(params$cor_pleio, accept_null = FALSE, raise_error = TRUE)
+
 })
 
 print(params[names(params) != "progressBar"])
@@ -742,13 +784,13 @@ Here is the procedure for trait 1 of setting the variances required by the gener
 We set the initial phenotypic mean, $\mu_p$, to a global intercept which will be held constant during the whole game: $\mu_p = \mu$.
 
 ```{r simul_proc_t1_mu}
-(mu <- 100)
+(mu <- params$t1_mu)
 ```
 
 We set the individual-plant phenotypic variance so that approximately 99% of all the phenotypes are above a minimal value: $\mu - 3 \sigma_p \ge y_{\text{min}}$.
 
 ```{r simul_proc_t1_sigma_p2}
-y.min <- 20
+y.min <- params$t1_min
 (sigma.p2 <- ((mu - y.min) / 3)^2)
 sqrt(sigma.p2)
 ```
@@ -777,7 +819,7 @@ We deduce the genotypic coef of variation:
 
 However, because the previous computations don't account for the negative correlation between traits, we still fix the CVg by hand at this point:
 ```{r}
-CV.g <- 0.10
+CV.g <- params$t1_cv_g
 ```
 
 We deduce the (additive) genotypic variance:
@@ -791,7 +833,7 @@ stopifnot(sigma.a2 < sigma.p2)
 We deduce the error variance given that the intra-annual, individual-plant heritability is set at a particular value: $h^2 = \frac{\sigma_a^2}{\sigma_a^2 + \sigma^2}$.
 
 ```{r simul_proc_t1_sigma2}
-h2 <- 0.3
+h2 <- params$t1_h2
 (sigma2 <- ((1 - h2) / h2) * sigma.a2)
 sqrt(sigma2)
 stopifnot(sigma2 + sigma.a2 < sigma.p2)
@@ -839,13 +881,13 @@ Here is the procedure for trait 2 of setting the variances required by the gener
 We fix the initial phenotypic mean, $\mu_p$, to a global intercept which will be held constant during the whole game: $\mu_p = \mu$.
 
 ```{r simul_proc_t2_mu}
-(mu <- 15)
+(mu <- params$t2_mu)
 ```
 
 We deduce the individual-plant phenotypic variance so that approximately 99% of all the phenotypes are above a minimal value: $\mu - 3 \sigma_p \ge y_{\text{min}}$.
 
 ```{r simul_proc_t2_sigma_p2}
-y.min <- 5
+y.min <- params$t2_min
 (sigma.p2 <- ((mu - y.min) / 3)^2)
 sqrt(sigma.p2)
 ```
@@ -859,7 +901,7 @@ register.min.trait2 <- mu
 We deduce the (additive) genotypic variance given that the genotypic coef of variation is set at a particular value:
 
 ```{r simul_proc_t2_sigma_a2}
-CV.g <- 0.06
+CV.g <- params$t2_cv_g
 (sigma.a2 <- (CV.g * mu)^2)
 sqrt(sigma.a2)
 stopifnot(sigma.a2 < sigma.p2)
@@ -868,7 +910,7 @@ stopifnot(sigma.a2 < sigma.p2)
 We deduce the error variance given that the intra-annual, individual-plant heritability is set at a particular value: $h^2 = \frac{\sigma_a^2}{\sigma_a^2 + \sigma^2}$.
 
 ```{r simul_proc_t2_sigma2}
-h2 <- 0.6
+h2 <- params$t2_h2
 (sigma2 <- ((1 - h2) / h2) * sigma.a2)
 sqrt(sigma2)
 stopifnot(sigma2 + sigma.a2 < sigma.p2)
@@ -920,7 +962,7 @@ Simulate the SNP effects for traits 1 and 2 jointly:
 snp.effects12 <- simulSnpEffectsTraits12(
   snp.ids = thin.snps,
   sigma.beta2 = sigma.beta2,
-  prop.pleio = 0.4, cor.pleio = -0.7
+  prop.pleio = params$prop_pleio, cor.pleio = params$cor_pleio
 )
 ```
 

@@ -100,12 +100,36 @@ valid_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
     error("Mandatory and should be a number")
   }
 
+  if (!is.numeric(x)) {
+    error("Mandatory and should be a number")
+  }
+
   return(NULL)
 }
 
 valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_null = TRUE, raise_error = FALSE) {
 
   error <- return
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
   if (raise_error) {
     error <- stop
   }
@@ -118,6 +142,10 @@ valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_nu
   }
 
   if (is.na(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  if (!is.numeric(x)) {
     error("Mandatory and should be a number")
   }
 
@@ -151,7 +179,31 @@ valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_nu
 }
 
 valid_mu <- function(x, accept_null = TRUE, raise_error = FALSE) {
-  valid_number(x, accept_null, raise_error)
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  if (is.na(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  if (!is.numeric(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  if (x == 0) {
+    error("μ cannot be null")
+  }
+
+  return(NULL)
 }
 
 valid_Tmin <- function(x, mu, accept_null = TRUE, raise_error = FALSE) {
@@ -168,6 +220,10 @@ valid_Tmin <- function(x, mu, accept_null = TRUE, raise_error = FALSE) {
   }
 
   if (is.na(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  if (!is.numeric(x)) {
     error("Mandatory and should be a number")
   }
 
@@ -226,6 +282,10 @@ valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE
       return(NULL)
     }
     error(paste0("variance is NA", var_name))
+  }
+
+  if (!is.numeric(x)) {
+    error(paste0("variance is not a number", var_name))
   }
 
   if (x <= 0) {

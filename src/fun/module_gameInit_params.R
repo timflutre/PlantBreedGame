@@ -663,10 +663,10 @@ gameInit_traits_server <- function(id, iv) {
       }
       input$t1_mu
     })
-    output$T1_sig_p2 <- renderText({round(T1_sig_p2(), 4)})
-    output$T1_sig_a2 <- renderText({round(T1_sig_a2(), 4)})
-    output$T1_sig2 <- renderText({round(T1_sig2(), 4)})
-    output$T1_sig_y2 <- renderText({round(T1_sig_y2(), 4)})
+    output$T1_sig_p2 <- renderText({signif(T1_sig_p2(), 6)})
+    output$T1_sig_a2 <- renderText({signif(T1_sig_a2(), 6)})
+    output$T1_sig2 <- renderText({signif(T1_sig2(), 6)})
+    output$T1_sig_y2 <- renderText({signif(T1_sig_y2(), 6)})
 
     output$T2_mu <- renderText({
       id = session$ns("prev_t2_mu")
@@ -677,10 +677,10 @@ gameInit_traits_server <- function(id, iv) {
       }
       input$t2_mu
     })
-    output$T2_sig_p2 <- renderText({round(T2_sig_p2(), 4)})
-    output$T2_sig_a2 <- renderText({round(T2_sig_a2(), 4)})
-    output$T2_sig2 <- renderText({round(T2_sig2(), 4)})
-    output$T2_sig_y2 <- renderText({round(T2_sig_y2(), 4)})
+    output$T2_sig_p2 <- renderText({signif(T2_sig_p2(), 6)})
+    output$T2_sig_a2 <- renderText({signif(T2_sig_a2(), 6)})
+    output$T2_sig2 <- renderText({signif(T2_sig2(), 6)})
+    output$T2_sig_y2 <- renderText({signif(T2_sig_y2(), 6)})
 
 
     output$pheno_plot <- renderPlotly({
@@ -766,11 +766,32 @@ gameInit_traits_server <- function(id, iv) {
 
       return(fig)
     })
+
+    return(
+      list(
+        value = reactive({
+          if (pheno_params_validator$is_valid()) {
+            return(list(
+              t1_mu = input$t1_mu,
+              t1_min = input$t1_min,
+              t1_cv_g = input$t1_cv_g,
+              t1_h2 = input$t1_h2,
+
+              t2_mu = input$t2_mu,
+              t2_min = input$t2_min,
+              t2_cv_g = input$t2_cv_g,
+              t2_h2 = input$t2_h2,
+
+              prop_pleio = input$prop_pleio,
+              cor_pleio = input$cor_pleio
+            ))
+          }
+          return(NA)
+        }),
+        iv = iv
+      )
+    )
+
   })
 }
-
-
-
-
-
 

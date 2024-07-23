@@ -2,6 +2,7 @@
 
 params = list(
   rng_seed = 1993,
+
   cost.pheno.field = 50,
   cost.pheno.patho = 0.1,
   cost.allof = 0.1,
@@ -11,7 +12,20 @@ params = list(
   cost.geno.ld = 0.5,
   cost.geno.single = 0.02,
   cost.register = 4,
-  initialBudget = 3900
+  initialBudget = 3900,
+
+  t1_mu = 100,
+  t1_min = 20,
+  t1_cv_g = 0.1,
+  t1_h2 = 0.3,
+
+  t2_mu = 15,
+  t2_min = 5,
+  t2_cv_g = 0.06,
+  t2_h2 = 0.6,
+
+  prop_pleio = 0.4,
+  cor_pleio = -0.7
 )
 
 

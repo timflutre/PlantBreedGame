@@ -776,6 +776,7 @@ observeEvent(input$initialiseGame, {
   params <- list(
     progressBar = progress_bar,
     rng_seed = gameInit_seed$value(),
+
     cost.pheno.field = gameInit_costs$value()$cost.pheno.field,
     cost.pheno.patho = gameInit_costs$value()$cost.pheno.patho,
     cost.allof = gameInit_costs$value()$cost.allof,
@@ -785,7 +786,20 @@ observeEvent(input$initialiseGame, {
     cost.geno.ld = gameInit_costs$value()$cost.geno.ld,
     cost.geno.single = gameInit_costs$value()$cost.geno.single,
     cost.register = gameInit_costs$value()$cost.register,
-    initialBudget = gameInit_costs$value()$initialBudget
+    initialBudget = gameInit_costs$value()$initialBudget,
+
+    t1_mu = gameInit_traits$value()$t1_mu,
+    t1_min = gameInit_traits$value()$t1_min,
+    t1_cv_g = gameInit_traits$value()$t1_cv_g,
+    t1_h2 = gameInit_traits$value()$t1_h2,
+
+    t2_mu = gameInit_traits$value()$t2_mu,
+    t2_min = gameInit_traits$value()$t2_min,
+    t2_cv_g = gameInit_traits$value()$t2_cv_g,
+    t2_h2 = gameInit_traits$value()$t2_h2,
+
+    prop_pleio = gameInit_traits$value()$prop_pleio,
+    cor_pleio = gameInit_traits$value()$cor_pleio
   )
 
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
