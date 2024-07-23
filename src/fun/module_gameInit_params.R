@@ -387,10 +387,25 @@ gameInit_traits_ui <- function(id) {
               label = tooltip_label_h2(2)
             ),
 
-            h4("Trait 1/2 pleiotropy:", style = "margin-top: 20px;"),
-            shiny::numericInput(ns("prop_pleio"), value = 0.4, step = 0.01, width = width_numInput, label = 'Proportion of pleiotropy'),
-            shiny::numericInput(ns("cor_pleio"), value = -0.7, step = 0.01, width = width_numInput, label = 'Pleiotropy correlation'),
-
+            h4("Trait 1/2 pleiotropy:", style = "margin-top: 20px;", id = ns("inputs_pleio")),
+            shiny::numericInput(ns("prop_pleio"), value = 0.4, step = 0.01, width = width_numInput,
+              label = tooltip_label(
+                "Proportion of pleiotropy",
+                div(
+                  p("Proportion of pleiotropic markers"),
+                  p("Those pleiotropic markers will have a correlated effects on trait 1 and trait 2.")
+                )
+              )
+            ),
+            shiny::numericInput(ns("cor_pleio"), value = -0.7, step = 0.01, width = width_numInput,
+              label = tooltip_label(
+                "Pleiotropy correlation",
+                div(
+                  p("Correlation between the markers effects's on trait 1 and",
+                    "trait 2 for the pleiotropic markers.")
+                )
+              )
+            ),
           ),
 
           div(style = "flex: 1;",
@@ -478,6 +493,11 @@ gameInit_traits_server <- function(id, iv) {
     pheno_params_validator_T1$add_rule("t1_cv_g", valid_cv_g)
     pheno_params_validator_T1$add_rule("t1_h2", valid_h2)
     valid_T1_sigma_y2 <- function(x) {
+      # do not trigger if inputs are invalid
+      if (!is.null(valid_Tmin(input$t1_min, input$t1_mu))) { return(NULL) }
+      if (!is.null(valid_cv_g(input$t1_cv_g))) { return(NULL) }
+      if (!is.null(valid_h2(input$t1_h2))) { return(NULL) }
+
       valid_variance(T1_sig_y2(), "year effects", accept_na = TRUE)
     }
     pheno_params_validator_T1$add_rule("t1_min", valid_T1_sigma_y2)
@@ -490,14 +510,24 @@ gameInit_traits_server <- function(id, iv) {
     pheno_params_validator_T2$add_rule("t2_cv_g", valid_cv_g)
     pheno_params_validator_T2$add_rule("t2_h2", valid_h2)
     valid_T2_sigma_y2 <- function(x) {
+      # do not trigger if inputs are invalid
+      if (!is.null(valid_Tmin(input$t2_min, input$t2_mu))) { return(NULL) }
+      if (!is.null(valid_cv_g(input$t2_cv_g))) { return(NULL) }
+      if (!is.null(valid_h2(input$t2_h2))) { return(NULL) }
+
       valid_variance(T2_sig_y2(), "year effects", accept_na = TRUE)
     }
     pheno_params_validator_T2$add_rule("t2_min", valid_T2_sigma_y2)
     pheno_params_validator_T2$add_rule("t2_cv_g", valid_T2_sigma_y2)
     pheno_params_validator_T2$add_rule("t2_h2", valid_T2_sigma_y2)
 
+    pheno_params_validator_pleio <- InputValidator$new()
+    pheno_params_validator_pleio$add_rule("prop_pleio", valid_prop_pleio)
+    pheno_params_validator_pleio$add_rule("cor_pleio", valid_cor_pleio)
+
     pheno_params_validator$add_validator(pheno_params_validator_T1)
     pheno_params_validator$add_validator(pheno_params_validator_T2)
+    pheno_params_validator$add_validator(pheno_params_validator_pleio)
     iv$add_validator(pheno_params_validator)
 
 
@@ -518,6 +548,15 @@ gameInit_traits_server <- function(id, iv) {
       } else {
         # shinyjs::addClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id_t2, '").addClass("has-error");'))
+      }
+
+      id_pleio = session$ns("inputs_pleio")
+      if (pheno_params_validator_pleio$is_valid()) {
+        # shinyjs::removeClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_pleio, '").removeClass("has-error");'))
+      } else {
+        # shinyjs::addClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id_pleio, '").addClass("has-error");'))
       }
 
       id_mainTitle = session$ns("pheno_simul_title")

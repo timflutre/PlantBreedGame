@@ -103,6 +103,53 @@ valid_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
   return(NULL)
 }
 
+valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_null = TRUE, raise_error = FALSE) {
+
+  error <- return
+  if (raise_error) {
+    error <- stop
+  }
+
+  if (is.null(x)) {
+    if (accept_null) {
+      return(NULL)
+    }
+    error("Must not be NULL")
+  }
+
+  if (is.na(x)) {
+    error("Mandatory and should be a number")
+  }
+
+  min_msg <- paste(min, "(excluded)")
+  if (incl_min) {
+    min_msg <- paste(min, "(included)")
+  }
+  max_msg <- paste(max, "(excluded)")
+  if (incl_max) {
+    max_msg <- paste(max, "(included)")
+  }
+
+  err_msg <- paste("Should be between", min_msg, "and", max_msg)
+  if (x < min) {
+    error(err_msg)
+  }
+  if (x > max) {
+    error(err_msg)
+  }
+
+  if (!incl_min && x == min) {
+    error(err_msg)
+  }
+
+  if (!incl_max && x == max) {
+    error(err_msg)
+  }
+
+  return(NULL)
+
+}
+
 valid_mu <- function(x, accept_null = TRUE, raise_error = FALSE) {
   valid_number(x, accept_null, raise_error)
 }
@@ -140,25 +187,7 @@ valid_cv_g <- function(x, accept_null = TRUE, raise_error = FALSE) {
 }
 
 valid_h2 <- function(x, accept_null = TRUE, raise_error = FALSE) {
-  error <- return
-  if (raise_error) {
-    error <- stop
-  }
-
-  if (is.null(x)) {
-    if (accept_null) {
-      return(NULL)
-    }
-    error("Must not be NULL")
-  }
-
-  if (x <= 0) {
-    error("Should be strictly between 0 and 1")
-  }
-  if (x >= 1) {
-    error("Should be strictly between 0 and 1")
-  }
-  return(NULL)
+  valid_range(x, 0, 1, incl_min = FALSE, incl_max = FALSE, accept_null = accept_null, raise_error = raise_error)
 }
 
 
@@ -206,5 +235,12 @@ valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE
     error(paste0("This value leads to an infinite variance", var_name))
   }
   return(NULL)
+}
+
+valid_prop_pleio <- function(x, accept_null = TRUE, raise_error = FALSE) {
+  valid_range(x, 0, 1, incl_min = TRUE, incl_max = TRUE, accept_null = accept_null, raise_error = raise_error)
+}
+valid_cor_pleio <-  function(x, accept_null = TRUE, raise_error = FALSE) {
+  valid_range(x, -1, 1, incl_min = TRUE, incl_max = TRUE, accept_null = accept_null, raise_error = raise_error)
 }
 
