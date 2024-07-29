@@ -102,6 +102,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   yearEffectSeed <- constants$seed.year.effect
 
   # set seed
+  saved_seed <- .GlobalEnv$.Random.seed
   set.seed(yearEffectSeed + year) # seed depend of the year
   # calculate year effect
   alphas <- c(
@@ -112,7 +113,7 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
     nrow = 1, ncol = 2,
     dimnames = list(year, c("trait1", "trait2"))
   )
-  set.seed(NULL) # remove seed
+  .GlobalEnv$.Random.seed <- saved_seed
 
   ## 2. check that the requested individuals already exist
   flush.console()

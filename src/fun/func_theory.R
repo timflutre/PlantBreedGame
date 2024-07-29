@@ -33,6 +33,7 @@
 simulDat <- function(mu.0 = 40, sigma2 = 1, h2 = 0.75, sigma.a2 = NULL,
                      I = 500, J = 1, seed = NULL) {
   stopifnot(xor(is.null(h2), is.null(sigma.a2)))
+  saved_seed <- .GlobalEnv$.Random.seed
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -66,6 +67,8 @@ simulDat <- function(mu.0 = 40, sigma2 = 1, h2 = 0.75, sigma.a2 = NULL,
   )
   y <- all.y[, 1] # mid-parents
   y.e <- all.y[, 2] # offsprings
+
+  .GlobalEnv$.Random.seed <- saved_seed
 
   return(list(
     mu.0 = mu.0, sigma2 = sigma2, sigma.a2 = sigma.a2, h2 = h2,
