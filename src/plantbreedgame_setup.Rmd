@@ -15,8 +15,8 @@ params:
   cost.geno.single: 0.02
   cost.register: 4
   initialBudget: 3900
-  t1_mu: 20
-  t1_min: 100
+  t1_mu: 100
+  t1_min: 20
   t1_cv_g: 0.1
   t1_h2: 0.3
   t2_mu: 15
@@ -310,25 +310,21 @@ progressBar$set(
 )
 
 f <- paste0(truth.dir, "/g0.RData")
-if (!file.exists(f)) {
-  g0 <- simulCoalescent(
-    nb.inds = I,
-    ind.ids = ind.ids,
-    nb.reps = nb.chrs,
-    pop.mut.rate = theta,
-    pop.recomb.rate = rho,
-    chrom.len = L,
-    other = cmd,
-    nb.pops = 1,
-    get.trees = FALSE,
-    get.tmrca = FALSE,
-    permute.alleles = TRUE,
-    verbose = 1
-  )
-  save(g0, file = f)
-} else {
-  load(f)
-}
+g0 <- simulCoalescent(
+  nb.inds = I,
+  ind.ids = ind.ids,
+  nb.reps = nb.chrs,
+  pop.mut.rate = theta,
+  pop.recomb.rate = rho,
+  chrom.len = L,
+  other = cmd,
+  nb.pops = 1,
+  get.trees = FALSE,
+  get.tmrca = FALSE,
+  permute.alleles = TRUE,
+  verbose = 1
+)
+save(g0, file = f)
 tools::md5sum(path.expand(f))
 file.info(f)$mtime
 head(g0$snp.coords)
@@ -348,7 +344,8 @@ afs <- estimSnpAf(X = g0$genos, allow.updating = TRUE)
 summary(afs)
 plotHistAllelFreq(
   afs = afs,
-  main = paste0(length(afs), " SNPs")
+  main = paste0(length(afs), " SNPs"),
+  add.ml.beta = T
 )
 mafs <- estimSnpMaf(afs = afs)
 summary(mafs)
