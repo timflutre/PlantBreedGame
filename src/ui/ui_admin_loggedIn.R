@@ -418,7 +418,7 @@ game_initialisation_tab_content <- div(
       gameInit_traits_ui("gameInit_geno_pheno_simul"),
       gameInit_costs_ui("gameInit_costs")
     ),
-    uiOutput("initialisation_button")
+    withSpinner(uiOutput("initialisation_button"))
   )
 )
 
