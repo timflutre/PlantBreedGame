@@ -437,13 +437,13 @@ gameInit_traits_ui <- function(id) {
               )
             ),
             plotlyOutput(ns("pheno_plot"), width = "100%"),
+            plotlyOutput(ns("genetic_values_plot"), width = "100%"),
             tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
-              "Note: The graphs above show an example of what the phenotypic values of",
+              "Note: The graphs above show an examples of what the phenotypic/genetic values of",
               "the initial population will look like. The actual values",
               "generated durring the game initialisation will have a similar",
               "structure but will be different."
             )
-
           )
         )
       )
@@ -451,26 +451,23 @@ gameInit_traits_ui <- function(id) {
   )
 }
 
-quick_pheno_simul <- function(mu, min, cv_g, h2, seed = 1993) {
+quick_pheno_simul <- function(mu, sig_p, sig, sig_y, g0, seed = 1993) {
 
-  saved_seed <- .Random.seed
+  saved_seed <- .GlobalEnv$.Random.seed
   set.seed(seed)
-  n_inds <- 100
+  n_inds <- length(g0)
   n_years <- 5
   first_year <- 1
 
-  sig_p <- calc_sigma_p2(mu, min)
-  sig_a <- calc_sigma_a2(cv_g, mu)
-  sig <- calc_sigma2(h2, sig_a)
-  sig_y <- calc_sigma_y2(sig_p, sig_a, sig)
-
   df <- data.frame(
     i = seq(1, n_inds),
-    g = rnorm(n_inds, 0, sqrt(sig_a))
+    g = g0
   )
 
-  df <- do.call(rbind, lapply(seq(first_year, first_year + n_years), function(year) {
-    y_eff <- rnorm(1, 0, sqrt(sig_y))
+  y_effs <- rnorm(n_years, 0, sqrt(sig_y))
+
+  df <- do.call(rbind, lapply(seq_along(y_effs), function(year) {
+    y_eff <- y_effs[year]
     df$year <- year
     df$year_eff <- y_eff
     df$pheno <- mu + df$g + y_eff + rnorm(n_inds, 0, sqrt(sig))
@@ -478,9 +475,84 @@ quick_pheno_simul <- function(mu, min, cv_g, h2, seed = 1993) {
   }))
   df$year <- as.character(df$year)
 
-  set.seed(saved_seed)
+  .GlobalEnv$.Random.seed <- saved_seed
+
   return(df)
 }
+
+quick_afs_simul <- function(n_marker_sim = 15000, shape1 = 0.5, shape2 = 0.5, seed = 42) {
+  saved_seed <- .GlobalEnv$.Random.seed
+  set.seed(seed)
+  sim.afs <- rbeta(n_marker_sim, shape1, shape2)
+  .GlobalEnv$.Random.seed <- saved_seed
+  sim.afs
+}
+
+quick_geno_simul <- function(afs, n_inds = 1000, seed = 43) {
+  saved_seed <- .GlobalEnv$.Random.seed
+  set.seed(seed)
+  geno_centered <- sapply(afs, function(af) {
+    n <- round(n_inds * af)
+    sample(c(rep(2 - 2 * af, n), rep(-2 * af, n_inds - n)))
+  })
+  .GlobalEnv$.Random.seed <- saved_seed
+  geno_centered
+}
+
+quick_g0_simul <- function(T1_sig_a2,
+                           T2_sig_a2,
+                           afs,
+                           prop_pleio,
+                           cor_pleio,
+                           geno,
+                           seed = 44) {
+
+  if (!is.null(valid_variance(T1_sig_a2))
+  || !is.null(valid_variance(T2_sig_a2))) {
+    return(NULL)
+  }
+  saved_seed <- .GlobalEnv$.Random.seed
+  set.seed(seed)
+  sigma.beta2 <- c(T1_sig_a2, T2_sig_a2) / (2 * sum(afs * (1 - afs)))
+
+  n_snp <- length(afs)
+  n_pleio <- round(n_snp * prop_pleio)
+  n_non_pleio <- n_snp - n_pleio
+
+  Sigma.beta.nopleio <- matrix(c(sigma.beta2[1], 0,
+    0, sigma.beta2[2]),
+    nrow = 2, ncol = 2)
+  cov.pleio <- cor_pleio * sqrt(sigma.beta2[1] * sigma.beta2[2])
+  Sigma.beta.pleio <- matrix(c(sigma.beta2[1], cov.pleio,
+    cov.pleio, sigma.beta2[2]),
+    nrow = 2, ncol = 2)
+
+  # I don't use MASS::mvrnorm and use a "manual approach" here so that the
+  # generated values remain the same more or less the covariance structure
+  # whatever the provided parameters. This will help the visualisation as
+  # the cloud point will be deformed.
+  base_random_values <- matrix(rnorm(n_snp * 2), 2)
+
+  if (n_non_pleio != 0) {
+    R_nopleio <- chol(Sigma.beta.nopleio)
+    beta_nopleio <- t(R_nopleio) %*% base_random_values[, 1:n_non_pleio]
+  } else {
+    beta_nopleio <- c()
+  }
+
+  if (n_pleio != 0) {
+    R_pleio <- chol(Sigma.beta.pleio)
+    beta_pleio <- t(R_pleio) %*% base_random_values[, (n_non_pleio+1):n_snp]
+  } else {
+    beta_pleio <- c()
+  }
+
+  beta <- t(cbind(beta_nopleio, beta_pleio))
+
+  .GlobalEnv$.Random.seed <- saved_seed
+  geno %*% beta
+}
+
 
 
 gameInit_traits_server <- function(id, iv) {
@@ -683,10 +755,34 @@ gameInit_traits_server <- function(id, iv) {
     output$T2_sig_y2 <- renderText({signif(T2_sig_y2(), 6)})
 
 
+    afs_sim <- reactive({
+      quick_afs_simul(n_marker_sim = 15000, seed = 42)
+    })
+
+    geno_sim <- reactive({
+      quick_geno_simul(afs = afs_sim(), n_inds = 1000, seed = 43)
+    })
+
+    g0_sim <- reactive({
+      quick_g0_simul(
+        T1_sig_a2 = T1_sig_a2(),
+        T2_sig_a2 = T2_sig_a2(),
+        afs = afs_sim(),
+        prop_pleio = input$prop_pleio,
+        cor_pleio = input$cor_pleio,
+        geno = geno_sim(),
+        seed = 44
+      )
+    })
+
     output$pheno_plot <- renderPlotly({
       colors_T1 <- c("#1f77b4", "#ff7f0e")
       colors_T2 <- c("#2ca02c", "#e12a2a")
-      if (!pheno_params_validator_T1$is_valid()) {
+      if (!pheno_params_validator_T1$is_valid()
+          || !pheno_params_validator_pleio$is_valid()
+          || !is.null(valid_variance(T1_sig_a2()))
+          || !is.null(valid_variance(T2_sig_a2()))
+      ) {
         fig_T1 <- plot_ly(type = "box") %>%
           add_annotations(
             x=0.5, y=0.5, xref = "paper", yref = "paper",
@@ -700,7 +796,12 @@ gameInit_traits_server <- function(id, iv) {
         T1_cv_g <- input$t1_cv_g
         T1_h2 <- input$t1_h2
 
-        data_t1 <- quick_pheno_simul(T1_mu, T1_min, T1_cv_g, T1_h2, seed = 1993)
+        data_t1 <- quick_pheno_simul(T1_mu,
+                                     sig_p = T1_sig_p2(),
+                                     sig = T1_sig2(),
+                                     sig_y = T1_sig_y2(),
+                                     g0 = g0_sim()[,1],
+                                     seed = 1993)
 
         fig_T1 <- plot_ly(
           data_t1,
@@ -722,7 +823,11 @@ gameInit_traits_server <- function(id, iv) {
         yaxis = list(title = "Phenotypes Trait 1")
       )
 
-      if (!pheno_params_validator_T2$is_valid()) {
+      if (!pheno_params_validator_T2$is_valid()
+          || !pheno_params_validator_pleio$is_valid()
+          || !is.null(valid_variance(T1_sig_a2()))
+          || !is.null(valid_variance(T2_sig_a2()))
+      ) {
         fig_T2 <- plot_ly(type = "box") %>%
           add_annotations(
             x=0.5, y=0.5, xref = "paper", yref = "paper",
@@ -736,7 +841,12 @@ gameInit_traits_server <- function(id, iv) {
         T2_cv_g <- input$t2_cv_g
         T2_h2 <- input$t2_h2
 
-        data_t2 <- quick_pheno_simul(T2_mu, T2_min, T2_cv_g, T2_h2, seed = 42)
+        data_t2 <- quick_pheno_simul(T2_mu,
+                                     sig_p = T2_sig_p2(),
+                                     sig = T2_sig2(),
+                                     sig_y = T2_sig_y2(),
+                                     g0 = g0_sim()[,2],
+                                     seed = 42)
 
 
         fig_T2 <- plot_ly(
@@ -766,6 +876,73 @@ gameInit_traits_server <- function(id, iv) {
 
       return(fig)
     })
+
+    output$genetic_values_plot <- renderPlotly({
+
+      valid <- (
+        pheno_params_validator_pleio$is_valid()
+        && is.null(valid_variance(T1_sig_a2()))
+        && is.null(valid_variance(T2_sig_a2()))
+      )
+
+      if (!valid) {
+        return(plot_ly(type = "scatter", mode = "markers") %>%
+          add_annotations(
+            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            text = "Error with provided parameters",
+            xanchor = 'center',
+            showarrow = FALSE
+          ))
+      }
+
+      dta <- as.data.frame(g0_sim())
+      colnames(dta) <- c("G_T1", "G_T2")
+
+      lin_mod <- lm("G_T2 ~ G_T1", data = dta)
+      cor_pearson <- signif(cor(dta$G_T1, dta$G_T2, method = "pearson"), 3)
+      cor_spearman <- signif(cor(dta$G_T1, dta$G_T2, method = "spearman"), 3)
+
+      plot_ly(type = "scatter",
+              mode = "markers",
+              data = dta,
+              x = ~G_T1,
+              y = ~G_T2,
+              showlegend = FALSE,
+              hoverinfo = "text",
+              text = apply(dta, 1, function(l) {
+                paste(names(l), ":", l, collapse = "\n")
+              })
+      ) %>% add_lines(
+          inherit = FALSE,
+          x = ~G_T1,
+          y = fitted(lin_mod),
+          showlegend = FALSE,
+          name = paste("linear reggression",
+            paste0("y = ",
+              signif(lin_mod$coefficients[1], 3),
+              " + ",
+              signif(lin_mod$coefficients[2], 3),
+              "x"),
+            paste0("r^2 = ", signif(summary(lin_mod)$r.squared, 3)),
+            sep = "\n")
+        ) %>% add_annotations(
+          x = 0.1, y = 0.9, xref = "paper", yref = "paper",
+          textposition = 'top left',
+          text = paste0("Correlation pearson = ", cor_pearson,
+            "\nCorrelation spearman = ", cor_spearman),
+          xanchor = 'center',
+          showarrow = FALSE
+        ) %>% layout(
+        xaxis = list(title = "Trait 1"),
+        yaxis = list(title = "Trait 2"),
+          legend = list(x = 0.9, y = 0.9),
+        title = "Example of genetic values\nfor the initial population"
+      )
+
+
+    })
+
+
 
     return(
       list(
