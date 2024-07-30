@@ -235,7 +235,12 @@ if (gameInitialised()) {
         style = "display: inline-block;
         vertical-align: top;",
         numericInput("admin_const_initialBudget", "Initial budget (relative to phenotyping plot)",
-          value = constantsReactive()$initialBudget / constantsReactive()$cost.pheno.field,
+          # value = constantsReactive()$initialBudget / constantsReactive()$cost.pheno.field,
+          value = 3900,
+          # NOTE / TODO: while it may be better to set the default value to the
+          # current initial budget, using constantsReactive() here cause this
+          # "admin" page to rerender if any modification is made to the DB, and
+          # then to show the default tab which is annoying.
           min = 0,
           max = NA,
           step = 100
