@@ -49,7 +49,7 @@ output$evalUI <- renderUI({
 
 
 ## read uploaded file ----
-evalRawFile <- reactiveFileReader(500, session, "data/shared/Evaluation.txt",
+evalRawFile <- reactiveFileReader(500, session, file.path(DATA_SHARED, "Evaluation.txt"),
   read.table,
   header = T, sep = "\t", stringsAsFactors = FALSE
 )

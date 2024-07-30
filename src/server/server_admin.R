@@ -351,8 +351,8 @@ output$sizeDataFolder <- renderTable({
     {
       if (breederStatus() == "game master") {
         # get list of all subfolders in "truth" and "shared"
-        folderShared <- list.dirs(path = "data/shared", full.names = TRUE, recursive = TRUE)[-1]
-        folderTruth <- list.dirs(path = "data/truth", full.names = TRUE, recursive = TRUE)[-1]
+        folderShared <- list.dirs(path = DATA_SHARED, full.names = TRUE, recursive = TRUE)[-1]
+        folderTruth <- list.dirs(path = DATA_TRUTH, full.names = TRUE, recursive = TRUE)[-1]
         subFolders <- c(folderShared, folderTruth)
 
         # get size of each subfolders
@@ -370,7 +370,7 @@ output$sizeDataFolder <- renderTable({
         infoDataFolder <- rbind(
           infoDataFolder,
           data.frame(
-            path = "data/shared",
+            path = DATA_SHARED,
             size = sum(infoDataFolder$size[infoDataFolder$path %in% folderShared])
           )
         )
@@ -380,29 +380,29 @@ output$sizeDataFolder <- renderTable({
         infoDataFolder <- rbind(
           infoDataFolder,
           data.frame(
-            path = "data/truth",
+            path = DATA_TRUTH,
             size = sum(infoDataFolder$size[infoDataFolder$path %in% folderTruth])
           )
         )
         #   2. sum of all initial collection
-        sizeInitCol <- sum(file.info(list.files("data/truth", recursive = FALSE, full.names = TRUE))$size)
-        infoDataFolder[infoDataFolder$path == "data/truth", "size"] <- infoDataFolder[infoDataFolder$path == "data/truth", "size"] + sizeInitCol
+        sizeInitCol <- sum(file.info(list.files(DATA_TRUTH, recursive = FALSE, full.names = TRUE))$size)
+        infoDataFolder[infoDataFolder$path == DATA_TRUTH, "size"] <- infoDataFolder[infoDataFolder$path == DATA_TRUTH, "size"] + sizeInitCol
 
         # get size of the database
         infoDataFolder <- rbind(
           infoDataFolder,
           data.frame(
-            path = "data/breeding-game.sqlite",
-            size = file.info("data/breeding-game.sqlite")$size
+            path = DATA_DB,
+            size = file.info(DATA_DB)$size
           )
         )
 
         # clac size of all "data" folder
         sizeData <- sum(infoDataFolder[
           infoDataFolder$path %in% c(
-            "data/shared",
-            "data/truth",
-            "data/breeding-game.sqlite"
+            DATA_SHARED,
+            DATA_TRUTH,
+            DATA_DB
           ),
           "size"
         ])

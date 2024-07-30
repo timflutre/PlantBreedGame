@@ -25,7 +25,7 @@
 output$dwnlIniData <- downloadHandler(
   filename = function() input$iniDataFile, # lambda function
   content = function(file) {
-    filePath <- paste0("data/shared/initial_data/", input$iniDataFile)
+    filePath <- file.path(DATA_INITIAL_DATA, input$iniDataFile)
     file.copy(filePath, file)
   }
 )

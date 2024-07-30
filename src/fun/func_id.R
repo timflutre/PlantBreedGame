@@ -24,24 +24,21 @@ getDataFileList <- function(type, breeder) {
   # type (char) type of data (pheno or geno)
   # breeder (char) name of the breeder
 
-
   stopifnot(type %in% c("pheno", "geno", "pltMat", "request"))
 
-
-  dirPath <- paste0("data/shared/", breeder)
+  dirPath <- file.path(DATA_SHARED, breeder)
   dataFile <- list.files(dirPath)
-  dataFile <- c(dataFile, list.files("data/shared/initial_data/"))
+  dataFile <- c(dataFile, list.files(DATA_INITIAL_DATA))
 
   ## Get the ids of the files
-  matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_pheno"))
   if (type == "pheno") {
-    matchId <- which(matchId)
+    matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_pheno"))
   } else if (type == "geno") {
     matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_geno"))
   } else if (type == "pltMat") {
     matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "IndList_"))
   } else if (type == "request") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
+    matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
   }
 
 
@@ -62,7 +59,7 @@ availToDwnld <- function(fileName, gameTime) {
   )
 
   # quick Return
-  initFiles <- list.files("data/shared/initial_data/")
+  initFiles <- list.files(DATA_INITIAL_DATA)
   if (fileName %in% initFiles) {
     res <- list()
     res$isAvailable <- TRUE
@@ -145,7 +142,7 @@ txt2Vcf <- function(txt_file, vcf_file, prog = NULL) {
       detail = "Get SNP coordinates..."
     )
   }
-  snpCoord <- read.table("data/shared/initial_data/snp_coords_hd.txt.gz")
+  snpCoord <- read.table(file.path(DATA_INITIAL_DATA, "snp_coords_hd.txt.gz"))
   snpCoord <- snpCoord[row.names(snpCoord) %in% colnames(geno), ]
 
   # Create the VCF "Fixed region"

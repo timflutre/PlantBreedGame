@@ -198,12 +198,14 @@ deleteBreeder <- function(breederName) {
   ))
 
   # delete entry in Evaluation file:
-  evalDta <- read.table("data/shared/Evaluation.txt",
+
+
+  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
     header = T, sep = "\t"
   )
   evalDta <- evalDta[evalDta$breeder != breederName, ]
   write.table(evalDta,
-    file = "data/shared/Evaluation.txt",
+    file = file.path(DATA_SHARED, "Evaluation.txt"),
     append = FALSE,
     quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE
@@ -375,7 +377,7 @@ calcGameProgress <- function(progBar = NULL) {
   breedValuesDta$trait2 <- breedValuesDta$trait2 - iniMeanT2
 
   # add intercept
-  load("data/truth/p0.RData")
+  load(file.path(DATA_TRUTH, "p0.RData"))
   breedValuesDta$trait1 <- breedValuesDta$trait1 + p0$mu["trait1"]
   breedValuesDta$trait2 <- breedValuesDta$trait2 + p0$mu["trait2"]
   breedValuesDta$t1t2 <- breedValuesDta$trait1 * breedValuesDta$trait2

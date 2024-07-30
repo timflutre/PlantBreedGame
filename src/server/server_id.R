@@ -90,8 +90,8 @@ accessGranted <- eventReactive(input$submitPSW,
           maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
 
 
-          allDataFiles <- list.files("data", all.files = TRUE, recursive = TRUE)
-          currentSize <- sum(na.omit(file.info(paste0("data/", allDataFiles))$size)) /
+          allDataFiles <- list.files(DATA_ROOT, all.files = TRUE, recursive = TRUE, full.names = FALSE)
+          currentSize <- sum(na.omit(file.info(allDataFiles)$size)) /
             10^9 # in Gb
 
           if (currentSize < maxDiskUsage) {
@@ -234,11 +234,11 @@ requestFiles <- reactive({
 output$dwnlPheno <- downloadHandler(
   filename = function() input$phenoFile, # lambda function
   content = function(file) {
-    initFiles <- list.files("data/shared/initial_data/")
+    initFiles <- list.files(DATA_INITIAL_DATA)
     if (input$phenoFile %in% initFiles) {
-      folder <- "data/shared/initial_data"
+      folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0("data/shared/", breeder())
+      folder <- paste0(DATA_SHARED, breeder())
     }
     filePath <- paste0(folder, "/", input$phenoFile)
     file.copy(filePath, file)
@@ -249,11 +249,11 @@ output$dwnlGeno <- downloadHandler(
   filename = function() paste0(input$genoFile, ".txt.gz"), # lambda function
   content = function(file) {
     gFile <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files("data/shared/initial_data/")
+    initFiles <- list.files(DATA_INITIAL_DATA)
     if (gFile %in% initFiles) {
-      folder <- "data/shared/initial_data"
+      folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0("data/shared/", breeder())
+      folder <- paste0(DATA_SHARED, breeder())
     }
     filePath <- paste0(folder, "/", gFile)
     file.copy(filePath, file)
@@ -264,11 +264,11 @@ output$dwnlGeno_vcf <- downloadHandler(
   filename = function() paste0(input$genoFile, ".vcf.gz"), # lambda function
   content = function(file) {
     gFile_txt <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files("data/shared/initial_data/")
+    initFiles <- list.files(DATA_INITIAL_DATA)
     if (gFile_txt %in% initFiles) {
-      folder <- "data/shared/initial_data"
+      folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0("data/shared/", breeder())
+      folder <- paste0(DATA_SHARED, breeder())
     }
     gFile_txt <- paste0(folder, "/", gFile_txt)
     progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
@@ -288,11 +288,11 @@ output$dwnlGeno_vcf <- downloadHandler(
 output$dwnlPltMat <- downloadHandler(
   filename = function() input$pltMatFile, # lambda function
   content = function(file) {
-    initFiles <- list.files("data/shared/initial_data/")
+    initFiles <- list.files(DATA_INITIAL_DATA)
     if (input$pltMatFile %in% initFiles) {
-      folder <- "data/shared/initial_data"
+      folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0("data/shared/", breeder())
+      folder <- paste0(DATA_SHARED, breeder())
     }
     filePath <- paste0(folder, "/", input$pltMatFile)
     file.copy(filePath, file)
@@ -303,11 +303,11 @@ output$dwnlPltMat <- downloadHandler(
 output$dwnlRequest <- downloadHandler(
   filename = function() input$requestFile, # lambda function
   content = function(file) {
-    initFiles <- list.files("data/shared/initial_data/")
+    initFiles <- list.files(DATA_INITIAL_DATA)
     if (input$requestFile %in% initFiles) {
-      folder <- "data/shared/initial_data"
+      folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0("data/shared/", breeder())
+      folder <- paste0(DATA_SHARED, breeder())
     }
     filePath <- paste0(folder, "/", input$requestFile)
     file.copy(filePath, file)
@@ -478,7 +478,7 @@ output$UIbreederInfoID <- renderUI({
 # add new inds for submission
 observeEvent(input$id_submitInds, priority = 10, {
   # load data
-  evalDta <- read.table("data/shared/Evaluation.txt",
+  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
     header = T, sep = "\t"
   )
   subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
@@ -539,7 +539,7 @@ observeEvent(input$id_submitInds, priority = 10, {
   b <- budget()
 
   write.table(submitDta,
-    file = "data/shared/Evaluation.txt",
+    file = file.path(DATA_SHARED, "Evaluation.txt"),
     append = TRUE,
     quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = FALSE
@@ -559,7 +559,7 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   }
 
   # load data
-  evalDta <- read.table("data/shared/Evaluation.txt",
+  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
     header = T, sep = "\t"
   )
   subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
@@ -573,7 +573,7 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   evalDta <- evalDta[-delLines, ]
 
   write.table(evalDta,
-    file = "data/shared/Evaluation.txt",
+    file = file.path(DATA_SHARED, "Evaluation.txt"),
     append = FALSE,
     quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE
@@ -585,7 +585,7 @@ submittedInds <- eventReactive(
   (input$id_submitInds | input$id_delSubmitInds),
   ignoreNULL = FALSE,
   {
-    evalDta <- read.table("data/shared/Evaluation.txt",
+    evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
       header = T, sep = "\t"
     )
     subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]

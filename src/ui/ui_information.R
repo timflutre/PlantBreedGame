@@ -143,7 +143,7 @@ tabItem(
     shinydashboard::box(
       height = 400, width = 12, title = "Initial data",
       p("Select and download each file:"),
-      selectInput("iniDataFile", "", choices = list.files("data/shared/initial_data")),
+      selectInput("iniDataFile", "", choices = list.files(DATA_INITIAL_DATA)),
       downloadButton("dwnlIniData", "Download your file")
     ),
     if (debugDisplay) {
