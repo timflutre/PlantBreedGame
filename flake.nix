@@ -31,6 +31,7 @@
           scrm
           GenomicRanges
           bsicons
+          uuid
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";
@@ -116,11 +117,7 @@
             initialise-data = pkgs.writeShellApplication {
               name = "initialise-data";
               text = ''
-                rm -rf data/*
-                touch data/.gitkeep
-                rm  data.zip || echo "no data.zip file"
                 make data
-
               '';
             };
           in {

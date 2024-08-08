@@ -85,7 +85,7 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 
 # Set up the environment
 
-```{r load_pkgs}
+```{r load_pkgs, warning = FALSE}
 
 progressBar$set(
   value = progressBar$getValue() + 1,
@@ -125,7 +125,11 @@ source("fun/functions.R")
 source("fun/module_gameInit_params.R")
 source("fun/func_gameInit_validation.R")
 
+
+session_id <- uuid::UUIDgenerate()
 ```
+
+This new session have id: ` `r session_id` `
 
 # Parameters
 
@@ -194,8 +198,10 @@ progressBar$set(
   value = progressBar$getValue() + 1,
   detail = "Setup directories..."
 )
-root.dir <- file.path("..", "data")
-root.dir <- normalizePath(root.dir)
+data_root <- normalizePath(file.path("..", "data"))
+
+
+root.dir <- file.path(data_root, session_id)
 truth.dir <- file.path(root.dir, "truth")
 shared.dir <- file.path(root.dir, "shared")
 init.dir <- file.path(shared.dir, "initial_data")
@@ -215,7 +221,6 @@ dir.create(shared.dir)
 dir.create(init.dir)
 dir.create(reports.dir)
 ```
-
 
 ```{r}
 RNGkind("L'Ecuyer-CMRG") # to make mclapply reproducible
@@ -1865,18 +1870,22 @@ progressBar$set(
   detail = "Create zip archive..."
 )
 
-cwd <- getwd()
-setwd(dirname(root.dir))
 system.time(
   zip(
-    zipfile = "data.zip",
+    zipfile = paste0(root.dir, ".zip"),
     files = list.files(
-      path = "data", full.names = TRUE, recursive = TRUE,
+      path = root.dir, full.names = TRUE, recursive = TRUE,
       include.dirs = TRUE
     )
   )
 )
-setwd(cwd)
+```
+
+# Specify this new session should be use
+
+```{r, new_session_specification}
+data_in_use_file <- file.path(data_root, "data_folder_in_use.txt")
+writeLines(session_id, data_in_use_file)
 ```
 
 

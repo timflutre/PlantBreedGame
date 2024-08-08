@@ -46,17 +46,30 @@ if (Sys.info()["sysname"] == "Windows") {
 }
 
 ## -------------------------------------------------------------------
-## variables
 
-DATA_ROOT <- normalizePath("./data", mustWork = TRUE)
-DATA_TRUTH <- file.path(DATA_ROOT, "truth")
-DATA_SHARED <- file.path(DATA_ROOT, "shared")
+DATA_ROOT <- "./data"
+if (!dir.exists(DATA_ROOT)) {
+  stop(paste("Specified game data folder:", DATA_ROOT, "does not exist."))
+}
+
+DATA_IN_USE_FILE <- file.path(DATA_ROOT, "data_folder_in_use.txt")
+if (file.exists(DATA_IN_USE_FILE)) {
+  CURRENT_SESSION_ID <- readLines(DATA_IN_USE_FILE)
+  DATA_SESSION <- normalizePath(file.path(DATA_ROOT, CURRENT_SESSION_ID), mustWork = TRUE)
+} else {
+  # set to a directory that do not exists (use uuid to be "certain" of that)
+  DATA_SESSION <- paste0("do_not_exist_", uuid::UUIDgenerate())
+}
+
+DATA_TRUTH <- file.path(DATA_SESSION, "truth")
+DATA_SHARED <- file.path(DATA_SESSION, "shared")
 DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
-DATA_DB <- file.path(DATA_ROOT, "breeding-game.sqlite")
-DATA_REPORTS <- file.path(DATA_ROOT, "reports")
+DATA_DB <- file.path(DATA_SESSION, "breeding-game.sqlite")
+DATA_REPORTS <- file.path(DATA_SESSION, "reports")
 GAME_INIT_REPORT <- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
 
-if (dir.exists(DATA_REPORTS)) {
+
+if (dir.exists(DATA_SESSION)) {
   addResourcePath("reports", DATA_REPORTS)
 }
 

@@ -346,6 +346,8 @@ if (gameInitialised()) {
 
 
   game_setup_tab_content <- div(
+    p("The current game session is:", CURRENT_SESSION_ID),
+
     h2("Game initialisation report"),
 
     p("The game is initialised. You can download the related report that contains",

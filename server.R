@@ -39,6 +39,7 @@ shinyServer(function(input, output, session) {
     (dir.exists(DATA_TRUTH) &
       dir.exists(DATA_SHARED) &
       dir.exists(DATA_INITIAL_DATA) &
+      dir.exists(DATA_REPORTS) &
       file.exists(DATA_DB))
   }
 

@@ -28,14 +28,16 @@ params = list(
   cor_pleio = -0.7
 )
 
-
+rmd_env <- new.env(parent = globalenv())
 out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
   output_file = tempfile(),
   encoding = "UTF-8",
   params = params,
-  envir = new.env(parent = globalenv()),
+  envir = rmd_env,
 )
+
+new_session_id <- rmd_env$session_id
 file.copy(
   from = out_report,
-  to = file.path("data", "reports", "plantBreedGame_initialisation_report.html")
+  to = file.path("data", new_session_id, "reports", "plantBreedGame_initialisation_report.html")
 )

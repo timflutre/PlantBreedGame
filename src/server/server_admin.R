@@ -734,39 +734,6 @@ observeEvent(input$initialiseGame, {
     return(NULL)
   }
 
-  if (gameInitialised()) {
-    # WARN / TODO --- IMPORTANT ! ---
-    # the initialisation script do not allow its execution if "the data" folder
-    # already exists.
-    # Therefore here we will delete this folder, however, in general,
-    # IT IS QUITE RISKY to delete folder with code. For example:
-    # - if `DATA_ROOT` have been wrongly defined
-    # - if a malicious agent placed files/folder inside DATA_ROOT
-    # - if files are currently beeing created
-    #
-    # A better approach could be instead to only create a new `DATA_ROOT` folder
-    # and save in the data-base (that should only be erase, not deleted) the current
-    # `DATA_ROOT` to use.
-    # The server administrator would then responsible to safely remove the unecessary data.
-    #
-    # Here, to mitigate the risks the application will remove the files it
-    # has created (based on their names). This is not perfect as if one of this
-    # file have been is symlinked to another, the unintended file could be deleted.
-    #
-    # WARN / TODO --- IMPORTANT ! ---
-    progress_bar$set(
-      value = 1,
-      message = "Game Initialisation:",
-      detail = "Delete existing data..."
-    )
-    clean_data_root()
-  } else {
-    # even when the game is not initialised, the data-base can be created if
-    # any request is attempted. This is the case when the user is on the app's
-    # welcome page.
-    file.remove(DATA_DB)
-  }
-
   progress_bar$set(
     value = 2,
     message = "Game Initialisation:",
@@ -802,15 +769,41 @@ observeEvent(input$initialiseGame, {
     cor_pleio = gameInit_traits$value()$cor_pleio
   )
 
+  rmd_env <- new.env(parent = globalenv())
   out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
     output_file = tempfile(),
     encoding = "UTF-8",
     params = params,
-    envir = new.env(parent = globalenv()),
+    envir = rmd_env
   )
-  file.copy(from = out_report, to = GAME_INIT_REPORT)
 
-  addResourcePath("reports", DATA_REPORTS)
+  new_session_id <- rmd_env$session_id
+  new_report_path <- file.path(
+    DATA_ROOT,
+    new_session_id,
+    "reports",
+    "plantBreedGame_initialisation_report.html"
+  )
+  file.copy(from = out_report, to = new_report_path)
+
+  addResourcePath("reports", new_report_path)
+
+  CURRENT_SESSION_ID <<- readLines(DATA_IN_USE_FILE)
+  DATA_SESSION <<- normalizePath(file.path(DATA_ROOT, CURRENT_SESSION_ID), mustWork = TRUE)
+
+  DATA_TRUTH <<- file.path(DATA_SESSION, "truth")
+  DATA_SHARED <<- file.path(DATA_SESSION, "shared")
+  DATA_INITIAL_DATA <<- file.path(DATA_SHARED, "initial_data")
+  DATA_DB <<- file.path(DATA_SESSION, "breeding-game.sqlite")
+  DATA_REPORTS <<- file.path(DATA_SESSION, "reports")
+  GAME_INIT_REPORT <<- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
+
+  if (dir.exists(DATA_SESSION)) {
+    print("add ressource")
+    addResourcePath("reports", DATA_REPORTS)
+  }
+
+
 
   progress_bar$set(
     value = progress_bar$max,

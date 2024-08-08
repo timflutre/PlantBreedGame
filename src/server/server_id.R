@@ -89,8 +89,7 @@ accessGranted <- eventReactive(input$submitPSW,
         {
           maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
 
-
-          allDataFiles <- list.files(DATA_ROOT, all.files = TRUE, recursive = TRUE, full.names = FALSE)
+          allDataFiles <- list.files(DATA_SESSION, all.files = TRUE, recursive = TRUE, full.names = FALSE)
           currentSize <- sum(na.omit(file.info(allDataFiles)$size)) /
             10^9 # in Gb
 

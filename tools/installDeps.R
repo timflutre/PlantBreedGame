@@ -22,7 +22,8 @@ install.packages(
     "lubridate",
     "vistime",
     "shinyvalidate",
-    "bsicons"
+    "bsicons",
+    "uuid"
   )
 )
 
