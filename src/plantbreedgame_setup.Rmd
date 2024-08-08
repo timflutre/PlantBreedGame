@@ -1806,12 +1806,13 @@ system.time(
   tmp <- mclapply(1:length(ind.ids), function(i) {
     ind.id <- ind.ids[i]
     ind <- list(haplos = getHaplosInd(haplos = coll$haplos, ind.name = ind.id))
-    f <- paste0(truth.dir, "/", ind.id, "_haplos.RData")
+    f <- file.path(truth.dir, paste0(ind.id, "_haplos.RData"))
     save(ind, file = f)
     for (breeder in breeders) {
-      fto <- paste0(truth.dir, "/", breeder, "/", ind.id, "_haplos.RData")
+      fto <- file.path(truth.dir, breeder, paste0(ind.id, "_haplos.RData"))
       if (!file.exists(fto)) {
-        file.symlink(f, fto)
+        f_relative_path <- file.path("..", paste0(ind.id, "_haplos.RData"))
+        file.symlink(f_relative_path, fto)
       }
     }
   }, mc.cores = nb.cores)

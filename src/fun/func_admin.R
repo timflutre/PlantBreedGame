@@ -140,8 +140,8 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
       )
     }
 
-    fromFile <- paste0("../", fileName)
-    toFile <- paste0(newTruthDir, "/", fileName)
+    fromFile <- file.path("..", fileName)
+    toFile <- file.path(newTruthDir, fileName)
     file.symlink(fromFile, toFile)
     return()
   }
