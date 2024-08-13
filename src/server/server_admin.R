@@ -344,95 +344,24 @@ observeEvent(input$admin_button_const_initialBudget, {
 
 
 ## Disk usage managment  ----
-output$sizeDataFolder <- renderTable({
-  # data frame containing the size of all subfolder of "data"
+output$dataFolderTree <- shinyTree::renderTree({
   invalidateLater(60000)
-  withProgress(
-    {
-      if (breederStatus() == "game master") {
-        # get list of all subfolders in "truth" and "shared"
-        folderShared <- list.dirs(path = DATA_SHARED, full.names = TRUE, recursive = TRUE)[-1]
-        folderTruth <- list.dirs(path = DATA_TRUTH, full.names = TRUE, recursive = TRUE)[-1]
-        subFolders <- c(folderShared, folderTruth)
-
-        # get size of each subfolders
-        funApply <- function(folder) {
-          files <- list.files(folder, all.files = TRUE, recursive = TRUE, full.names = T)
-          sum(file.info(files)$size)
-        }
-        infoDataFolder <- as.data.frame(sapply(subFolders, FUN = funApply, USE.NAMES = FALSE),
-          col.names = c("size")
-        )
-        names(infoDataFolder) <- c("size")
-        infoDataFolder$path <- subFolders
-
-        # clac size of "shared"
-        infoDataFolder <- rbind(
-          infoDataFolder,
-          data.frame(
-            path = DATA_SHARED,
-            size = sum(infoDataFolder$size[infoDataFolder$path %in% folderShared])
-          )
-        )
-
-        # clac size of "truth"
-        #   1.sum of all subfolders
-        infoDataFolder <- rbind(
-          infoDataFolder,
-          data.frame(
-            path = DATA_TRUTH,
-            size = sum(infoDataFolder$size[infoDataFolder$path %in% folderTruth])
-          )
-        )
-        #   2. sum of all initial collection
-        sizeInitCol <- sum(file.info(list.files(DATA_TRUTH, recursive = FALSE, full.names = TRUE))$size)
-        infoDataFolder[infoDataFolder$path == DATA_TRUTH, "size"] <- infoDataFolder[infoDataFolder$path == DATA_TRUTH, "size"] + sizeInitCol
-
-        # get size of the database
-        infoDataFolder <- rbind(
-          infoDataFolder,
-          data.frame(
-            path = DATA_DB,
-            size = file.info(DATA_DB)$size
-          )
-        )
-
-        # clac size of all "data" folder
-        sizeData <- sum(infoDataFolder[
-          infoDataFolder$path %in% c(
-            DATA_SHARED,
-            DATA_TRUTH,
-            DATA_DB
-          ),
-          "size"
-        ])
-        infoDataFolder <- rbind(
-          infoDataFolder,
-          data.frame(
-            path = "data",
-            size = sizeData
-          )
-        )
-
-        # order table
-        infoDataFolder <- infoDataFolder[order(infoDataFolder$size, decreasing = T), ]
-
-        # convert in Mo
-        infoDataFolder$size <- infoDataFolder$size / 10^6
-        infoDataFolder <- rev(infoDataFolder)
-
-        # var names
-        names(infoDataFolder) <- c("path", "size (Mo)")
-
-        return(infoDataFolder)
-      } else {
-        return(NULL)
-      }
-    },
-    message = "Calculating... Please wait."
-  )
+  get_folder_tree("data", exclude_files = FALSE, excluded_files_ext = "RData")
 })
 
+output$currentDataUsage <- renderUI({
+  invalidateLater(60000)
+  current_size <- get_folder_size(DATA_ROOT)
+  max_usage <- getBreedingGameConstants()$max.disk.usage
+  current_usage <- round(current_size / (max_usage * 10^9) * 100, 0)
+  p(paste0("Current usage: ",
+    prettyunits::pretty_bytes(current_size),
+    " / ",
+    max_usage,
+    " GB (",
+    current_usage,
+    "%)"))
+})
 
 observeEvent(input$updateMaxDiskUsage, {
   # save maximum disk usage value in the database
@@ -452,7 +381,7 @@ currentMaxDiskUsage <- reactive({
 })
 
 output$InfoCurrentMaxDiskUsage <- renderText({
-  paste("Current maximum disk usage:", currentMaxDiskUsage(), "Gb")
+  paste("Current maximum disk usage:", currentMaxDiskUsage(), "GB")
 })
 
 

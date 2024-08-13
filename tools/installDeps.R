@@ -23,7 +23,9 @@ install.packages(
     "vistime",
     "shinyvalidate",
     "bsicons",
-    "uuid"
+    "uuid",
+    "shinyTree",
+    "prettyunits"
   )
 )
 

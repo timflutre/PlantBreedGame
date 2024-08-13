@@ -90,8 +90,7 @@ accessGranted <- eventReactive(input$submitPSW,
           maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
 
           allDataFiles <- list.files(DATA_SESSION, all.files = TRUE, recursive = TRUE, full.names = FALSE)
-          currentSize <- sum(na.omit(file.info(allDataFiles)$size)) /
-            10^9 # in Gb
+          currentSize <- get_folder_size(DATA_ROOT) / 10^9
 
           if (currentSize < maxDiskUsage) {
             goodDiskUsage <- TRUE
@@ -102,7 +101,7 @@ accessGranted <- eventReactive(input$submitPSW,
             goodDiskUsage <- TRUE
             alert(paste0(
               "Warning! The size of the \"data\" folder exceeds the specified limit\n",
-              paste("of", round(currentSize, 2), "Gb (maximum size allowed:", maxDiskUsage, "Gb).\n"),
+              paste("of", round(currentSize, 2), "GB (maximum size allowed:", maxDiskUsage, "GB).\n"),
               "To preserve your server, players can't log in anymore (but connected users can still play).\n",
               "If you want to resume the game, please raise the maximum disk usage limit.\n",
               "Go to the Admin tab, then \"Disk usage\", and raise the threshold."

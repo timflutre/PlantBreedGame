@@ -168,3 +168,60 @@ delGameSession <- function(id) {
   db_execute_request_safe(query, id = id)
 }
 
+
+get_folder_size <- function(dir, as_string = FALSE) {
+  size <- as.numeric(strsplit(system(paste("du -s --block-size=1", dir), intern = TRUE), "\t")[[1]][1])
+  if (as_string) {
+    return(prettyunits::pretty_bytes(size, style = "6"))
+  }
+  return(size)
+}
+
+get_files_size <- function(files, as_string = FALSE) {
+  size <- file.info(files)$size
+  if (as_string) {
+    return(prettyunits::pretty_bytes(size))
+  }
+  return(size)
+}
+
+get_folder_tree <- function(dir, exclude_files = FALSE, excluded_files_ext = NULL) {
+  dirs_fullnames <- list.dirs(path = dir, recursive = F)
+  dirs_list <- lapply(dirs_fullnames, function(dir) {
+    structure(get_folder_tree(dir,
+                              exclude_files = exclude_files,
+                              excluded_files_ext = excluded_files_ext),
+              sttype = "directory")
+  })
+  dirs <- basename(dirs_fullnames)
+  if (length(dirs) > 0) {
+    dir_sizes <- sapply(dirs_fullnames, get_folder_size, as_string = TRUE)
+    names(dirs_list) <- paste0(dirs, " (", dir_sizes, ")")
+  }
+
+  if (exclude_files) {
+    file_list <- list()
+  } else {
+    files_fullnames <- list.files(path = dir, full.names = TRUE, include.dirs = F)
+    files_fullnames <- setdiff(files_fullnames, dirs_fullnames)
+
+    if (!is.null(excluded_files_ext)) {
+      excl_file_regex <- paste0("\\.(", paste0(excluded_files_ext, collapse = "|"), ")$")
+      excl_files <- grepl(excl_file_regex, files_fullnames)
+      files_fullnames <- files_fullnames[!excl_files]
+    }
+
+    files <- basename(files_fullnames)
+    file_list <- lapply(files, function(f){
+      structure("", sttype="file")
+    })
+    if (length(files) > 0) {
+      file_sizes <- get_files_size(files_fullnames, as_string = TRUE)
+      names(file_list) <- paste0(files, " (", file_sizes, ")")
+    }
+  }
+
+  tree_list <- c(dirs_list, file_list)
+  return(tree_list)
+}
+

@@ -264,45 +264,61 @@ if (gameInitialised()) {
   )
 
   disk_usage_tab_content <- div(
-    div(
-      id = "admin_diskU_data",
-      style = "display: inline-block;
-      vertical-align:top;
-      width: 33%;
-      min-width:300px;",
-      h3("Disk usage:"),
-      tableOutput("sizeDataFolder")
-    ),
-    div(
-      id = "admin_diskU_input",
-      style = "display: inline-block;
-      vertical-align:top;
-      width: 66%;",
-      p("To prevent over disk usage on your server, you can specifiy here the maximum size for all game data.",
-        style = "margin-top:20px;"
-      ),
-      p("In case the size of all data exceeds this threshold, players will not be allowed to connect any more, and you will have to delete haplotypes of some breeders."),
-      p(textOutput("InfoCurrentMaxDiskUsage")),
+    div(style = "display: flex;",
       div(
-        style = "width: 50%;
-        display: inline-block;
-        vertical-align: top;",
-        numericInput("admin_maxDiskUsage",
-          label = "Maximum disk usage (in Gb)",
-          value = 10,
-          min = 2
-        )
+        id = "admin_diskU_data",
+        style = "flex: 1; margin-right:10px;",
+        h3("Disk usage:"),
+        uiOutput("currentDataUsage"),
+        p("Current session: ", CURRENT_SESSION_ID),
+        p(code("RData"), "files are not shown."),
+        shinyTree::shinyTree(
+          "dataFolderTree",
+          stripes = TRUE,
+          multiple = FALSE,
+          animation = FALSE,
+          types =
+          "{
+          'directory' : { 'icon' : 'glyphicon glyphicon-folder-open' },
+          'default' : { 'icon' : 'glyphicon glyphicon-file', 'valid_children' : [] }
+          }"
+        ) %>% withSpinner()
       ),
+
       div(
-        style = "width: 30%;
-        padding-top: 26px;
-        display: inline-block;
-        vertical-align: top;",
-        actionButton("updateMaxDiskUsage",
-          label = "Update"
+        id = "admin_diskU_input",
+        style = "flex: 2;",
+        p(style = "margin-top:20px;",
+          "To prevent over disk usage on your server,",
+          "you can specifiy here the maximum size for all game data."
+        ),
+        p("In case the size of all data exceeds this threshold,",
+          "players will not be allowed to connect any more, and you will",
+          "have to delete haplotypes of some breeders."),
+        p("Deletion of data must be made manually on the host machine."),
+        p(textOutput("InfoCurrentMaxDiskUsage")),
+
+        div(
+          style = "width: 50%;
+          display: inline-block;
+          vertical-align: top;",
+          numericInput("admin_maxDiskUsage",
+            label = "Maximum disk usage (in GB)",
+            value = 10,
+            min = 2)
+        ),
+        div(
+          style = "width: 30%;
+          padding-top: 26px;
+          display: inline-block;
+          vertical-align: top;",
+          actionButton("updateMaxDiskUsage",
+            label = "Update")
         )
+
+
       )
-    ) # end div "admin_diskU_input"
+    ),
   )
 
 

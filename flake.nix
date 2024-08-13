@@ -32,6 +32,8 @@
           GenomicRanges
           bsicons
           uuid
+          shinyTree
+          prettyunits
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";
