@@ -427,3 +427,19 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 
   write.table(df, file = fout, sep = "\t", row.names = FALSE, quote = FALSE)
 }
+
+
+create_issue_link <- function(title = "", body = ""){
+  repo_base_url <- "https://github.com/timflutre/PlantBreedGame"
+  body <- gsub(pattern = "\n", replacement = "%0A", x = body)
+  issue_link <- paste0(
+    repo_base_url,
+    "/issues/new?title=",
+    title,
+    "&body=",
+    body
+  )
+  return(issue_link)
+}
+
+

@@ -699,12 +699,51 @@ observeEvent(input$initialiseGame, {
   )
 
   rmd_env <- new.env(parent = globalenv())
-  out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
-    output_file = tempfile(),
-    encoding = "UTF-8",
-    params = params,
-    envir = rmd_env
-  )
+  out_report <- tryCatch({
+    rmarkdown::render("./src/plantbreedgame_setup.Rmd",
+      output_file = tempfile(),
+      encoding = "UTF-8",
+      params = params,
+      envir = rmd_env
+    )
+  }, error = function(err) {
+      progress_bar$close()
+      showNotification("Game Initialisation Error.", type = "error")
+      showModal(modalDialog(
+        size = "l",
+        title = tags$span(class = "has-error", "Game initialisation failed."),
+        p("The game initialisation script failed with the following error message:"),
+        p(code(err$message)),
+        p("This problem will likely be fixed by using a",
+          strong("different RNG seed"),
+          ". If the problem is recurrent, please ",
+          a("click here to report this issue on GitHub.",
+            href = create_issue_link(
+              title = paste0("Game initialisation error: `", err$message, "`"),
+              body = paste0(
+                "Encountered error message:\n\n```console\n",
+                err$message,
+                "\n```\n\n",
+                "For reproducibility, here are the parameters used",
+                " for this failed game initialisation:\n\n```json\n",
+                as.character(jsonlite::toJSON(
+                  params[names(params) != "progressBar"],
+                  pretty = T,
+                  auto_unbox = T
+                )),
+                "\n```\n\n[Please add other information about",
+                " how you enconter this problem.]"
+              )
+            )
+          )
+        )
+      ))
+      return("error")
+  })
+
+  if (identical(out_report, "error")) {
+    return(NULL)
+  }
 
   new_session_id <- rmd_env$session_id
   new_report_path <- file.path(
@@ -728,7 +767,6 @@ observeEvent(input$initialiseGame, {
   GAME_INIT_REPORT <<- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
 
   if (dir.exists(DATA_SESSION)) {
-    print("add ressource")
     addResourcePath("reports", DATA_REPORTS)
   }
 
