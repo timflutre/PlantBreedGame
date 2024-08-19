@@ -26,22 +26,9 @@
 getCodeVersion <- function(url.repo = "") {
   code.version <- list(display = "", link = "")
 
-  if (requireNamespace("git2r", quietly = TRUE)) {
-    if (git2r::in_repository()) {
-      git2r.version <- as.character(utils::packageVersion(pkg = "git2r"))
-      if (utils::compareVersion(git2r.version, "0.22.1") == -1) {
-        commit.sha <- git2r::commits()[[1]]@sha
-      } else {
-        commit.sha <- git2r::commits()[[1]]$sha
-      }
-      code.version$display <- substr(commit.sha, 1, 7)
-      code.version$link <- paste0(url.repo, "/commit/", commit.sha)
-    } else {
-      code.version$display <- "unavailable (initialize git repository to enable)"
-    }
-  } else {
-    code.version$display <- "unavailable (install git2r package to enable)"
-  }
+  current_version <- readLines("VERSION")
+  code.version$display <- current_version
+  code.version$link <- paste0(url.repo, "/tree/v", current_version)
 
   return(code.version)
 }

@@ -1290,6 +1290,13 @@ query <- paste0(
   " ('max.disk.usage', '", 10, "')"
 ) # in Gb
 res <- dbExecute(conn = db, query)
+
+version <- readLines("../VERSION")
+query <- paste0(
+  "INSERT INTO ", tbl, " VALUES",
+  " ('version', '", version, "')"
+)
+res <- dbExecute(conn = db, query)
 ```
 
 ### Simulation parameters

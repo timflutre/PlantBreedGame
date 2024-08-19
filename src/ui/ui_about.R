@@ -46,8 +46,10 @@ tabItem(
           "It is available under a free software license, the ", a("GNU Affero General Public License", href = "https://www.gnu.org/licenses/agpl.html", target = "_blank"), " (version 3 and later)."
         ),
         p(
-          "Code: ", a("repository", href = url.repo, target = "_blank"), "; ",
-          "current version: ",
+          "Source code: ", a("GitHub repository", href = url.repo, target = "_blank")
+        ),
+        h3("Version"),
+        p("Current version: ",
           a(code.version$display, href = code.version$link, target = "_blank")
         ),
         br(),
