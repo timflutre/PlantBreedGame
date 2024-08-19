@@ -65,6 +65,7 @@
           TEST_PORT = 3000;
           PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = true;
+          PLANTBREEDGAME_DATA_ROOT = "./data";
           nativeBuildInputs = [pkgs.bashInteractive];
           shellHook = ''
             npm install --ignore-scripts

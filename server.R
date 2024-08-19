@@ -63,5 +63,5 @@ shinyServer(function(input, output, session) {
   source("src/server/server_theory.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_admin.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_about.R", local = TRUE, encoding = "UTF-8")$value
-  source("./src/server/server_constants.R", local = TRUE, encoding = "UTF-8")$value
+  source("src/server/server_constants.R", local = TRUE, encoding = "UTF-8")$value
 })

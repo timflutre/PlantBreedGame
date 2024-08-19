@@ -86,10 +86,10 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 # Set up the environment
 
 ```{r load_pkgs, warning = FALSE}
-
+progress_detail = "Load R packages..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Load R packages..."
+  detail = progress_detail
 )
 
 suppressPackageStartupMessages(library(parallel))
@@ -120,10 +120,9 @@ stopifnot(compareVersion(
 != 1)
 suppressPackageStartupMessages(library(scrm)) # from CRAN
 suppressPackageStartupMessages(library(GenomicRanges)) # from bioconductor
-
-source("fun/functions.R")
-source("fun/module_gameInit_params.R")
-source("fun/func_gameInit_validation.R")
+source("src/fun/functions.R")
+source("src/fun/module_gameInit_params.R")
+source("src/fun/func_gameInit_validation.R")
 
 
 session_id <- uuid::UUIDgenerate()
@@ -136,9 +135,10 @@ This new session have id: ` `r session_id` `
 Validation and overview of the parameters used to initialised this game session.
 
 ```{r}
+progress_detail = "Parameter validation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Parameter validation..."
+  detail = progress_detail
 )
 
 invisible({
@@ -194,12 +194,12 @@ print(params[names(params) != "progressBar"])
 # Set up data directories and RNG seed
 
 ```{r setup_dir}
+progress_detail = "Setup directories..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Setup directories..."
+  detail = progress_detail
 )
-data_root <- normalizePath(file.path("..", "data"))
-
+data_root <- normalizePath(Sys.getenv("PLANTBREEDGAME_DATA_ROOT"))
 
 root.dir <- file.path(data_root, session_id)
 truth.dir <- file.path(root.dir, "truth")
@@ -309,9 +309,10 @@ Enhancement: simulate two sub-populations, quite differenciated (by crossing ind
 Simulate genotypes via the coalescent:
 ```{r simul_geno_coalescent}
 
+progress_detail = "Genotype simulation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Genotype simulation..."
+  detail = progress_detail
 )
 
 f <- paste0(truth.dir, "/g0.RData")
@@ -341,9 +342,10 @@ g0$genos[1:2, 1:6]
 
 Look at the AFs and MAFs:
 ```{r look_mafs}
+progress_detail = "AF calculation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "AF calculation..."
+  detail = progress_detail
 )
 afs <- estimSnpAf(X = g0$genos, allow.updating = TRUE)
 summary(afs)
@@ -376,9 +378,10 @@ plotHaplosMatrix(g0$haplos$chr1[
 Estimate and plot pairwise LD per chromosome:
 ```{r estim_plot_ld}
 
+progress_detail = "Generate LD plot..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Generate LD plot..."
+  detail = progress_detail
 )
 
 chr <- "chr1"
@@ -419,9 +422,10 @@ abline(v = 500, lty = 2)
 Look at distances between consecutive SNPs:
 ```{r dist_btw_snps}
 
+progress_detail = "SNP distances calculation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "SNP distances calculation..."
+  detail = progress_detail
 )
 
 chr <- "chr3"
@@ -504,9 +508,10 @@ write.table(
 Make collection of lines via haplodiploidization:
 ```{r coll_lines}
 
+progress_detail = "Generate initial collection's genotype..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Generate initial collection's genotype..."
+  detail = progress_detail
 )
 
 f <- paste0(truth.dir, "/coll.RData")
@@ -555,9 +560,10 @@ gc()
 Make data frame encoding the design for the initial phenotypes given to the players:
 ```{r init_pheno}
 
+progress_detail = "Simulate initial phenotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Simulate initial phenotypes..."
+  detail = progress_detail
 )
 
 nb.lines.per.year <- 150
@@ -1062,9 +1068,10 @@ Enhancement: add missing data
 Save data:
 ```{r save_phenos}
 
+progress_detail = "Save initial phenotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Save initial phenotypes..."
+  detail = progress_detail
 )
 
 f <- paste0(truth.dir, "/p0.RData")
@@ -1261,9 +1268,10 @@ gc()
 Create a database:
 ```{r setup_db}
 
+progress_detail = "Initialise data-base..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Initialise data-base..."
+  detail = progress_detail
 )
 
 db <- dbConnect(SQLite(), dbname = dbname)
@@ -1291,7 +1299,7 @@ query <- paste0(
 ) # in Gb
 res <- dbExecute(conn = db, query)
 
-version <- readLines("../VERSION")
+version <- readLines("VERSION")
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
   " ('version', '", version, "')"
@@ -1809,9 +1817,10 @@ dbDisconnect(db)
 For each individual initially given to the players, save its haplotypes into a file (slow):
 ```{r save_haplos_in_files}
 
+progress_detail = "Save initial haplotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Save initial haplotypes..."
+  detail = progress_detail
 )
 
 system.time(
@@ -1872,9 +1881,10 @@ suppressWarnings(write.table(
 Make a zip archive of the whole directory:
 ```{r make_zip}
 
+progress_detail = "Create zip archive..."
 progressBar$set(
   value = progressBar$getValue() + 1,
-  detail = "Create zip archive..."
+  detail = progress_detail
 )
 
 system.time(
@@ -1891,6 +1901,11 @@ system.time(
 # Specify this new session should be use
 
 ```{r, new_session_specification}
+progress_detail = "Save session to use..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 data_in_use_file <- file.path(data_root, "data_folder_in_use.txt")
 writeLines(session_id, data_in_use_file)
 ```
@@ -1902,4 +1917,10 @@ writeLines(session_id, data_in_use_file)
 t1 <- proc.time()
 t1 - t0
 print(sessionInfo(), locale = FALSE)
+
+progress_detail = "Game setup script DONE"
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 ```

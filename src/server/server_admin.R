@@ -646,7 +646,7 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 16)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 18)
 
   progress_bar$set(
     value = 1,
@@ -700,10 +700,11 @@ observeEvent(input$initialiseGame, {
 
   rmd_env <- new.env(parent = globalenv())
   out_report <- tryCatch({
-    rmarkdown::render("./src/plantbreedgame_setup.Rmd",
+    rmarkdown::render("src/plantbreedgame_setup.Rmd",
       output_file = tempfile(),
       encoding = "UTF-8",
       params = params,
+      knit_root_dir = getwd(),
       envir = rmd_env
     )
   }, error = function(err) {
@@ -714,6 +715,7 @@ observeEvent(input$initialiseGame, {
         title = tags$span(class = "has-error", "Game initialisation failed."),
         p("The game initialisation script failed with the following error message:"),
         p(code(err$message)),
+        p("after step: ", code(rmd_env$progress_detail)),
         p("This problem will likely be fixed by using a",
           strong("different RNG seed"),
           ". If the problem is recurrent, please ",

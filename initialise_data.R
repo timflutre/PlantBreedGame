@@ -33,6 +33,7 @@ out_report <- rmarkdown::render("./src/plantbreedgame_setup.Rmd",
   output_file = tempfile(),
   encoding = "UTF-8",
   params = params,
+  knit_root_dir = getwd(),
   envir = rmd_env,
 )
 

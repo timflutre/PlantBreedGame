@@ -47,9 +47,10 @@ if (Sys.info()["sysname"] == "Windows") {
 
 ## -------------------------------------------------------------------
 
-DATA_ROOT <- "./data"
+DATA_ROOT <- Sys.getenv("PLANTBREEDGAME_DATA_ROOT")
 if (!dir.exists(DATA_ROOT)) {
-  stop(paste("Specified game data folder:", DATA_ROOT, "does not exist."))
+  stop(paste("Specified game data folder:", DATA_ROOT, "does not exist.",
+  "Make sure the `PLANTBREEDGAME_DATA_ROOT` environment variable is correctly set."))
 }
 
 DATA_IN_USE_FILE <- file.path(DATA_ROOT, "data_folder_in_use.txt")
