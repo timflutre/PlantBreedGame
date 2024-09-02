@@ -257,6 +257,40 @@ nix run
 
 To install nix you can visit: https://github.com/DeterminateSystems/nix-installer
 
+
+## Dependencies update
+
+Most of the dependencies (eg. `R` and its packages) are handled with `nix`. To update the dependencies just run:
+
+```sh
+nix flake update
+```
+
+However, `playwright` (the tool used to test the UI) is handeled by `npm` but the web browser it uses are handled by `nix` and we need to use the same version of playwright in the node project as in nix, or else playwright will try to use browsers versions that aren't installed! (cf. [nixos wiki](https://nixos.wiki/wiki/Playwright)).
+
+There is an example of such error:
+```console
+Test was interrupted.
+
+    Error: browserType.launch: Executable doesn't exist at /nix/store/8hmp47k3dfdw38f82zj7yd7q351pzgh6-playwright-browsers-chromium/chromium-1080/chrome-linux/chrome
+```
+
+To make sure the same version are installed:
+- 1. Check the nix playwright's version:
+  ```sh
+  which playwright # to make sure we are targeting nix's playwright
+  playwright --version
+  ```
+- 2. Specify this version in `package.json`
+  ```json
+  "devDependencies": {
+    "@playwright/test": "X.X.X",
+  },
+  ```
+- 3. Run `npm install --ignore-scripts` to reinstall npm's playwright
+
+
+
 # Citation
 
 As the authors invested time and effort in creating this game, please cite the following [letter](https://dl.sciencesocieties.org/publications/cs/abstracts/0/0/cropsci2019.03.0183le) to the editor of Crop Science:
