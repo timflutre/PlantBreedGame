@@ -236,9 +236,9 @@ output$dwnlPheno <- downloadHandler(
     if (input$phenoFile %in% initFiles) {
       folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0(DATA_SHARED, breeder())
+      folder <- file.path(DATA_SHARED, breeder())
     }
-    filePath <- paste0(folder, "/", input$phenoFile)
+    filePath <- file.path(folder, input$phenoFile)
     file.copy(filePath, file)
   }
 )
@@ -251,9 +251,9 @@ output$dwnlGeno <- downloadHandler(
     if (gFile %in% initFiles) {
       folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0(DATA_SHARED, breeder())
+      folder <- file.path(DATA_SHARED, breeder())
     }
-    filePath <- paste0(folder, "/", gFile)
+    filePath <- file.path(folder, gFile)
     file.copy(filePath, file)
   }
 )
@@ -266,9 +266,9 @@ output$dwnlGeno_vcf <- downloadHandler(
     if (gFile_txt %in% initFiles) {
       folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0(DATA_SHARED, breeder())
+      folder <- file.path(DATA_SHARED, breeder())
     }
-    gFile_txt <- paste0(folder, "/", gFile_txt)
+    gFile_txt <- file.path(folder, gFile_txt)
     progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
     progressVcf$set(
       value = 0,
@@ -290,9 +290,9 @@ output$dwnlPltMat <- downloadHandler(
     if (input$pltMatFile %in% initFiles) {
       folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0(DATA_SHARED, breeder())
+      folder <- file.path(DATA_SHARED, breeder())
     }
-    filePath <- paste0(folder, "/", input$pltMatFile)
+    filePath <- file.path(folder, input$pltMatFile)
     file.copy(filePath, file)
   }
 )
@@ -305,9 +305,9 @@ output$dwnlRequest <- downloadHandler(
     if (input$requestFile %in% initFiles) {
       folder <- DATA_INITIAL_DATA
     } else {
-      folder <- paste0(DATA_SHARED, breeder())
+      folder <- file.path(DATA_SHARED, breeder())
     }
-    filePath <- paste0(folder, "/", input$requestFile)
+    filePath <- file.path(folder, input$requestFile)
     file.copy(filePath, file)
   }
 )

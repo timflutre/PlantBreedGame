@@ -536,14 +536,17 @@ async function checkResultsFile(page: Page, reqFile: string, type: string) {
   await page.getByRole("option").getByText(resultFilePatern).first().click();
 
   // download request results file
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    await page.locator(buttonID).click(),
-  ]);
-  const tempFilePath = join(tmpdir(), `${Date.now()}_${tmpFileSuff}.txt`);
-  const downloadPath = await download.path();
-  gunzip(downloadPath, tempFilePath, function () {
-    const fileContent = readFileSync(tempFilePath, { encoding: "utf8" });
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator(buttonID).click();
+  const download = await downloadPromise;
+
+  const tempDirPath = tmpdir() + "/";
+  const tempDownlFile = tempDirPath + download.suggestedFilename();
+  await download.saveAs(tempDownlFile);
+
+  const extractedFilePath = join(tempDirPath, `${Date.now()}_${tmpFileSuff}`);
+  gunzip(tempDownlFile, extractedFilePath, function () {
+    const fileContent = readFileSync(extractedFilePath, { encoding: "utf8" });
     expect(fileContent).toContain(expectedText);
   });
 }
