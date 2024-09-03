@@ -640,6 +640,7 @@ output$elvalReport <- downloadHandler(
     rmarkdown::render("./src/evalReport.Rmd",
       output_file = file,
       params = params,
+      intermediates_dir = tempdir(), # important for nix pkg
       envir = new.env(parent = globalenv()),
       encoding = "UTF-8"
     )

@@ -45,14 +45,15 @@
             };
             propagatedBuildInputs = with pkgs.rPackages; [data_table lme4 Matrix Rcpp];
           })
-
-          /*
-          developement packages
-          */
+        ];
+        R-test-packages = with Rpkgs.rPackages; [
+          testthat
+        ];
+        R-dev-packages = with Rpkgs.rPackages; [
           languageserver
           styler
         ];
-      in {
+      in rec {
         devShells.default = pkgs.mkShell {
           LOCALE_ARCHIVE =
             if "${system}" == "x86_64-linux"
@@ -70,9 +71,11 @@
           shellHook = ''
             npm install --ignore-scripts
           '';
+
           buildInputs = [
-            (Rpkgs.rWrapper.override {packages = R-packages;})
-            (Rpkgs.rstudioWrapper.override {packages = R-packages;})
+            (Rpkgs.rWrapper.override {packages = R-packages ++ R-test-packages ++ R-dev-packages;})
+            (Rpkgs.rstudioWrapper.override {packages = R-packages ++ R-test-packages ++ R-dev-packages;})
+            pkgs.pandoc
             pkgs.zip
             pkgs.nodejs_20
             (pkgs.playwright-driver.override {nodejs = pkgs.nodejs_20;})
@@ -128,6 +131,14 @@
             program = "${initialise-data}/bin/initialise-data";
           };
         };
+
+        packages.plantBreedGame = pkgs.callPackage ./nix_package/default.nix {
+          inherit pkgs;
+          R_deps = R-packages;
+          tests_R_deps = R-test-packages;
+          src = pkgs.lib.sources.cleanSource ./.;
+        };
+        packages.default = packages.plantBreedGame;
       }
     );
 }

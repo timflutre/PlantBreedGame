@@ -699,9 +699,11 @@ observeEvent(input$initialiseGame, {
   )
 
   rmd_env <- new.env(parent = globalenv())
+  report_build_dir <- tempdir()
   out_report <- tryCatch({
     rmarkdown::render("src/plantbreedgame_setup.Rmd",
-      output_file = tempfile(),
+      output_file = tempfile(tmpdir = report_build_dir),
+      intermediates_dir = report_build_dir, # important for nix pkg
       encoding = "UTF-8",
       params = params,
       knit_root_dir = getwd(),
