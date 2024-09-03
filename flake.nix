@@ -3,16 +3,25 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
+
+    nix2container.url = "github:nlewo/nix2container";
+    nix2container.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
+    nix2container,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = import nixpkgs {inherit system;};
+        nix2containerPkgs = nix2container.packages.${system};
+        imageBuilder =
+          (import ./nix_package/image.nix {inherit nix2containerPkgs pkgs;})
+          .builder;
+
         Rpkgs = pkgs;
         R-packages = with Rpkgs.rPackages; [
           shiny
@@ -79,6 +88,7 @@
             pkgs.zip
             pkgs.nodejs_20
             (pkgs.playwright-driver.override {nodejs = pkgs.nodejs_20;})
+            pkgs.skopeo
           ];
         };
 
@@ -139,6 +149,15 @@
           src = pkgs.lib.sources.cleanSource ./.;
         };
         packages.default = packages.plantBreedGame;
+
+        images = {
+          latest = let
+          in (imageBuilder {
+            imageName = "plantBreedGame";
+            plantBreedGame = packages.plantBreedGame;
+            tag = "latest";
+          });
+        };
       }
     );
 }

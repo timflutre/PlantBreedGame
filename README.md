@@ -112,7 +112,7 @@ See the explanations below in the section "Usage".
 
 ## :whale2: Docker
 
-Thank to docker, you can deploy this application without not installing anything more than docker on your server.
+Thank to docker, you can deploy this application without installing anything more than docker on your server.
 
 To install docker please refer here: [ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/), [debian](https://docs.docker.com/install/linux/docker-ce/debian/), [other](https://docs.docker.com/install/).
 
@@ -120,89 +120,42 @@ To install docker please refer here: [ubuntu](https://docs.docker.com/install/li
 
 A docker image of this application is available on Docker Hub: [juliendiot/plantbreedgame](https://hub.docker.com/r/juliendiot/plantbreedgame).
 
+Those images are tagged in 3 different ways:
+- `latest`: The latest stable version
+- `development`: The latest development version
+- `X.X.X`: The image corresponding the plantBreedGame version `X.X.X`
+
+In the following commands, you can replace `juliendiot/plantbreedgame:latest` 
+with the version you want to use.
+
 #### 1st method
 
-The simplest way to deploy the application on a server using docker is with this command:
+For **testing purpose**, the simplest way to run the application using docker is with this command:
 
 ```sh
-docker run -d --rm --name plantbreedgame -p 80:3838 juliendiot/plantbreedgame
+docker run -d --rm --name plantbreedgame -p 80:3838 juliendiot/plantbreedgame:latest
 ```
 
 The application is then accessible on the host machine on port `80` at the path `/PlantBreedGame`, for example: `localhost:80/PlantBreedGame` on your personal computer.
 
-Be careful, stopping this container will erase all the progress of the players.
+Be careful ! **Stopping this container will erase all the progress of the players**.
 
 #### 2nd method
 
-This method is for people who want persistant game progress, a manual access to the `data` folder of the game and an access to the application's logs.
+For actual game session, you need to specify to docker a persistent
+["volume"](https://docs.docker.com/engine/storage/volumes/#start-a-container-with-a-volume)
+where it can save and keep the game data when the container is stoped.
 
-In order to access to the `data` folder of the game, we must first extract this folder from the image:
-
-```sh
-docker run -d --rm --name plantbreedgame juliendiot/plantbreedgame
-docker cp plantbreedgame:/srv/shiny-server/PlantBreedGame/data /host/path/to/appData
-docker stop plantbreedgame
-chgrp docker -R /host/path/to/appData/data
-chmod 774 /host/path/to/appData/data
-chmod 664 /host/path/to/appData/data/breeding-game.sqlite
-```
-
-Then we must create a folder for the logs:
-
-```sh
-mkdir /host/path/to/log
-chgrp docker /host/path/to/log
-```
-
-We can now mount these folders on a new running the container :
+With the command below:
 
 ```sh
 docker run -d --rm --name plantbreedgame -p 80:3838 \
-    -v /host/path/to/appData:/srv/shiny-server/PlantBreedGame/data \
-    -v /host/path/to/log:/var/log/shiny-server/ \
-    juliendiot/plantbreedgame
+    -v /host/path/to/plantBreedGameData:/var/lib/plantBreedGame \
+    juliendiot/plantbreedgame:latest
 ```
 
-Finally, we must give the same group id to the container's "shiny" group than the host's "docker" group:
-
-```sh
-docker exec -u 0 -it plantbreedgame groupmod -g $(cut -d: -f3 < <(getent group docker)) shiny
-```
-
-#### debug
-
-To access to the a bash console from inside the container use:
-
-```sh
-docker exec -u 0 -it plantbreedgame bash
-```
-
-### custom build
-
-If you want to use specific game parameters (define in the file `plantbreedgame_setup.Rmd`) you can build your own docker image:
-
-1. get the application code:
-
-```sh
-wget https://github.com/timflutre/PlantBreedGame/archive/master.zip
-unzip master.zip
-mv PlantBreedGame-master PlantBreedGame
-```
-
-or
-
-```sh
-git clone --depth=1 https://github.com/timflutre/PlantBreedGame.git
-```
-
-2. move in the app code folder and build a new image:
-
-```sh
-cd PlantBreedGame
-docker build -t customplantbreedgame ./
-```
-
-You can then run this image by using the same commands as above replacing `juliendiot/plantbreedgame` by `customplantbreedgame`
+The game data will be saved in the host machine at `/host/path/to/plantBreedGameData`.
+You can select any location you want.
 
 
 # Usage
@@ -211,17 +164,16 @@ You can then run this image by using the same commands as above replacing `julie
 
 To start playing, the game need some specific data (eg. the genotypes and haplotypes of the initial population, a data-base...). This initialisation can be done through the game.
 
-The first time you run the application, most of the game menus will show a message asking you to initialise the game. To do so you need to go to the `Admin` menue, and in `Game Initialisation` tab. There you will find a button that will start the game initialisation. Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game.
+The first time you run the application, most of the game menus will show a message asking you to initialise the game. To do so you need to go to the `Admin` menu, and in `Game Initialisation` tab. There you will find some parametres you can tweak to customise the game and a button that will start the game initialisation. Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game.
 
 The game initialisation will automatically create an `admin` breeder with the default password `1234`.
 
 If the game have already been initialise, it is also possible to re-initialise it to start a new "fresh game". However in such case **all the data of the game will be lost**.
 
-> NOTE: Currently the game do not let you choose the game initialisation parameters, in order to change them, you need to manually modify the file `plantbreedgame_setup.Rmd` befor proceding to the initialisation. In a near future, you will be able to set the intialisation parameters from the game.
 
 ## How to play
 
-Once the application is installed and working, _please_ read the game rules (tab `How to play?`) and start by downloading the initial data set as well as example files showing how requests should be formatted (all files listed at the bottom of the tab `How to play?`).
+Once the application is installed and working, please read the game rules (tab `How to play?`) and start by downloading the initial data set as well as example files showing how requests should be formatted (all files listed at the bottom of the tab `How to play?`).
 
 Before making any request, such as phenotyping, you need to log in (tab `Identification`).
 To get a sense of how the interface works, you can use the "test" breeder with the "tester" status which doesn't require any password and isn't subject to time restriction.
