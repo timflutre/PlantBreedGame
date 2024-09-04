@@ -118,7 +118,7 @@ To install docker please refer here: [ubuntu](https://docs.docker.com/install/li
 
 ### Deployment
 
-A docker image of this application is available on Docker Hub: [juliendiot/plantbreedgame](https://hub.docker.com/r/juliendiot/plantbreedgame).
+A docker image of this application is available on Docker Hub: [juliendiot/plantbreedgame](https://hub.docker.com/r/juliendiot/plantbreedgame/tags).
 
 Those images are tagged in 3 different ways:
 - `latest`: The latest stable version
