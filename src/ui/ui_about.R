@@ -28,7 +28,7 @@ tabItem(
         h3("Context"),
         p("This is the ", code("PlantBreedGame"), " software implementing a serious game to teach selective breeding via the example of a fictitious annual plant species to students at the master level."),
         h3("Citation"),
-        p("Flutre, T., Diot, J., and David, J. (2019). PlantBreedGame: A Serious Game that Puts Students in the Breeder’s Seat. Crop Science. DOI ", a("10.2135/cropsci2019.03.0183le", href = "https://dl.sciencesocieties.org/publications/cs/abstracts/0/0/cropsci2019.03.0183le", target = "_blank")),
+        p("Flutre, T., Diot, J., and David, J. (2019). PlantBreedGame: A Serious Game that Puts Students in the Breeder's Seat. Crop Science. DOI ", a("10.2135/cropsci2019.03.0183le", href = "https://dl.sciencesocieties.org/publications/cs/abstracts/0/0/cropsci2019.03.0183le", target = "_blank")),
         h3("Copyright"),
         p(
           "2015-2019: ",
