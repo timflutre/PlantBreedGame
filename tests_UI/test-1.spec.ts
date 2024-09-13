@@ -695,8 +695,10 @@ async function registerIndividuals(
     for (let ind of ind_list) {
       await page.getByRole("cell", { name: ind }).click();
     }
+    await expect(page.getByRole("button", { name: "Delete" })).toBeVisible();
     await page.getByRole("button", { name: "Delete" }).click();
   }
+  await page.waitForTimeout(500);
 
   // add specified inds
   await page.locator(".tab-pane .active").locator(".selectize-input").click();
