@@ -364,6 +364,13 @@ if (gameInitialised()) {
   game_setup_tab_content <- div(
     p("The current game session is:", CURRENT_SESSION_ID),
 
+    h2("Actual marker effects"),
+    p("The causal SNP for the resistance is:", code(shiny::textOutput("causal_resist_snp", inline = TRUE))),
+    p("With the button below you can donwload the actual marker effects used",
+    "for simulating the phenotypes of", code("trait 1"), "and", code("trait 2"), "in a csv format."),
+    downloadButton("download_actual_marker_effects", "Download game's actual marker effects (csv)"),
+
+
     h2("Game initialisation report"),
 
     p("The game is initialised. You can download the related report that contains",

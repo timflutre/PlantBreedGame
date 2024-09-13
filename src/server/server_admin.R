@@ -582,6 +582,23 @@ output$download_game_init_report <- downloadHandler(
   contentType = "text/html"
 )
 
+output$download_actual_marker_effects <- downloadHandler(
+  filename = paste0("plantBreedGame_actual_marker_effects_", strftime(Sys.time(),format = "%Y-%m-%d"), ".csv"), # lambda function
+  content = function(file) {
+    f <- paste0(DATA_TRUTH, "/p0.RData")
+    load(f)
+    marker_effects <- as.data.frame(p0$Beta)
+    marker_effects$SNP <- rownames(marker_effects)
+    marker_effects <- marker_effects[, c("SNP", "trait1", "trait2")]
+    write.csv(marker_effects, file = file, row.names = FALSE)
+  }
+)
+output$causal_resist_snp <- renderText({
+  f <- paste0(DATA_TRUTH, "/p0.RData")
+  load(f)
+  p0$trait3$qtn.id
+})
+
 output$initialisation_button <- renderUI({
   if (!gameInitialised()) {
     return(
