@@ -1637,7 +1637,7 @@ query <- paste0(
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('cost.register', '", 4, "')"
+  " ('cost.register', '", params$cost.register, "')"
 ) # idem
 res <- dbExecute(conn = db, query)
 
