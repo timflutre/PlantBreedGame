@@ -76,6 +76,7 @@ constants_server("duration.allof", constantsReactive)("pltmat_duration.allof")
 constants_server("duration.autof", constantsReactive)("pltmat_duration.autof")
 constants_server("duration.haplodiplo", constantsReactive)("pltmat_duration.haplodiplo")
 constants_server("max.nb.haplodiplos", constantsReactive)("pltmat_max.nb.haplodiplos")
+constants_server("max.nb.pltmatReq", constantsReactive)("pltmat_max_crosses")
 
 # phenotyping page:
 constants_server("cost.pheno.field", constantsReactive)("pheno_cost.pheno.field")

@@ -65,7 +65,27 @@ div(
         tags$li("Individuals should be available."),
         tags$li("Individuals should not be duplicated within each task."),
         tags$li("Lines starting with ", code("#"), " will be ignored.")
-      ))
+      )),
+
+      h4("Results"),
+      p("The phenotyping results will present 7 variables:"),
+      tags$ul(
+        tags$li(code("ind"), ": the individual name"),
+        tags$li(code("year"), ": the year when this phenotyping happens."),
+        tags$li(code("plot"), ": the plot id of the phenotyping observation"),
+        tags$li(code("pathogen"), ": boolean value indicating if the pathogen have been observed durring the phenotyping."),
+        tags$li(code("trait1"), ": observed value for trait 1 (yield in kg/ha)"),
+        tags$li(code("trait2"), ": observed value for trait 2 (sepmetin content in g/kg)"),
+        tags$li(
+          code("trait3"),
+          ": observed", strong("symptoms"), "of fluorescent rust.",
+          tags$ul(
+            tags$li(code("1"), "indicates the individual showed symptoms"),
+            tags$li(code("0"), "indicates the individual did not show symptoms.")
+          ),
+          "Note: If", code("pathogen"), "is", code("FALSE"),
+          ", the pathogen was not observed and therefore not any individuals will show  symptoms.")
+      )
     )
   ),
   shinydashboard::box(

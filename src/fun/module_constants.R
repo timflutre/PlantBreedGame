@@ -53,6 +53,9 @@ constants_server <- function(const, constantsReactive) {
             if (const == "chr.length.Mb") {
               return(format(constants$chr.length / 10^6, digits = 2))
             }
+            if (const == "max.nb.pltmatReq") {
+              return(constants$max.nb.pltmatReq)
+            }
 
             if (const == "duration.allof") {
               return(format(12 / constants$duration.allof,

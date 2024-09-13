@@ -31,7 +31,8 @@ div(
         tags$li(strong("Allofecundation"), ": ", constants_ui("pltmat_duration.allof"), "-month delay and costs", constants_ui("pltmat_cost.allof"), " plot (", constants_ui("pltmat_cost.allof.mendels"), " Mendels )."),
         tags$li(strong("Autofecundation"), ": ", constants_ui("pltmat_duration.autof"), "-month delay and costs", constants_ui("pltmat_cost.autof"), " plot (", constants_ui("pltmat_cost.autof.mendels"), " Mendels ).")
       ),
-      p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants_ui("pltmat_duration.haplodiplo"), "-month delay, costs ", constants_ui("pltmat_cost.haplodiplo"), " plot (", constants_ui("pltmat_cost.haplodiplo.mendels"), " Mendels ), and a maximum of ", constants_ui("pltmat_max.nb.haplodiplos"), " can be requested at once.")
+      p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants_ui("pltmat_duration.haplodiplo"), "-month delay, costs ", constants_ui("pltmat_cost.haplodiplo"), " plot (", constants_ui("pltmat_cost.haplodiplo.mendels"), " Mendels ), and a maximum of ", constants_ui("pltmat_max.nb.haplodiplos"), " can be requested at once."),
+      p(paste0("The maximum number of new individuals that can be generated with 1 request is ", constants_ui("pltmat_max_crosses"), "."))
     ),
     div(
       id = "cross_info2",
