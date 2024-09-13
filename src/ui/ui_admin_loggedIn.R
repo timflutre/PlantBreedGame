@@ -416,6 +416,7 @@ game_initialisation_tab_content <- div(
       h2("Game Initialisation Parameters:"),
       gameInit_seed_ui("gameInit_seed"),
       gameInit_traits_ui("gameInit_geno_pheno_simul"),
+      gameInit_request_constraints_ui("gameInit_request_constraints"),
       gameInit_costs_ui("gameInit_costs")
     ),
     withSpinner(uiOutput("initialisation_button"))

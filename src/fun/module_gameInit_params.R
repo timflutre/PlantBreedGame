@@ -60,7 +60,7 @@ gameInit_seed_ui <- function(id) {
 gameInit_seed_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
 
-    iv$add_rule("seed", valid_rng_seed)
+    iv$add_rule("seed", valid_positive_integer)
     return(
       list(
         value = reactive({
@@ -95,6 +95,13 @@ gameInit_costs_ui <- function(id) {
     )
   )
 
+  final_eval_label <- tooltip_label(
+    "Final evaluation registration",
+    div(
+      p("Cost for registering one individuals for final evaluation.")
+    )
+  )
+
   div(
 
     collapible_section(
@@ -124,7 +131,7 @@ gameInit_costs_ui <- function(id) {
             shiny::numericInput(ns("cost.geno.single"), label = 'Genotyping single SNP', value = 0.02, step = 0.1, width = width_numInput),
 
             h4("Other:", style = "margin-top: 20px;"),
-            shiny::numericInput(ns("cost.register"), label = 'Final evaluation registration', value = 4, step = 0.1, width = width_numInput),
+            shiny::numericInput(ns("cost.register"), label = final_eval_label, value = 4, step = 0.1, width = width_numInput),
             shiny::numericInput(ns("initialBudget"), label = initBudget_label, value = 3900, step = 100, width = width_numInput)
             # 3900 = 300 plots * 10 years + 30%
           ),
@@ -972,3 +979,123 @@ gameInit_traits_server <- function(id, iv) {
   })
 }
 
+
+
+gameInit_request_constraints_ui <- function(id) {
+  ns <- NS(id)
+
+  width_numInput <- "50%"
+
+  n_pheno_plots_label <- tooltip_label(
+    "Available plots",
+    div(
+      p("Number of phenotyping plots available for the experimental site.",
+      'The amount of "resistance phenotyping" done in greedhouse remains unlimited.'),
+      p('Note: Players with the "tester" or "game-master" status are not',
+        'constrained by this limitation.')
+    )
+  )
+  n_max_cross_label <- tooltip_label(
+    "Maximum number of crosses per request",
+    div(
+      p('Maximum number of crosses that can be performed in one "plant material" request.'),
+      p('Notes:'),
+      tags$ul(
+        tags$li('This limitation apply on one request, players remain able to',
+          'make several requests one after the other to bypass this limitation.'
+        ),
+        tags$li('Players with the "tester" or "game-master" status are not',
+          'constrained by this limitation.'
+        )
+      )
+    )
+  )
+
+  n_max_hd_label <- tooltip_label(
+    "Maximum number of haplodiploidisation per request",
+    div(
+      p('Maximum number of haplodiploidisation that can be performed in one "plant material" request.'),
+      p('Notes:'),
+      tags$ul(
+        tags$li('This number will remains limited by "Maximum number of crosses per request" parameter.'
+        ),
+        tags$li('Players with the "tester" or "game-master" status are not',
+          'constrained by this limitation.'
+        )
+      )
+    )
+  )
+  n_max_registration_label <- tooltip_label(
+    "Maximum number of registrations",
+    div(
+      p('Maximum number of individuals that can be submitted for final evaluation.')
+    )
+  )
+
+  div(
+    collapible_section(
+      title = "Game requests constraints",
+      title_id = ns("constraints_title"),
+      div(
+        tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+          div(
+            p("This section presents parameters that apply some constraints on",
+              "the phenotyping, genotyping, plant material and final registration requests.")
+          )
+        ),
+        div(
+
+          h4("Phenotyping:", style = "margin-top: 20px;", id = ns("constraints_pheno")),
+          shiny::numericInput(ns("n_pheno_plot"), label = n_pheno_plots_label, value = 300, step = 1, width = width_numInput),
+
+          h4("Plant material:", style = "margin-top: 20px;", id = ns("constraints_pltmat")),
+          shiny::numericInput(ns("n_max_cross"), label = n_max_cross_label, value = 300, step = 1, width = width_numInput),
+          shiny::numericInput(ns("n_max_hd"), label = n_max_hd_label, value = 300, step = 1, width = width_numInput),
+
+          h4("Final evaluation:", style = "margin-top: 20px;", id = ns("constraints_eval")),
+          shiny::numericInput(ns("n_max_registration"), label = n_max_registration_label, value = 5, step = 1, width = width_numInput)
+        )
+      )
+    )
+  )
+}
+
+gameInit_request_constraints_server <- function(id, iv) {
+  moduleServer(id, function(input, output, session) {
+
+    constraints_validator <- InputValidator$new()
+    constraints_validator$add_rule("n_pheno_plot", function(x){valid_positive_integer(x, strict = TRUE)})
+    constraints_validator$add_rule("n_max_cross", function(x){valid_positive_integer(x, strict = TRUE)})
+    constraints_validator$add_rule("n_max_hd", function(x){valid_positive_integer(x, strict = TRUE)})
+    constraints_validator$add_rule("n_max_registration", function(x){valid_positive_integer(x, strict = TRUE)})
+    iv$add_validator(constraints_validator)
+
+    observe({
+      id = session$ns('constraints_title')
+      if (constraints_validator$is_valid()) {
+        # shinyjs::removeClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
+      } else {
+        # shinyjs::addClass(id, "has-error") # not working in modules
+        shinyjs::runjs(code = paste0('$("#', id, '").addClass("has-error");'))
+      }
+    })
+
+    return(
+      list(
+        value = reactive({
+          if (constraints_validator$is_valid()) {
+            return(list(
+              n_pheno_plot = input$n_pheno_plot,
+              n_max_cross = input$n_max_cross,
+              n_max_hd = input$n_max_hd,
+              n_max_registration = input$n_max_registration
+            ))
+          }
+          return(NA)
+        }),
+        iv = iv
+      )
+    )
+  })
+}

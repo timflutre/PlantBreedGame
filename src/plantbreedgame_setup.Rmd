@@ -25,6 +25,10 @@ params:
   t2_h2: 0.6
   prop_pleio: 0.4
   cor_pleio: -0.7
+  max.nb.haplodiplos: 300
+  max.nb.pltmatReq: 300
+  nb.plots: 300
+  maxEvalInds: 5
 colorlinks: true
 output:
   html_document:
@@ -142,7 +146,7 @@ progressBar$set(
 )
 
 invisible({
-  valid_rng_seed(params$rng_seed, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_integer(params$rng_seed, strict = FALSE, accept_null = FALSE, raise_error = TRUE)
 
   valid_positive_number(params$cost.pheno.field, accept_null = FALSE, raise_error = TRUE)
   valid_positive_number(params$cost.pheno.patho, accept_null = FALSE, raise_error = TRUE)
@@ -186,6 +190,10 @@ invisible({
   valid_prop_pleio(params$prop_pleio, accept_null = FALSE, raise_error = TRUE)
   valid_cor_pleio(params$cor_pleio, accept_null = FALSE, raise_error = TRUE)
 
+  valid_positive_integer(params$max.nb.haplodiplos, strict = TRUE, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_integer(params$max.nb.pltmatReq, strict = TRUE, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_integer(params$nb.plots, strict = TRUE, accept_null = FALSE, raise_error = TRUE)
+  valid_positive_integer(params$maxEvalInds, strict = TRUE, accept_null = FALSE, raise_error = TRUE)
 })
 
 print(params[names(params) != "progressBar"])
@@ -569,7 +577,6 @@ progressBar$set(
 nb.lines.per.year <- 150
 nb.plots.per.line.per.year <- 2
 nb.years <- 10
-nb.plots <- nb.lines.per.year * nb.plots.per.line.per.year
 line.ids <- getIndNamesFromHaplos(coll$haplos)[1:(150 + (10 - 1) * 75)]
 first.year <- 2005
 p0.df <- makeDfInitPhenos(
@@ -1490,12 +1497,12 @@ query <- paste0(
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('max.nb.haplodiplos', '", 300, "')"
+  " ('max.nb.haplodiplos', '", params$max.nb.haplodiplos, "')"
 )
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('max.nb.pltmatReq', '", 300, "')"
+  " ('max.nb.pltmatReq', '", params$max.nb.pltmatReq, "')"
 )
 res <- dbExecute(conn = db, query)
 query <- paste0(
@@ -1505,7 +1512,7 @@ query <- paste0(
 res <- dbExecute(conn = db, query)
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('nb.plots', '", nb.plots, "')"
+  " ('nb.plots', '", params$nb.plots, "')"
 )
 res <- dbExecute(conn = db, query)
 query <- paste0(
@@ -1655,7 +1662,7 @@ Fill the table with other constants necessary for the game:
 # maximum number individuals for evaluation
 query <- paste0(
   "INSERT INTO ", tbl, " VALUES",
-  " ('maxEvalInds', '", 5, "')"
+  " ('maxEvalInds', '", params$maxEvalInds, "')"
 )
 res <- dbExecute(conn = db, query)
 ```

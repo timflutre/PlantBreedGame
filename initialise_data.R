@@ -25,7 +25,12 @@ params = list(
   t2_h2 = 0.6,
 
   prop_pleio = 0.4,
-  cor_pleio = -0.7
+  cor_pleio = -0.7,
+
+  max.nb.haplodiplos = 300,
+  max.nb.pltmatReq = 300,
+  nb.plots = 300,
+  maxEvalInds = 5
 )
 
 rmd_env <- new.env(parent = globalenv())

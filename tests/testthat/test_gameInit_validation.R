@@ -6,22 +6,24 @@ is_error <- function(x) {
   expect_type(x, "character")
 }
 
-test_that("valid_rng_seed", {
+test_that("valid_positive_integer", {
 
   # OK cases
-  expect_null(valid_rng_seed(42))
-  expect_null(valid_rng_seed(NULL))
+  expect_null(valid_positive_integer(42))
+  expect_null(valid_positive_integer(0))
+  expect_null(valid_positive_integer(NULL))
 
   # invalid cases (no error)
-  is_error(valid_rng_seed(42.234))
-  is_error(valid_rng_seed(-42))
+  is_error(valid_positive_integer(42.234))
+  is_error(valid_positive_integer(-42))
+  is_error(valid_positive_integer(0, strict = TRUE))
 
-  is_error(valid_rng_seed(NA))
-  is_error(valid_rng_seed("abc"))
-  is_error(valid_rng_seed(NULL, accept_null = FALSE))
+  is_error(valid_positive_integer(NA))
+  is_error(valid_positive_integer("abc"))
+  is_error(valid_positive_integer(NULL, accept_null = FALSE))
 
   # invalid cases (error)
-  expect_error(valid_rng_seed(24.234, raise_error = TRUE))
+  expect_error(valid_positive_integer(24.234, raise_error = TRUE))
 
 })
 

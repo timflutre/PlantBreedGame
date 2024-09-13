@@ -15,30 +15,39 @@
 # and the return behaviour is intended to be used with `InputValidator$add_rule`
 
 
-valid_rng_seed <- function(seed, accept_null = TRUE, raise_error = FALSE) {
+valid_positive_integer <- function(n, strict = FALSE, accept_null = TRUE, raise_error = FALSE) {
 
   error <- return
   if (raise_error) {
     error <- stop
   }
 
-  if (is.null(seed)) {
+  strictly <- ""
+  if (strict) {
+    strictly <- " strictly "
+  }
+
+  if (is.null(n)) {
     if (accept_null) {
       return(NULL)
     }
     error("Must not be NULL")
   }
 
-  if (is.na(seed)) {
-    error("Mandatory and should be a positive integer")
+  if (is.na(n)) {
+    error(paste0("Mandatory and should be a", strictly, "positive integer"))
   }
 
-  if (!is.numeric(seed)) {
-    error("Should be a positive integer")
+  if (!is.numeric(n)) {
+    error(paste0("Should be a", strictly, "positive integer"))
   }
 
-  if (seed %% 1 != 0 || seed < 0) {
-    error("Should be a positive integer")
+  if (n %% 1 != 0 || n < 0) {
+    error(paste0("Should be a", strictly, "positive integer"))
+  }
+
+  if (strict && n == 0) {
+    error(paste0("Should be a", strictly, "positive integer"))
   }
 
   return(NULL)

@@ -287,7 +287,7 @@ output$admin_current_initial_budget <- renderText({
 observeEvent(input$admin_button_seedYearEfect, {
   newSeed <- input$admin_seedYearEfect
 
-  error <- valid_rng_seed(newSeed)
+  error <- valid_positive_integer(newSeed)
   if (is.null(error)) {
     query <- paste0(
       "UPDATE constants SET value = ",
@@ -619,11 +619,9 @@ output$initialisation_button <- renderUI({
 
 
 gameInit_input_validator <- InputValidator$new()
-
 gameInit_seed <- gameInit_seed_server("gameInit_seed", gameInit_input_validator)
-
 gameInit_costs <- gameInit_costs_server("gameInit_costs", gameInit_input_validator)
-
+gameInit_constraints <- gameInit_request_constraints_server("gameInit_request_constraints", gameInit_input_validator)
 gameInit_traits <- gameInit_traits_server("gameInit_geno_pheno_simul", gameInit_input_validator)
 
 
@@ -695,7 +693,12 @@ observeEvent(input$initialiseGame, {
     t2_h2 = gameInit_traits$value()$t2_h2,
 
     prop_pleio = gameInit_traits$value()$prop_pleio,
-    cor_pleio = gameInit_traits$value()$cor_pleio
+    cor_pleio = gameInit_traits$value()$cor_pleio,
+
+    max.nb.haplodiplos = gameInit_constraints$value()$n_pheno_plot,
+    max.nb.pltmatReq = gameInit_constraints$value()$n_max_cross,
+    nb.plots = gameInit_constraints$value()$n_max_hd,
+    maxEvalInds = gameInit_constraints$value()$n_max_registration
   )
 
   rmd_env <- new.env(parent = globalenv())
