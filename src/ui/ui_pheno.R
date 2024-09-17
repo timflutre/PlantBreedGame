@@ -60,7 +60,6 @@ div(
         tags$li("All columns (", code("ind"), ", ", code("task"), ", and ", code("details"), ") are compulsory."),
         tags$li("The ", code("task"), " column should contain 'pheno-field' (for experimental site phenotyping) or 'pheno-patho' (for greenhouse phenotyping)"),
         tags$li("If 'task=pheno-field', the ", code("details"), " column should contain the number of plots (the total number of requested plots should not exceed the total available:", strong(constants_ui("pheno_nb.plots_2"), " plots."), ")"),
-        # WIP ---- blocked here as `outputs` can only be used once ! ><
         tags$li("If 'task=pheno-patho', the ", code("details"), " column should contain the number of replicates"),
         tags$li("Individuals should be available."),
         tags$li("Individuals should not be duplicated within each task."),
@@ -73,7 +72,7 @@ div(
         tags$li(code("ind"), ": the individual name"),
         tags$li(code("year"), ": the year when this phenotyping happens."),
         tags$li(code("plot"), ": the plot id of the phenotyping observation"),
-        tags$li(code("pathogen"), ": boolean value indicating if the pathogen have been observed durring the phenotyping."),
+        tags$li(code("pathogen"), ": boolean value indicating if the pathogen have been observed during the phenotyping."),
         tags$li(code("trait1"), ": observed value for trait 1 (yield in kg/ha)"),
         tags$li(code("trait2"), ": observed value for trait 2 (sepmetin content in g/kg)"),
         tags$li(
