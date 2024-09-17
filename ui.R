@@ -59,6 +59,10 @@ shinyUI(
           tabName = "geno",
           icon = icon("dna")
         ),
+        menuItem("Data Visualisation",
+          tabName = "data-viz",
+          icon = icon("chart-line")
+        ),
         menuItem("Evaluation",
           tabName = "eval",
           icon = icon("medal")
@@ -158,6 +162,14 @@ shinyUI(
         #   local = TRUE,
         #   encoding = "UTF-8"
         # )$value,
+
+        # ---- Evaluation ----
+        tabItem(
+          tabName = "data-viz",
+          fluidRow(
+            uiOutput("data_viz_UI")
+          )
+        ),
 
         # ---- Evaluation ----
         tabItem(
