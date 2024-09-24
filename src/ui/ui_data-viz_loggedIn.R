@@ -44,15 +44,28 @@ list(
         ),
         div(style = "display: inline-block; vertical-align: top; margin-right: 10px;",
           selectInput("categ_variables",
-            "Categorical variables",
-            choices = list("var 1", "var 2", "var 3"),
+            label = tooltip_label(
+              "Categorical variables",
+              div(
+                p("Select here the categorical variables of your data-set.")
+              )
+            ),
+            choices = list(),
             multiple = TRUE
           )
         ),
         div(style = "display: inline-block; vertical-align: top;",
           selectInput("quant_variables",
-            "Quantitative variables",
-            choices = list("None","var 1", "var 2", "var 3"),
+            label = tooltip_label(
+              "Quantitative variables",
+              div(
+                p("This input is disable, any variable that is not",
+                  "categorical is considered quantitative.",
+                  "Please remove categorical variables to mark them as",
+                  "quantitative.")
+              )
+            ),
+            choices = list(),
             multiple = TRUE
           )
         ),

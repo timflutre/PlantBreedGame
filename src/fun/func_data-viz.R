@@ -1,3 +1,5 @@
+library(shiny)
+
 none_value <- "-- None --"
 
 data_viz_ui <- function(id) {
@@ -20,7 +22,8 @@ data_viz_ui <- function(id) {
           "Color variable",
           choices = list(none_value),
           multiple = FALSE
-        )
+        ),
+        uiOutput(ns("plotWarning"))
       ),
       div(style = "flex: 1;",
         withSpinner(plotlyOutput(ns("plot")))
@@ -64,6 +67,26 @@ data_viz_server <- function(id, plot_data) {
       updateSelectInput(session, "col_var",
         choices = var_list,
         selected = ifelse(!is_null_var(input$x_var) && input$col_var %in% var_list, input$col_var, var_list[1])
+      )
+    })
+
+    output$plotWarning <- renderUI({
+      warning_messages <- plot_warning(
+        data = plot_data(),
+        x_var = input$x_var,
+        y_var = input$y_var,
+        col_var = input$col_var
+      )
+
+      if (length(warning_messages) == 0) {
+        return(span())
+      }
+
+      div(class = "warning",
+        p(bsicons::bs_icon("exclamation-diamond-fill"), "Warning:"),
+        tags$ul(
+          lapply(warning_messages, tags$li)
+        )
       )
     })
 
@@ -169,8 +192,14 @@ scatter_plot <- function(data, x_var, y_var, col_var) {
 box_plot <- function(data, x_var, y_var, col_var) {
   color <- NULL
   if (!is_null_var(col_var)) {
-    color <- data[, col_var]
+    if (!is.numeric(data[, col_var])) {
+      # TODO, since this boxplot have jitter points it may be possible
+      # to use quantitiative variables for color but it does not seems
+      # straightforward currently
+      color <- data[, col_var]
+    }
   }
+
   x_values <- NULL
   if (!is_null_var(x_var)) {
     x_values <- data[, x_var]
@@ -205,6 +234,13 @@ box_plot <- function(data, x_var, y_var, col_var) {
 
 histogram <- function(data, x_var, y_var, col_var) {
   hist_axis_title <- "Number of observations"
+
+  if (!is_null_var(col_var)) {
+    if (is.numeric(data[, col_var])) {
+      col_var <- none_value
+    }
+  }
+
   data_list <- list(data)
 
   alpha <- 1
@@ -270,7 +306,9 @@ barplot <- function(data, x_var, y_var, col_var) {
     dplyr::mutate_if(is.character, as.factor)
 
   if (!is_null_var(col_var)) {
-    data <- dplyr::group_by(data, !!sym(col_var), .drop = FALSE)
+    if (!is.numeric(data[, col_var])) {
+      data <- dplyr::group_by(data, !!sym(col_var), .drop = FALSE)
+    }
   }
 
   x_axis_title <- hist_axis_title
@@ -315,6 +353,56 @@ barplot <- function(data, x_var, y_var, col_var) {
     legend = list(title = list(text = col_var))
   )
   p
+}
+
+plot_warning <- function(data, x_var, y_var, col_var) {
+
+  warnings_messages <- c()
+  if (is.null(data)) {
+    return(warnings_messages)
+  }
+
+  n_factor_max <- 20
+  for (var in c(x_var, y_var, col_var)) {
+    if (!is_null_var(var)) {
+      if (is.character(data[, var])) {
+        n_factor <- length(unique(data[, var]))
+        if (n_factor > n_factor_max) {
+          warnings_messages <- c(warnings_messages,
+            "Categorical variable with a large amount of levels is detected, plot may not render correctly."
+          )
+        }
+      }
+    }
+  }
+
+
+  if (x_var == none_value || y_var == none_value) {
+    # 1D plot
+    if (!is_null_var(col_var)) {
+      if (is.numeric(data[, col_var])) {
+        warnings_messages <- c(warnings_messages,
+          "Quantitative variables cannot be used for colors with histograms and barplots"
+        )
+      }
+    }
+  } else {
+    # 2D plot
+    if (is.numeric(data[, x_var]) && is.numeric(data[, y_var])) {
+      # scatter plot
+    }
+    if (any(c(is.numeric(data[, x_var]), is.numeric(data[, y_var])))) {
+      # box plot
+      if (!is_null_var(col_var)) {
+        if (is.numeric(data[, col_var])) {
+          warnings_messages <- c(warnings_messages,
+                                 "Quantitative variables cannot be used for colors with boxplot"
+          )
+        }
+      }
+    }
+  }
+  warnings_messages
 }
 
 is_null_var <- function(vars) {
