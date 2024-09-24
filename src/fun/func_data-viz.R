@@ -371,6 +371,7 @@ plot_warning <- function(data, x_var, y_var, col_var) {
           warnings_messages <- c(warnings_messages,
             "Categorical variable with a large amount of levels is detected, plot may not render correctly."
           )
+          break()
         }
       }
     }

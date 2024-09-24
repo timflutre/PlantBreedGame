@@ -46,6 +46,25 @@ output$data_viz_UI <- renderUI({
 })
 
 
+data_viz_file_validator <- InputValidator$new()
+data_viz_file_validator$add_rule("categ_variables", function(x) {
+  data <- raw_data_from_file()
+  must_be_categorical_var <- colnames(data)[sapply(colnames(data), function(var) {
+    numeric_values <- as.numeric(data[, var])
+    any(is.na(numeric_values))
+  })]
+  if (!all(must_be_categorical_var %in% x)) {
+    missing_var <- must_be_categorical_var[!must_be_categorical_var %in% x]
+    return(paste0(
+      "`", paste0(missing_var, collapse = "`, `"),
+      "`, must be categorical"
+      )
+    )
+  }
+  return(NULL)
+})
+data_viz_file_validator$enable()
+
 raw_data_from_file <- reactive({
   if (is.null(input$file_data_viz)) {
     return(NULL)
