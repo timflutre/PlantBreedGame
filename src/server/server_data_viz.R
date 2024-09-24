@@ -99,22 +99,22 @@ observeEvent(input$categ_variables, {
   data <- req(raw_data_from_file())
   categ_var <- input$categ_variables
   quant_var <- colnames(data)[!colnames(data) %in% categ_var]
-  if (!setequal(quant_var, input$quant_variables)) {
-    updateSelectInput(session, "quant_variables",
-      selected = quant_var
-    )
-  }
-
+  updateSelectInput(session, "quant_variables",
+    selected = quant_var
+  )
 })
 
 
 data_from_file <- reactive({
 
   data <- raw_data_from_file()
-  for (var in input$quant_variables) {
+  categ_vars <- input$categ_variables
+  quant_vars <- colnames(data)[!colnames(data) %in% categ_vars]
+
+  for (var in quant_vars) {
     data[, var] <- as.numeric(data[, var])
   }
-  for (var in input$categ_variables) {
+  for (var in categ_vars) {
     data[, var] <- as.character(data[, var])
   }
   data
