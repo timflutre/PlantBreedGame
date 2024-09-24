@@ -22,6 +22,9 @@ data_viz_ui <- function(id) {
     ),
     div(
       plotlyOutput(ns("plot"))
+    ),
+    div(style = "margin-top: 30px;",
+      dataTableOutput(ns("dataTable"))
     )
   )
 }
@@ -83,6 +86,18 @@ data_viz_server <- function(id, plot_data) {
           x_var = input$x_var,
           y_var = input$y_var,
           col_var = input$col_var
+        )
+      )
+    })
+
+    output$dataTable <- renderDataTable({
+      DT::datatable(plot_data(),
+        filter = "top",
+        style = "bootstrap4",
+        options = list(
+          pageLength = 20,
+          lengthMenu = c(10, 20, 50, 100),
+          sDom = '<"top"f>rt<"bottom"lp><"clear">'
         )
       )
     })
