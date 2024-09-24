@@ -3,26 +3,30 @@ none_value <- "-- None --"
 data_viz_ui <- function(id) {
   ns <- NS(id)
   div(
-    div(
-      selectInput(ns("x_var"),
-        "X variable",
-        choices = list(none_value),
-        multiple = FALSE
+    div(style = "display: flex;",
+      div(style = "flex: 0;",
+        selectInput(ns("x_var"),
+          "X variable",
+          choices = list(none_value),
+          multiple = FALSE
+        ),
+
+        selectInput(ns("y_var"),
+          "Y variable",
+          choices = list(none_value),
+          multiple = FALSE
+        ),
+        selectInput(ns("col_var"),
+          "Color variable",
+          choices = list(none_value),
+          multiple = FALSE
+        )
       ),
-      selectInput(ns("y_var"),
-        "Y variable",
-        choices = list(none_value),
-        multiple = FALSE
-      ),
-      selectInput(ns("col_var"),
-        "Color variable",
-        choices = list(none_value),
-        multiple = FALSE
+      div(style = "flex: 1;",
+        plotlyOutput(ns("plot"))
       )
     ),
-    div(
-      plotlyOutput(ns("plot"))
-    ),
+    hr(),
     div(style = "margin-top: 30px;",
       dataTableOutput(ns("dataTable"))
     )
@@ -91,13 +95,19 @@ data_viz_server <- function(id, plot_data) {
     })
 
     output$dataTable <- renderDataTable({
-      DT::datatable(plot_data(),
-        filter = "top",
+      data <- plot_data()
+      filter <- "top"
+      if (is.null(data)) {
+        data <- data.frame(`Variable` = numeric())
+        filter <- "none"
+      }
+      DT::datatable(data,
+        filter = filter,
         style = "bootstrap4",
         options = list(
-          pageLength = 20,
-          lengthMenu = c(10, 20, 50, 100),
-          sDom = '<"top"f>rt<"bottom"lp><"clear">'
+          language = list(emptyTable = 'Empty'),
+          pageLength = 10,
+          lengthMenu = c(10, 25, 50, 100)
         )
       )
     })

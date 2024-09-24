@@ -23,24 +23,30 @@ list(
     width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "From file",
     tabPanel(
       "From file",
-      div(
+      div(style = "",
         h4("Import file"),
         fileInput(
           inputId = "file_data_viz",
           label = NULL,
           multiple = FALSE,
-          accept = c(".txt", ".tsv", ".txt.gz")
+          accept = c(".txt", ".tsv", ".txt.gz"),
+          width = "100%"
         ),
-        selectInput("quant_variables",
-          "Quantitative variables",
-          choices = list("None","var 1", "var 2", "var 3"),
-          multiple = TRUE
+        div(style = "display: inline-block; vertical-align: top; margin-right: 10px;",
+          selectInput("categ_variables",
+            "Categorical variables",
+            choices = list("var 1", "var 2", "var 3"),
+            multiple = TRUE
+          )
         ),
-        selectInput("categ_variables",
-          "Categorical variables",
-          choices = list("var 1", "var 2", "var 3"),
-          multiple = TRUE
-        )
+        div(style = "display: inline-block; vertical-align: top;",
+          selectInput("quant_variables",
+            "Quantitative variables",
+            choices = list("None","var 1", "var 2", "var 3"),
+            multiple = TRUE
+          )
+        ),
+        hr()
       ),
       div(
         data_viz_ui("data-viz_file")
