@@ -27,9 +27,19 @@ list(
         h4("Import file"),
         fileInput(
           inputId = "file_data_viz",
-          label = NULL,
+          label = tooltip_label(
+            "Help about file format",
+            div(
+              p("Accepted format is the", strong("same as the phenotype data"), "provided by this game:"),
+              tags$ul(
+                tags$li("A", code(".txt"), "or", code(".tsv"), "file (or their gzip compression)"),
+                tags$li("Field separator must be", strong("a tabulation")),
+                tags$li("File must be encoded in UTF-8")
+              )
+            )
+          ),
           multiple = FALSE,
-          accept = c(".txt", ".tsv", ".txt.gz"),
+          accept = c(".txt", ".tsv", ".txt.gz", ".tsv.gz"),
           width = "100%"
         ),
         div(style = "display: inline-block; vertical-align: top; margin-right: 10px;",

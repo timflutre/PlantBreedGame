@@ -23,12 +23,12 @@ data_viz_ui <- function(id) {
         )
       ),
       div(style = "flex: 1;",
-        plotlyOutput(ns("plot"))
+        withSpinner(plotlyOutput(ns("plot")))
       )
     ),
     hr(),
     div(style = "margin-top: 30px;",
-      dataTableOutput(ns("dataTable"))
+      withSpinner(dataTableOutput(ns("dataTable")))
     )
   )
 }
