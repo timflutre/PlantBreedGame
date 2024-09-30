@@ -56,7 +56,7 @@ There is a quick breakdown to present some option you can modify:
 Here:
   - `80` is the port on the host (your machine). You can choose another available
   port if you like.
-  - `3838` is the the application is listenning to inside the container.
+  - `3838` is the port the application is listenning to inside the container.
   You can not modify it.
 - `-v /host/path/to/plantBreedGameData:/var/lib/plantBreedGame` control where 
 the application will save data to allow persistent storage across container runs.
@@ -98,6 +98,36 @@ nix build github:timflutre/PlantBreedGame # build the application
 ```
 
 The game data will be stored at `$HOME/.local/share/plantBreedGame`.
+
+
+## Installation for multiplayer session
+
+This application currently suffer from optimization problems when several players
+are connected and play at the same time. When one user make a long request to
+the application, it becomes unresponsive for all the other users.
+
+It is possible to work around these problems by launching several game instances
+targeting **the same `plantBreedGame` volume**, and make each player use a different 
+instance.
+
+For example to start 2 instances you can run:
+
+```sh
+docker run -d --rm --name plantbreedgame_A -p 81:3838 \
+    -v /host/path/to/plantBreedGameData:/var/lib/plantBreedGame \
+    juliendiot/plantbreedgame:latest
+docker run -d --rm --name plantbreedgame_B -p 82:3838 \
+    -v /host/path/to/plantBreedGameData:/var/lib/plantBreedGame \
+    juliendiot/plantbreedgame:latest
+```
+
+One instance will be accessible on port `81` and the other on port `82`.
+
+You can then set-up your web server's router to serve each of these instances
+on different URLs, or let users access directly port `81` or `82`.
+
+Like that, when eg. *Player-A* make a long request to `plantbreedgame_A`,
+`plantbreedgame_B` will not be affected and will be responsive for *Player-B*.
 
 # Usage
 
