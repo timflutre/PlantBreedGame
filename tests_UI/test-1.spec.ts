@@ -275,10 +275,16 @@ async function requestPlantMaterial(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("link", { name: "Check" }).click();
+  await page
+    .locator("#cross_tabset")
+    .getByRole("link", { name: "Check" })
+    .click();
   await expect(page.locator("#plmatUploaded")).toContainText("GOOD");
 
-  await page.getByRole("link", { name: "Summary" }).click();
+  await page
+    .locator("#cross_tabset")
+    .getByRole("link", { name: "Summary" })
+    .click();
   await expect(
     page.locator("#PltmatInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -292,7 +298,10 @@ async function requestPlantMaterial(
     page.locator("#PltmatInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Data" }).click();
+  await page
+    .locator("#cross_tabset")
+    .getByRole("link", { name: "Data" })
+    .click();
   await expect(
     page
       .locator("#qryPlmat")
@@ -314,7 +323,10 @@ async function requestPlantMaterial(
       .getByLabel("explanations: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Request", exact: true }).click();
+  await page
+    .locator("#cross_tabset")
+    .getByRole("link", { name: "Request", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Create Plant Material: Done !")).toBeVisible({
@@ -355,10 +367,16 @@ async function requestPhenotyping(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("link", { name: "Check" }).click();
+  await page
+    .locator("#pheno_tabset")
+    .getByRole("link", { name: "Check" })
+    .click();
   await expect(page.locator("#PhenoUploaded")).toContainText("GOOD");
 
-  await page.getByRole("link", { name: "Summary" }).click();
+  await page
+    .locator("#pheno_tabset")
+    .getByRole("link", { name: "Summary" })
+    .click();
   await expect(
     page.locator("#PhenoInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -372,7 +390,10 @@ async function requestPhenotyping(
     page.locator("#PhenoInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Data" }).click();
+  await page
+    .locator("#pheno_tabset")
+    .getByRole("link", { name: "Data" })
+    .click();
   await expect(
     page
       .locator("#qryPheno")
@@ -389,7 +410,10 @@ async function requestPhenotyping(
       .getByLabel("details: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Request", exact: true }).click();
+  await page
+    .locator("#pheno_tabset")
+    .getByRole("link", { name: "Request", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Process Pheno request: Done")).toBeVisible({
@@ -416,10 +440,16 @@ async function requestGenotyping(
     .getByRole("textbox", { name: "Browse..." })
     .setInputFiles("./tests/requestExamples/" + reqFile);
 
-  await page.getByRole("link", { name: "Check" }).click();
+  await page
+    .locator("#geno_tabset")
+    .getByRole("link", { name: "Check" })
+    .click();
   await expect(page.locator("#GenoUploaded")).toContainText("GOOD");
 
-  await page.getByRole("link", { name: "Summary" }).click();
+  await page
+    .locator("#geno_tabset")
+    .getByRole("link", { name: "Summary" })
+    .click();
   await expect(
     page.locator("#GenoInvoice").getByRole("cell", { name: "Task" }),
   ).toBeVisible();
@@ -433,7 +463,10 @@ async function requestGenotyping(
     page.locator("#GenoInvoice").locator("th").filter({ hasText: "Total" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Data" }).click();
+  await page
+    .locator("#geno_tabset")
+    .getByRole("link", { name: "Data" })
+    .click();
   await expect(
     page
       .locator("#qryGeno")
@@ -450,7 +483,10 @@ async function requestGenotyping(
       .getByLabel("details: activate to sort column ascending"),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Request", exact: true }).click();
+  await page
+    .locator("#geno_tabset")
+    .getByRole("link", { name: "Request", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: "Yes, I do!" })).toBeEnabled();
   await page.getByRole("button", { name: "Yes, I do!" }).click();
   await expect(page.getByText("Process Geno request: Done")).toBeVisible({
