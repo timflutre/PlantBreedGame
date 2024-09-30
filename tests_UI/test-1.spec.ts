@@ -107,6 +107,73 @@ test.describe("PlantBreedGame_UI", () => {
     await deleteBreeder(page, "test_UI");
   });
 
+  test("data-viz", async ({ page }) => {
+    await login(page, "admin", psw);
+
+    // download initial phenotype file:
+    await expect(page.locator("#phenoFile-selectized")).toBeVisible({
+      timeout: 100,
+    });
+    await page.locator("#phenoFile-selectized").locator("..").click();
+
+    await page
+      .getByRole("option")
+      .getByText("Result_phenos_initialColl.txt.gz")
+      .first()
+      .click();
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator("#dwnlPheno").click();
+    const download = await downloadPromise;
+
+    const tempDirPath = tmpdir() + "/";
+    const data_file = tempDirPath + download.suggestedFilename();
+    await download.saveAs(data_file);
+
+    // Data-viz
+    await page.getByRole("link", { name: "chart-line icon Data" }).click();
+
+    await page.getByLabel("Browse...").setInputFiles(data_file);
+
+    const variables = [
+      "-- None --",
+      "ind",
+      "year",
+      "plot",
+      "pathogen",
+      "trait1",
+      "trait2",
+      "trait3",
+    ];
+
+    // check data table
+    for (let variable of variables.slice(1)) {
+      await expect(
+        page
+          .locator("#data-viz_file-dataTable")
+          .locator("th")
+          .filter({ hasText: variable }),
+      ).toBeVisible();
+    }
+
+    // check all variables can be selected for X/Y/Col
+    const variable_selection_ids = [
+      "#data-viz_file-x_var-selectized",
+      "#data-viz_file-y_var-selectized",
+      "#data-viz_file-col_var-selectized",
+    ];
+    for (let select_id of variable_selection_ids) {
+      await expect(page.locator(select_id)).toBeVisible();
+      await page.locator(select_id).click();
+      for (let variable of variables) {
+        await expect(
+          page.getByRole("option", { name: variable }),
+        ).toBeVisible();
+      }
+      await page.getByRole("option", { name: variables[0] }).click();
+    }
+  });
+
   test("Large_requests/full campaing", async ({ page }) => {
     test.setTimeout(180_000);
     await login(page, "admin", psw);

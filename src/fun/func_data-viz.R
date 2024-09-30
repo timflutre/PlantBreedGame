@@ -31,6 +31,7 @@ data_viz_ui <- function(id) {
     ),
     hr(),
     div(style = "margin-top: 30px;",
+      id = ns("data-table"),
       withSpinner(dataTableOutput(ns("dataTable")))
     )
   )
