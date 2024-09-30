@@ -55,18 +55,19 @@ data_viz_server <- function(id, plot_data) {
       }
 
       var_list <- colnames(data)
+      # browser()
       var_list <- c(none_value, var_list)
       updateSelectInput(session, "x_var",
         choices = var_list,
-        selected = ifelse(!is_null_var(input$x_var) && input$x_var %in% var_list, input$x_var, var_list[2])
+        selected = ifelse(input$x_var %in% var_list, input$x_var, none_value)
       )
       updateSelectInput(session, "y_var",
         choices = var_list,
-        selected = ifelse(!is_null_var(input$x_var) && input$y_var %in% var_list, input$y_var, var_list[1])
+        selected = ifelse(input$y_var %in% var_list, input$y_var, none_value)
       )
       updateSelectInput(session, "col_var",
         choices = var_list,
-        selected = ifelse(!is_null_var(input$x_var) && input$col_var %in% var_list, input$col_var, var_list[1])
+        selected = ifelse(input$col_var %in% var_list, input$col_var, none_value)
       )
     })
 
