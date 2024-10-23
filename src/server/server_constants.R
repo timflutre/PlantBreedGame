@@ -1,15 +1,3 @@
-constantsReactive <- reactivePoll(
-  5000,
-  session,
-  function() {
-    if (file.exists(DATA_DB)) {
-      file.info(DATA_DB)$mtime[1]
-    } else {
-      ""
-    }
-  },
-  getBreedingGameConstants
-)
 
 # Information page: ("How to play?")
 constants_server("chr.length.Mb", constantsReactive)("info_chr.length.Mb")

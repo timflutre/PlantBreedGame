@@ -65,4 +65,19 @@ shinyServer(function(input, output, session) {
   source("src/server/server_admin.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_about.R", local = TRUE, encoding = "UTF-8")$value
   source("src/server/server_constants.R", local = TRUE, encoding = "UTF-8")$value
+
+  # some reactive values used at different places:
+  constantsReactive <- reactivePoll(
+    5000,
+    session,
+    function() {
+      if (file.exists(DATA_DB)) {
+        file.info(DATA_DB)$mtime[1]
+      } else {
+        ""
+      }
+    },
+    getBreedingGameConstants
+  )
+
 })

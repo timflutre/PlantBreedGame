@@ -95,6 +95,9 @@ tabItem(
           " ", strong("Single-SNP genotyping"), " has a ", strong(constants_ui("info_duration.geno.single"), "-month"), " delay and costs ", strong(constants_ui("info_cost.geno.single"), " plot"), " (", constants_ui("info_cost.geno.single.mendels"), " Mendels)."
         ),
         p(strong("Budget"), ": each team starts with a total budget of ", strong(constants_ui("info_initial.budget"), " Mendels"), ", fully available from the start."),
+        div(
+          uiOutput("costSummaryTable")
+        ),
         h2("Final trial"),
         p(
           "At the end of the game, each team will have to propose to register their best genotypes (up to", constants_ui("info_maxEvalInds"), ").",
