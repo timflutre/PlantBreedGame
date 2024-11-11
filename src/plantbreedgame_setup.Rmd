@@ -576,13 +576,14 @@ progressBar$set(
 
 nb.lines.per.year <- 150
 nb.plots.per.line.per.year <- 2
-nb.years <- 10
 line.ids <- getIndNamesFromHaplos(coll$haplos)[1:(150 + (10 - 1) * 75)]
-first.year <- 2005
+nb.years <- 10
+first.year <- as.numeric(format(Sys.Date(), "%Y"))
+first_pheno_year <- first.year - nb.years
 p0.df <- makeDfInitPhenos(
   nb.lines.per.year = nb.lines.per.year, nb.years = nb.years,
   nb.plots.per.line.per.year = nb.plots.per.line.per.year,
-  first.year = first.year, line.ids
+  first.year = first_pheno_year, line.ids
 )
 head(p0.df)
 str(p0.df)
