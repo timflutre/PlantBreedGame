@@ -23,7 +23,7 @@
 
 
 getGameTime <- function(time_irl = Sys.time(),
-                        gameSessions = getGameSessions(),
+                        gameSessions = db_get_game_sessions(),
                         first_year = getBreedingGameConstants()["first.year"]) {
 
   first_game_day <- strptime(paste0(first_year, "-01-01"), format = "%Y-%m-%d")

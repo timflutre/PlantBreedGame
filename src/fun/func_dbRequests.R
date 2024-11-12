@@ -91,7 +91,7 @@ connect_to_db <- function(dbname = DATA_DB) {
 
 #' Send a get request to the db WITHOUT SQL INTERPOLATION !!!
 #' can be prone to SQL injection
-db_get_request <- function(query, dbname = DATA_DB) {
+db_get <- function(query, dbname = DATA_DB) {
   # for SELECT query only
   conn <-  connect_to_db(dbname = dbname)
   tryCatch({
@@ -103,7 +103,7 @@ db_get_request <- function(query, dbname = DATA_DB) {
 }
 
 #' Send a get request to the db safe from SQL injection
-db_get_request_safe <- function(query, dbname = DATA_DB, ...) {
+db_get_safe <- function(query, dbname = DATA_DB, ...) {
   conn <-  connect_to_db(dbname = dbname)
   out <- tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
@@ -118,7 +118,7 @@ db_get_request_safe <- function(query, dbname = DATA_DB, ...) {
 
 #' Send a request that alter the db WITHOUT SQL INTERPOLATION !!!
 #' can be prone to SQL injection
-db_execute_request <- function(query, dbname = DATA_DB) {
+db_execute <- function(query, dbname = DATA_DB) {
   conn <-  connect_to_db(dbname = dbname)
 
   tryCatch({
@@ -136,7 +136,7 @@ db_execute_request <- function(query, dbname = DATA_DB) {
 }
 
 #' Send a request that alter the db safe from SQL injection
-db_execute_request_safe <- function(query, dbname = DATA_DB, ...) {
+db_execute_safe <- function(query, dbname = DATA_DB, ...) {
   conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
@@ -192,7 +192,7 @@ db_add_data <- function(table, data, append = TRUE, overwrite = FALSE, dbname = 
 #
 #   conditions <- paste0(" OR (", conditions, ")", collapse = " ")
 #   query <- paste0(query, conditions, collapse = " ")
-#   db_get_request(query)
+#   db_get(query)
 # }
 
 #' List data base tables
@@ -218,7 +218,7 @@ db_list_tables <- function(dbname = DATA_DB) {
 
 db_add_constants <- function(constants_list) {
   query <- "INSERT INTO constants VALUES (?key, ?value)"
-  mapply(db_execute_request_safe,
+  mapply(db_execute_safe,
          key = names(constants_list),
          value = constants_list,
          MoreArgs = list(query = query))
@@ -226,7 +226,7 @@ db_add_constants <- function(constants_list) {
 
 db_update_constants <- function(constants_list) {
   query <- "UPDATE constants SET value = ?value WHERE key = ?key"
-  mapply(db_execute_request_safe,
+  mapply(db_execute_safe,
          key = names(constants_list),
          value = constants_list,
          MoreArgs = list(query = query))
@@ -240,7 +240,7 @@ db_update_constants <- function(constants_list) {
 getBreedingGameConstants <- function() {
   ## retrieve the content of the table
   query <- "SELECT * FROM constants"
-  out.df <- db_get_request(query)
+  out.df <- db_get(query)
 
   ## reformat
   # suppress "NAs introduced by coercion" warning
@@ -273,13 +273,13 @@ getBreedingGameConstants <- function() {
 
 ## Game sessions ----
 
-addGameSession <- function(id = NA, startDate, endDate, yearTime, timeZone) {
+db_add_game_session <- function(id = NA, startDate, endDate, yearTime, timeZone) {
   query <- paste0(
     "INSERT INTO sessions (id, start, end, year_time, time_zone)", " VALUES ",
     "(?id, ?startDate, ?endDate, ?yearTime, ?timeZone)"
   )
 
-  db_execute_request_safe(query,
+  db_execute_safe(query,
                           id = id,
                           startDate = startDate,
                           endDate = endDate,
@@ -288,16 +288,16 @@ addGameSession <- function(id = NA, startDate, endDate, yearTime, timeZone) {
   )
 }
 
-getGameSessions <- function() {
+db_get_game_sessions <- function() {
   query <- paste0("SELECT * FROM sessions")
-  res <- db_get_request(query)
+  res <- db_get(query)
   return(res)
 }
 
 
-delGameSession <- function(id) {
+db_delete_game_session <- function(id) {
   query <- "DELETE FROM sessions WHERE id = ?id"
-  db_execute_request_safe(query, id = id)
+  db_execute_safe(query, id = id)
 }
 
 
@@ -312,7 +312,7 @@ db_add_breeder <- function(name, status, hashed_psw) {
   query <- paste0(
     "INSERT INTO breeders (name, status, h_psw) VALUES (?name, ?status, ?hashed_psw) "
   )
-  db_execute_request_safe(query,
+  db_execute_safe(query,
                           name = name,
                           status = status,
                           hashed_psw = hashed_psw)
@@ -322,28 +322,18 @@ db_delete_breeder <- function(name) {
   query <- paste0(
     "DELETE FROM breeders WHERE name = ?name"
   )
-  db_execute_request_safe(query, name = name)
+  db_execute_safe(query, name = name)
 }
 
 getBreederList <- function(dbname = DATA_DB) {
   query <- paste0("SELECT name FROM breeders")
-  breederNames <- db_get_request(query)[, 1]
+  breederNames <- db_get(query)[, 1]
   return(breederNames)
 }
 
-getBreederInfo <- function(breeder.name, dbname = DATA_DB) {
-  excluded_columns <- c("h_psw")
-
-  table_cols <- db_get_request("PRAGMA table_info(breeders);")$name
-  cols <- paste0(table_cols[!table_cols %in% excluded_columns], collapse = ", ")
-
-  query <- paste("SELECT", cols, "FROM breeders WHERE name = ?name")
-  as.list(db_get_request_safe(query, name = breeder.name))
-}
-
-getBreederHashedPsw <- function(breeder.name, dbname = DATA_DB) {
-  query <- "SELECT h_psw FROM breeders WHERE name = ?name"
-  db_get_request_safe(query, name = breeder.name)[1,1]
+db_get_breeder <- function(breeder.name, dbname = DATA_DB) {
+  query <- paste("SELECT * FROM breeders WHERE name = ?name")
+  as.list(db_get_safe(query, name = breeder.name))
 }
 
 
@@ -356,18 +346,18 @@ getBreederHashedPsw <- function(breeder.name, dbname = DATA_DB) {
 
 ## Main game requests ----
 
-db_add_game_request <- function(id,
-                                breeder,
-                                name,
-                                type,
-                                game_date) {
+db_add_request <- function(id,
+                           breeder,
+                           name,
+                           type,
+                           game_date) {
   query <- paste(
     "INSERT INTO requests",
     "(id, breeder, name, type, game_date)",
     "VALUES (?id, ?breeder, ?name, ?type, ?game_date)"
   )
 
-  db_execute_request_safe(query,
+  db_execute_safe(query,
                           id = id,
                           breeder = breeder,
                           name = name,
@@ -375,45 +365,7 @@ db_add_game_request <- function(id,
                           game_date = game_date)
 }
 
-
-
-
-INIT_PLTMAT_REQUEST_NAME = "-- Initial Plant Material --"
-create_initPltMat_request <- function() {
-  # TODO: not complete may need to be more complex
-  if (nrow(get_initPltMat_req()) != 0) {
-    stop("initial plant material request already exists")
-  }
-  getBreedingGameConstants()$first.year
-  db_add_game_request(id = NA,
-                      breeder = "@ALL",
-                      name = INIT_PLTMAT_REQUEST_NAME,
-                      type = "pltmat",
-                      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
-}
-get_initPltMat_req <- function(dbname = DATA_DB) {
-  query <- paste0("SELECT * FROM requests WHERE breeder = '@ALL' AND name='", INIT_PLTMAT_REQUEST_NAME, "'")
-  db_get_request(query)
-}
-
-INIT_GENO_REQUEST_NAME = "-- Initial Genotypes --"
-create_initGeno_request <- function() {
-  # TODO: not complete may need to be more complex
-  if (nrow(get_initGeno_req()) != 0) {
-    stop("initial genotype request already exists")
-  }
-  db_add_game_request(id = NA,
-                      breeder = "@ALL",
-                      name = INIT_GENO_REQUEST_NAME,
-                      type = "geno",
-                      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
-}
-get_initGeno_req <- function(dbname = DATA_DB) {
-  query <- paste0("SELECT * FROM requests WHERE breeder = '@ALL' AND name='", INIT_GENO_REQUEST_NAME, "'")
-  db_get_request(query)
-}
-
-get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
+db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -427,7 +379,7 @@ get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NUL
     condition("AND", "type", "IN", type),
     condition("AND", "id", "IN", id)
   )
-  db_get_request(query)
+  db_get(query)
 }
 
 
@@ -442,12 +394,12 @@ get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NUL
 #' @param type
 #' @param name
 #' @param id
-get_game_requests_data <- function(breeder = NULL,
+db_get_game_requests_data <- function(breeder = NULL,
                                    type = NULL,
                                    name = NULL,
                                    id = NULL) {
 
-  requests <- get_game_requests(breeder = breeder, name = name, type = type, id = id)
+  requests <- db_get_game_requests(breeder = breeder, name = name, type = type, id = id)
   # requests <- requests[, c("id", "type")]
   req_type <- unique(requests$type)
   if (length(unique(requests$type)) != 1) {
@@ -469,7 +421,7 @@ get_game_requests_data <- function(breeder = NULL,
                  paste(requests$id, collapse = ", "),
                  ")")
 
-  data <- db_get_request(query)
+  data <- db_get(query)
   data <- data[order(data$id, decreasing = T), ]
 
   full_data <- data %>%
@@ -484,7 +436,12 @@ get_game_requests_data <- function(breeder = NULL,
 
 ## plant material requests ----
 
-add_init_pltmat_req_data <- function(req_id, data) {
+#' Add initial plant material data in the db
+#' This function is different than `add_pltmat_req_data`
+#' Because with `add_pltmat_req_data`:
+#'  - The parents must exist in the db, which is not the case here
+#'  - `add_pltmat_req_data` call `db_get_individuals_ids` that do not include those parents
+db_add_init_pltmat_req_data <- function(req_id, data) {
   breeder <- "@ALL"
 
   # add initial collection's parents
@@ -496,7 +453,6 @@ add_init_pltmat_req_data <- function(req_id, data) {
                 pltmat_request_id = NA,
                 haplotype_file = NA
               ))
-
   colnames(data) <- c("parent1_request_name", "parent2_request_name", "child_name", "cross_type")
   data$req_id <- req_id
   data$parent1_id <- parent1_id
@@ -505,17 +461,17 @@ add_init_pltmat_req_data <- function(req_id, data) {
   query <- paste("SELECT * FROM pltmat_requests WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
-add_pltmat_req_data <- function(req_id, data) {
-  game_requests <- get_game_requests(id = req_id, type = "pltmat")
+db_add_pltmat_req_data <- function(req_id, data) {
+  game_requests <- db_get_game_requests(id = req_id, type = "pltmat")
   if (length(game_requests) == 0) {
     stop("requested plant material request does not exist")
   }
   breeder <- game_requests$breeder
 
-  ind_ids <- get_plant_material_id(breeder, c(data$parent1,
+  ind_ids <- db_get_individuals_ids(breeder, c(data$parent1,
                                               data$parent2))
   parent1_id <- ind_ids[1:nrow(data)]
   parent2_id <- ind_ids[(nrow(data) + 1):(2 * nrow(data))]
@@ -536,7 +492,7 @@ add_pltmat_req_data <- function(req_id, data) {
   query <- paste("SELECT * FROM pltmat_requests WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
 
@@ -559,13 +515,14 @@ db_add_pltmat <- function(req_id) {
       WHERE req_id IN (", paste(req_id, collapse = ", "),")
     RETURNING id
   ")
-  new_row_ids <- db_get_request(query)$id
+  new_row_ids <- db_get(query)$id
 }
 
 #' From a breeder and a vector of individuals names
 #' return the vector of the individuals id in the same order (with repetition
-#' if there is repetitions in the `name` vector)
-get_plant_material_id <- function(breeder, names) {
+#' if there is repetitions in the `name` vector).
+#' Note: the parents of the initial collection are not returned
+db_get_individuals_ids <- function(breeder, names) {
   ind_ids <- db_get_individual(breeder = breeder,
                                name = unique(names))[, c("id", "name")]
   ind_ids$id[match(names, ind_ids$name)]
@@ -577,6 +534,8 @@ get_plant_material_id <- function(breeder, names) {
 #' - the parents names are shown, not their id.
 #' - the request name that generate the individual is displayed
 #' - the "available date" is calculated by the DB
+#'
+#' Note: the parents of the initial collection are not returned
 db_get_individual <- function(ind_id = NULL,
                               breeder = NULL,
                               name = NULL,
@@ -605,7 +564,7 @@ db_get_individual <- function(ind_id = NULL,
     condition("AND", "n_pheno", ">=", n_pheno_min),
     condition("AND", "n_geno", ">=", n_geno_min)
   )
-  db_get_request(query)
+  db_get(query)
 }
 
 
@@ -617,24 +576,24 @@ db_get_individual_raw <- function(name = NULL, id = NULL) {
     condition("AND", "name", "IN", name),
     condition("AND", "id", "IN", id)
   )
-  db_get_request(query)
+  db_get(query)
 }
 
 ## phenotype requests ----
 
 add_pheno_req_data <- function(req_id, request_data) {
-  game_requests <- get_game_requests(id = req_id, type = "pheno")
+  game_requests <- db_get_game_requests(id = req_id, type = "pheno")
   if (length(game_requests) == 0) {
     stop("requested phenotype request does not exist")
   }
   breeder <- game_requests$breeder
-  ind_ids <- get_plant_material_id(breeder, request_data$ind)
+  ind_ids <- db_get_individuals_ids(breeder, request_data$ind)
 
   if (any(is.na(ind_ids))) {
     stop("Some requested individuals are missing in the db.")
   }
   request_data <- request_data[, c("ind", "task", "details")]
-  colnames(request_data) <- c("ind_request_name", "task", "n_pheno")
+  colnames(request_data) <- c("ind_request_name", "type", "n_pheno")
   request_data$req_id <- req_id
   request_data$ind_id <- ind_ids
   new_ids <- db_add_data("pheno_requests", request_data)
@@ -642,7 +601,7 @@ add_pheno_req_data <- function(req_id, request_data) {
   query <- paste("SELECT * FROM pheno_requests WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
 ## phenotype ----
@@ -655,8 +614,7 @@ add_pheno_req_data <- function(req_id, request_data) {
 #'
 #' @param init_pheno_data raw data of the initial phenotypes
 #'
-add_initial_pheno_data <- function(init_pheno_data) {
-
+db_add_initial_pheno_data <- function(init_pheno_data) {
   pheno_years <- unique(init_pheno_data$year)
   lapply(pheno_years, FUN = function(year) {
     pheno_data <- dplyr::group_by(init_pheno_data[init_pheno_data$year == year, ],
@@ -665,12 +623,12 @@ add_initial_pheno_data <- function(init_pheno_data) {
     request_data$task <- "pheno-field"
 
     request_name <- paste("-- Initial phenotype year", year, "--")
-    db_add_game_request(id = NA,
+    db_add_request(id = NA,
                         breeder = "@ALL",
                         name = request_name,
                         type = "pheno",
                         game_date = paste0(year, "-01-01"))
-    pheno_req_id <- get_game_requests(breeder = "@ALL", name = request_name)[1, 1]
+    pheno_req_id <- db_get_game_requests(breeder = "@ALL", name = request_name)[1, 1]
 
     add_pheno_req_data(pheno_req_id, request_data)
     db_add_pheno_data(pheno_data, pheno_req_id)
@@ -682,17 +640,17 @@ add_initial_pheno_data <- function(init_pheno_data) {
 #' @param pheno_data data.frame of the phenotypic data
 #' @param pheno_req_id corresponding main request id
 db_add_pheno_data <- function(pheno_data, pheno_req_id) {
-  pheno_request <- get_game_requests_data(id = pheno_req_id, type = "pheno")
+  pheno_request <- db_get_game_requests_data(id = pheno_req_id, type = "pheno")
   if (nrow(pheno_request) == 0) {
     stop("No phenotype's request data found")
   }
   pheno_field_data <- pheno_data[!is.na(pheno_data$trait1),]
-  pheno_request_field <- pheno_request[pheno_request$task == "pheno-field", c("id", "ind_request_name", "ind_id")]
+  pheno_request_field <- pheno_request[pheno_request$type == "pheno-field", c("id", "ind_request_name", "ind_id")]
   pheno_field_data <- dplyr::left_join(pheno_field_data,
                                        pheno_request_field,
                                        by = dplyr::join_by(ind == ind_request_name))
 
-  pheno_request_patho <- pheno_request[pheno_request$task == "pheno-patho", c("id", "ind_request_name", "ind_id")]
+  pheno_request_patho <- pheno_request[pheno_request$type == "pheno-patho", c("id", "ind_request_name", "ind_id")]
   pheno_patho_data <- pheno_data[is.na(pheno_data$trait1),]
   pheno_patho_data <- dplyr::left_join(pheno_patho_data,
                                        pheno_request_patho,
@@ -705,7 +663,7 @@ db_add_pheno_data <- function(pheno_data, pheno_req_id) {
   query <- paste("SELECT * FROM phenotypes WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
 
@@ -760,19 +718,19 @@ db_get_phenotypes <- function(id = NULL,
     condition("AND", "year", "IN", year),
     initial_data_condition
   )
-  db_get_request(query)
+  db_get(query)
 }
 
 
 ## genotype requests ----
 
-add_geno_req_data <- function(req_id, request_data) {
-  game_requests <- get_game_requests(id = req_id, type = "geno")
+db_add_geno_req_data <- function(req_id, request_data) {
+  game_requests <- db_get_game_requests(id = req_id, type = "geno")
   if (length(game_requests) == 0) {
     stop("requested genotype request does not exist")
   }
   breeder <- game_requests$breeder
-  ind_ids <- get_plant_material_id(breeder, request_data$ind)
+  ind_ids <- db_get_individuals_ids(breeder, request_data$ind)
 
   if (any(is.na(ind_ids))) {
     stop("Some requested individuals are missing in the db.")
@@ -786,7 +744,7 @@ add_geno_req_data <- function(req_id, request_data) {
   query <- paste("SELECT * FROM geno_requests WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
 
@@ -799,7 +757,7 @@ add_geno_req_data <- function(req_id, request_data) {
 #' names should be `hd`, `ld`, `snp` and the associated values must be the path
 #' of the corresponding result files
 db_add_geno_data <- function(geno_req_id, genotype_data_files) {
-  geno_request <- get_game_requests_data(id = geno_req_id, type = "geno")
+  geno_request <- db_get_game_requests_data(id = geno_req_id, type = "geno")
   if (nrow(geno_request) == 0) {
     stop("No genotype's request data found")
   }
@@ -821,7 +779,7 @@ db_add_geno_data <- function(geno_req_id, genotype_data_files) {
   query <- paste("SELECT * FROM genotypes WHERE id IN (",
                  paste(new_ids, collapse = ", "),
                  ")")
-  return(db_get_request(query))
+  return(db_get(query))
 }
 
 db_get_genotypes <- function(id = NULL,
@@ -850,7 +808,7 @@ db_get_genotypes <- function(id = NULL,
     condition("AND", "request_name", "IN", request_name),
     condition("AND", "result_file", "IN", result_file)
   )
-  db_get_request(query)
+  db_get(query)
 }
 
 
