@@ -121,9 +121,9 @@ CREATE TABLE IF NOT EXISTS "pheno_requests" (
 	"req_id" INTEGER REFERENCES requests(id),
 	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id),
 	"ind_request_name" TEXT,
-	"task" TEXT,
+	"type" TEXT,
 	"n_pheno" INTEGER,
-	UNIQUE("req_id", "ind_id", "task")
+	UNIQUE("req_id", "ind_id", "type")
 );
 
 
@@ -152,7 +152,7 @@ SELECT
 	p.trait2,
 	p.trait3,
 	p.pheno_req_id,
-	pr.task as type,
+	pr.type as type,
 	r.name as request_name
 FROM phenotypes p
 	LEFT JOIN pheno_requests pr ON (p.pheno_req_id = pr.id)
