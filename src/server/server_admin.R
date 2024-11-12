@@ -132,7 +132,7 @@ output$deleteSessionUI <- renderUI({
 sessionsList <- reactive({
   # get session table from the data base:
   values$lastDBupdate
-  getGameSessions()
+  db_get_game_sessions()
 })
 
 output$sessionsTable <- renderTable({
@@ -219,7 +219,7 @@ observeEvent(input$addSession, {
   }
 
   # check overlaps
-  gameSessions <- getGameSessions()
+  gameSessions <- db_get_game_sessions()
 
   if (nrow(gameSessions) > 0) {
     overlapse <- apply(gameSessions, 1, function(session) {
@@ -239,16 +239,9 @@ observeEvent(input$addSession, {
     }
   }
 
-  # calculate id number:
-  id <- 1
-  if (nrow(sessionsList()) != 0) {
-    id <- max(sessionsList()$id) + 1
-  }
-
-
   # complete "sessions" table
-  addGameSession(
-    id = id,
+  db_add_game_session(
+    id = NA,
     startDate = as.character(startDate),
     endDate = as.character(endDate),
     yearTime = input$yearTime,
@@ -262,7 +255,7 @@ observeEvent(input$addSession, {
 observeEvent(input$deleteSession, {
   if (input$delSession != "") {
     # delete entry in sessions' table
-    delGameSession(input$delSession)
+    db_delete_game_session(input$delSession)
     values$lastDBupdate <- Sys.time()
     showNotification("Session removed", type = "message")
   }
