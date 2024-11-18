@@ -325,8 +325,10 @@ db_delete_breeder <- function(name) {
   db_execute_safe(query, name = name)
 }
 
+#' Get all the breeders registered in the db except the special `@ALL`
+#' breeder that is used internally
 getBreederList <- function(dbname = DATA_DB) {
-  query <- paste0("SELECT name FROM breeders")
+  query <- paste0("SELECT name FROM breeders WHERE name != '@ALL'")
   breederNames <- db_get(query)[, 1]
   return(breederNames)
 }
@@ -358,11 +360,11 @@ db_add_request <- function(id,
   )
 
   db_execute_safe(query,
-                          id = id,
-                          breeder = breeder,
-                          name = name,
-                          type = type,
-                          game_date = game_date)
+                  id = id,
+                  breeder = breeder,
+                  name = name,
+                  type = type,
+                  game_date = game_date)
 }
 
 db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
@@ -382,7 +384,27 @@ db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = 
   db_get(query)
 }
 
+#' Get a the list of request in a more detail way where each request are split
+#' according to the "sub-type" of request. For example a pheno request can
+#' appear on 2 lines, one for "pheno-field" and one for "pheno-patho".
+#' this also give the detail price of each requests.
+#' The initial request (ie. own by `@ALL`) are not returned.
+db_get_game_requests_history <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
 
+  breeder_condition <- ""
+  if (!is.null(breeder)) {
+    breeder_condition <- condition("AND", "breeder", "IN", c(breeder))
+  }
+
+  query <- paste(
+    "SELECT * FROM v_request_history WHERE 1=1",
+    breeder_condition,
+    condition("AND", "name", "IN", name),
+    condition("AND", "type", "IN", type),
+    condition("AND", "id", "IN", id)
+  )
+  db_get(query)
+}
 
 
 
@@ -431,7 +453,6 @@ db_get_game_requests_data <- function(breeder = NULL,
 
   return(full_data)
 }
-
 
 
 ## plant material requests ----

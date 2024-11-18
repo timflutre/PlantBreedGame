@@ -93,7 +93,8 @@ test_that("db initialisation", {
       "sqlite_sequence",
       "v_plant_material",
       "v_phenotypes",
-      "v_genotypes"
+      "v_genotypes",
+      "v_request_history"
     ))
   )
 })
@@ -120,8 +121,20 @@ test_that("read/write constants", {
     duration.haplodiplo = 12,
     duration.geno.hd = 3,
     duration.geno.ld = 2,
-    duration.geno.single = 1
+    duration.geno.single = 1,
+
+    cost.pheno.field = 100,
+    cost.pheno.patho = 0.1,
+    cost.allof = 0.1,
+    cost.autof = 0.25,
+    cost.haplodiplo = 1,
+    cost.geno.hd = 1,
+    cost.geno.ld = 0.5,
+    cost.geno.single = 0.02,
+    cost.register = 4,
+    initialBudget = 195000
   )
+
   db_add_constants(constants_list)
   expect_identical(
     getBreedingGameConstants(),
@@ -1018,6 +1031,21 @@ test_that("genotype data", {
     db_get_genotypes(breeder = "A", result_file = "result_geno_test_geno_2-hd")
   })
 })
+
+
+
+test_that("request history", {
+  expect_no_error({
+    db_get_all("v_request_history")
+  })
+  expect_no_error({
+    db_get_game_requests_history()
+  })
+  expect_no_error({
+    db_get_game_requests_history(breeder = "A")
+  })
+})
+
 
 unlink(tmpdir, recursive = TRUE)
 
