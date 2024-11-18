@@ -338,6 +338,28 @@ db_get_breeder <- function(breeder.name, dbname = DATA_DB) {
   as.list(db_get_safe(query, name = breeder.name))
 }
 
+db_update_breeder <- function(breeder, new_status = NULL, new_h_psw = NULL) {
+  queries <- c()
+  breeder <- dbQuoteLiteral(DBI::ANSI(), breeder)
+  if (!is.null(new_status)) {
+    new_status <- dbQuoteLiteral(DBI::ANSI(), new_status)
+    queries <- c(query_status, paste("UPDATE breeders SET status =",
+                                     new_status,
+                                     "WHERE name =",
+                                     breeder))
+  }
+  if (!is.null(new_h_psw)) {
+    new_h_psw <- dbQuoteLiteral(DBI::ANSI(), new_h_psw)
+    queries <- c(queries, paste("UPDATE breeders SET h_psw =",
+                                new_h_psw,
+                                "WHERE name =",
+                                breeder))
+  }
+  queries <- paste(queries,
+                   collapse = "; ")
+  db_execute(queries)
+}
+
 
 
 
