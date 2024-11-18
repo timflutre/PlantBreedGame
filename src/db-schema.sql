@@ -195,3 +195,69 @@ FROM genotypes g
 	LEFT JOIN plant_material pltmat ON (gr.ind_id = pltmat.id)
 	LEFT JOIN requests r ON (gr.req_id = r.id);
 
+CREATE VIEW v_request_history AS
+WITH prices AS (
+	SELECT
+		CASE
+			WHEN key = "cost.pheno.field" THEN "pheno-field"
+			WHEN key = "cost.pheno.patho" THEN "pheno-patho"
+			WHEN key = "cost.allof" THEN "allofecundation"
+			WHEN key = "cost.autof" THEN "autofecundation"
+			WHEN key = "cost.haplodiplo" THEN "haplodiploidization"
+			WHEN key = "cost.geno.hd" THEN "hd"
+			WHEN key = "cost.geno.ld" THEN "ld"
+			WHEN key = "cost.geno.single" THEN "geno-snp"
+			ELSE NULL
+		END AS detail,
+		CASE
+			WHEN key = "cost.pheno.field" THEN value
+			ELSE value * (
+			SELECT
+				value
+			FROM
+				constants
+			WHERE
+				key = "cost.pheno.field"
+			)
+		END as unit_price
+	FROM
+		constants
+	WHERE
+		detail is not NULL
+), request_details AS (
+	SELECT
+		r.id,
+		r.game_date,
+		r.time,
+		r.breeder,
+		r.name,
+		r.type as request_type,
+		CASE
+			WHEN r.type = 'pltmat' THEN pltr.cross_type
+			WHEN r.type = 'pheno' THEN pr."type"
+			WHEN r.type = 'geno' THEN
+				CASE
+					WHEN gr."type" LIKE "snp%" THEN "geno-snp"
+					else gr.type
+				END
+			ELSE NULL
+	  END AS detail,
+	  CASE
+			WHEN r.type = 'pltmat' THEN COUNT(*)
+			WHEN r.type = 'pheno' THEN COUNT(pr.n_pheno)
+			WHEN r.type = 'geno' THEN COUNT(*)
+			ELSE NULL
+	  END AS quantity
+	FROM requests r
+	  FULL JOIN pheno_requests pr ON (pr.req_id = r.id)
+	  FULL JOIN pltmat_requests pltr ON (pltr.req_id = r.id)
+	  FULL JOIN geno_requests gr ON (gr.req_id = r.id)
+	GROUP BY r.id, detail
+) SELECT
+	d.*,
+	p.unit_price,
+	d.quantity * p.unit_price as cost
+FROM request_details d
+LEFT JOIN prices p ON d.detail = p.detail
+ORDER BY d.time;
+
