@@ -306,6 +306,16 @@ test_that("read/write breeders", {
                status = "player",
                h_psw = "abcd")
   )
+  expect_no_error({
+    db_update_breeder(breeder = "test-db 2",
+                      new_h_psw = "1234")
+  })
+  expect_equal(
+    db_get_all("breeders"),
+    data.frame(name = "test-db 2",
+               status = "player",
+               h_psw = "1234")
+  )
   db_delete_breeder("test-db 2")
 
   db_add_breeder("@ALL", NA, NA)
