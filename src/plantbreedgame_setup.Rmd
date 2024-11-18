@@ -127,7 +127,7 @@ suppressPackageStartupMessages(library(GenomicRanges)) # from bioconductor
 source("src/fun/functions.R")
 source("src/fun/module_gameInit_params.R")
 source("src/fun/func_gameInit_validation.R")
-
+source("src/fun/func_dbRequests.R")
 
 session_id <- uuid::UUIDgenerate()
 ```
@@ -594,14 +594,14 @@ Enhancement: arrange plots on a grid and return their coordinates
 
 Export genotypes for the players using high-density chip, but only for a subset of lines:
 ```{r export_geno}
-f <- paste0(init.dir, "/Result_genos_subset-initialColl-hd.txt.gz")
+initial_genotype_file <- paste0(init.dir, "/Result_genos_subset-initialColl-hd.txt.gz")
 subset.years <- as.numeric(levels(p0.df$year)[
   (floor(0.5 * nlevels(p0.df$year))):nlevels(p0.df$year)
 ])
-subset.coll <- unique(as.character(p0.df$ind[p0.df$year %in% subset.years]))
+initially_genotyped_inds <- unique(as.character(p0.df$ind[p0.df$year %in% subset.years]))
 write.table(
-  x = coll$genos[subset.coll, subset.snps[["hd"]]],
-  file = gzfile(f), quote = FALSE,
+  x = coll$genos[initially_genotyped_inds, subset.snps[["hd"]]],
+  file = gzfile(initial_genotype_file), quote = FALSE,
   sep = "\t", row.names = TRUE, col.names = TRUE
 )
 ```
@@ -1088,18 +1088,6 @@ tools::md5sum(path.expand(f))
 file.info(f)$mtime
 ```
 
-Export "phenotype" data.frame for players:
-```{r export_phenos}
-f <- paste0(init.dir, "/Result_phenos_initialColl.txt.gz")
-write.table(
-  x = p0.df[, -grep("raw", colnames(p0.df))],
-  file = gzfile(f), quote = FALSE,
-  sep = "\t", row.names = FALSE, col.names = TRUE
-)
-tools::md5sum(path.expand(f))
-file.info(f)$mtime
-```
-
 # Controls and registration
 
 ## Choose controls
@@ -1256,10 +1244,6 @@ fout <- paste0(init.dir, "/Result_phenos_controls.txt.gz")
 if (file.exists(fout)) {
   file.remove(fout)
 }
-write.table(
-  x = phectls.df, file = gzfile(fout), quote = FALSE,
-  sep = "\t", row.names = FALSE, col.names = TRUE
-)
 ```
 
 Enhancement: add spatial coordinates and missing data
@@ -1271,582 +1255,229 @@ gc()
 ```
 
 
-# Set up database and example files
+# Set up database
 
-Create a database:
+Create the database:
 ```{r setup_db}
-
 progress_detail = "Initialise data-base..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
+DATA_DB <- dbname
+# db <- dbConnect(SQLite(), dbname = dbname)
+# dbDisconnect(db)
 
-db <- dbConnect(SQLite(), dbname = dbname)
-dbListTables(db)
+db_schema <- read_sql_file("src/db-schema.sql")
+db_execute(query = db_schema)
+
+db <- dbConnect(SQLite(), dbname = DATA_DB)
+tables <- dbListTables(db)
+dbDisconnect(db)
+tables
 ```
+
+
 
 ## Constants
 
-Create the table with the constants (average phenotypes, unitary costs, etc):
-```{r table_constants_create}
-tbl <- "constants"
-if (tbl %in% dbListTables(db)) {
-  query <- paste0("DROP TABLE ", tbl)
-  res <- dbExecute(conn = db, query)
-}
-query <- paste0(
-  "CREATE TABLE ", tbl,
-  " (item TEXT",
-  ", value TEXT)"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('max.disk.usage', '", 10, "')"
-) # in Gb
-res <- dbExecute(conn = db, query)
+Fill the table with the game's constants.
 
-version <- readLines("VERSION")
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('version', '", version, "')"
+```{r table_constants}
+constants <- list(
+  max.disk.usage = 10,
+  version = readLines("VERSION"),
+  maxEvalInds = params$maxEvalInds,
+
+  # Haplotypes and genotypes
+  nb.chrs = nb.chrs,
+  chr.length = L,
+  nb.snps = length(thin.snps),
+
+  # phenotypes
+  seed.year.effect = 4321,
+
+  # phenotypes trait 1
+  mu.trait1 = params.trait1$mu,
+  y.min.trait1 = params.trait1$y.min,
+  sigma.p2.trait1 = params.trait1$sigma.p2,
+  # w.trait1 = params.trait1$w, # this value does not exist
+  i.trait1 = params.trait1$i,
+  CV.g.trait1 = params.trait1$CV.g,
+  sigma.a2.trait1 = params.trait1$sigma.a2,
+  h2.trait1 = params.trait1$h2,
+  sigma2.trait1 = params.trait1$sigma2,
+  sigma.alpha2.trait1 = params.trait1$sigma.alpha2,
+  H2.design.trait1 = params.trait1$H2.design,
+  sigma.beta2.trait1 = params.trait1$sigma.beta2,
+
+  # phenotypes trait 2
+  mu.trait2 = params.trait2$mu,
+  y.min.trait2 = params.trait2$y.min,
+  sigma.p2.trait2 = params.trait2$sigma.p2,
+  CV.g.trait2 = params.trait2$CV.g,
+  sigma.a2.trait2 = params.trait2$sigma.a2,
+  h2.trait2 = params.trait2$h2,
+  sigma2.trait2 = params.trait2$sigma2,
+  sigma.alpha2.trait2 = params.trait2$sigma.alpha2,
+  H2.design.trait2 = params.trait2$H2.design,
+  sigma.beta2.trait2 = params.trait2$sigma.beta2,
+
+  # Initial data
+  nb.inds.denovo = nb.inds.denovo,
+  nb.snps.hd = nb.snps.hd,
+  nb.snps.ld = nb.snps.ld,
+  nb.phenotyped.coll = nlevels(p0.df$ind),
+  nb.genotyped.coll = length(initially_genotyped_inds),
+  max.nb.haplodiplos = params$max.nb.haplodiplos,
+  max.nb.pltmatReq = params$max.nb.pltmatReq,
+  max.nb.inds = 1000,
+  nb.plots = params$nb.plots,
+  nb.controls = nb.controls,
+  nb.years.per.ctl = nb.years.per.ctl,
+  nb.plots.per.ctl = nb.plots.per.ctl,
+  register.min.trait1 = register.min.trait1,
+  register.min.trait2 = register.min.trait2,
+
+  # Time delays
+  first.year = first.year,
+  max.upload.pheno.field = "05-31",
+  duration.pheno.field = 4, # in months
+  duration.pheno.patho = 3,
+  duration.allof = 4,
+  duration.autof = 4,
+  duration.haplodiplo = 12,
+  duration.geno.hd = 1,
+  duration.geno.ld = 1,
+  duration.geno.single = 1,
+
+  # costs
+  cost.pheno.field = params$cost.pheno.field,
+  cost.pheno.patho = params$cost.pheno.patho,
+  cost.allof = params$cost.allof,
+  cost.autof = params$cost.autof,
+  cost.haplodiplo = params$cost.haplodiplo,
+  cost.geno.hd = params$cost.geno.hd,
+  cost.geno.ld = params$cost.geno.ld,
+  cost.geno.single = params$cost.geno.single,
+  cost.register = params$cost.register,
+  initialBudget = params$initialBudget * params$cost.pheno.field
 )
-res <- dbExecute(conn = db, query)
+
+db_add_constants(constants)
 ```
 
-### Simulation parameters
-
-Fill the table with the constants used for the data simulation.
-
-#### Haplotypes and genotypes
-
-```{r table_constants_fill_simul}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.chrs', '", nb.chrs, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('chr.length', '", L, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.snps', '", length(thin.snps), "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-#### Phenotypes
-
-Trait 1:
-```{r}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('mu.trait1', '", params.trait1$mu, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('y.min.trait1', '", params.trait1$y.min, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.p2.trait1', '", params.trait1$sigma.p2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('w.trait1', '", params.trait1$w, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('i.trait1', '", params.trait1$i, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('CV.g.trait1', '", params.trait1$CV.g, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.a2.trait1', '", params.trait1$sigma.a2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('h2.trait1', '", params.trait1$h2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma2.trait1', '", params.trait1$sigma2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.alpha2.trait1', '", params.trait1$sigma.alpha2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('H2.design.trait1', '", params.trait1$H2.design, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.beta2.trait1', '", params.trait1$sigma.beta2, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-Trait 2:
-```{r}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('mu.trait2', '", params.trait2$mu, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('y.min.trait2', '", params.trait2$y.min, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.p2.trait2', '", params.trait2$sigma.p2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('CV.g.trait2', '", params.trait2$CV.g, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.a2.trait2', '", params.trait2$sigma.a2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('h2.trait2', '", params.trait2$h2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma2.trait2', '", params.trait2$sigma2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.alpha2.trait2', '", params.trait2$sigma.alpha2, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('H2.design.trait2', '", params.trait2$H2.design, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('sigma.beta2.trait2', '", params.trait2$sigma.beta2, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-Year effects:
-```{r}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('seed.year.effect', '", 4321, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-#### Initial data
-
-```{r}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.inds.denovo', '", nb.inds.denovo, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.snps.hd', '", nb.snps.hd, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.snps.ld', '", nb.snps.ld, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.phenotyped.coll', '", nlevels(p0.df$ind), "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.genotyped.coll', '", length(subset.coll), "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('max.nb.haplodiplos', '", params$max.nb.haplodiplos, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('max.nb.pltmatReq', '", params$max.nb.pltmatReq, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('max.nb.inds', '", 1000, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.plots', '", params$nb.plots, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.controls', '", nb.controls, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.years.per.ctl', '", nb.years.per.ctl, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('nb.plots.per.ctl', '", nb.plots.per.ctl, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('register.min.trait1', '", register.min.trait1, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('register.min.trait2', '", register.min.trait2, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-### Time delays
-
-Fill the table with the constants specifying the time delays (in months):
-```{r table_constants_fill_time}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('first.year', '", first.year, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('max.upload.pheno.field', '", "05-31", "')"
-) # May 31 of each year
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.pheno.field', '", 4, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.pheno.patho', '", 3, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.allof', '", 4, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.autof', '", 4, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.haplodiplo', '", 12, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.geno.hd', '", 1, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.geno.ld', '", 1, "')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('duration.geno.single', '", 1, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-### Costs
-
-Fill the table with the constants specifying the costs:
-```{r table_constants_fill_costs}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.pheno.field', '", params$cost.pheno.field, "')"
-) # in Mendels
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.pheno.patho', '", params$cost.pheno.patho, "')"
-) # compare to one plot
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.allof', '", params$cost.allof, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.autof', '", params$cost.autof, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.haplodiplo', '", params$cost.haplodiplo, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.hd', '", params$cost.geno.hd, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.ld', '", params$cost.geno.ld, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.geno.single', '", params$cost.geno.single, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('cost.register', '", params$cost.register, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('initialBudget', '", params$initialBudget * params$cost.pheno.field, "')"
-) # idem
-res <- dbExecute(conn = db, query)
-```
-
-### Other
-
-Fill the table with other constants necessary for the game:
-```{r}
-# maximum number individuals for evaluation
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('maxEvalInds', '", params$maxEvalInds, "')"
-)
-res <- dbExecute(conn = db, query)
-```
-
-
-## Log
-
-Create the table for logging:
-```{r create_table_log}
-tbl <- "log"
-if (tbl %in% dbListTables(db)) {
-  query <- paste0("DROP TABLE ", tbl)
-  res <- dbExecute(conn = db, query)
-}
-query <- paste0(
-  "CREATE TABLE ", tbl,
-  " (breeder TEXT",
-  ", request_date TEXT", # ISO-8601
-  ", task TEXT",
-  ", quantity INT",
-  ", time TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL)"
-)
-res <- dbExecute(conn = db, query)
-```
 
 ## Sessions
 
-Create the table describing the game sessions:
-```{r create_table_sessions}
-tbl <- "sessions"
-if (tbl %in% dbListTables(db)) {
-  query <- paste0("DROP TABLE ", tbl)
-  res <- dbExecute(conn = db, query)
-}
-query <- paste0(
-  "CREATE TABLE ", tbl,
-  " (id INT",
-  ", start TEXT",
-  ", end TEXT",
-  ", year_time INT", # in minute
-  ", time_zone TEXT)")
-res <- dbExecute(conn = db, query)
-```
+Fill with initial game sessions:
 
-Fill the table:
 ```{r table_sessions_fill}
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('1'",
-  ", '2018-02-15 09:00:00'",
-  ", '2018-02-15 12:00:00'",
-  ", '60'",
-  ", 'UTC')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('2'",
-  ", '2018-02-15 14:00:00'",
-  ", '2018-02-15 17:00:00'",
-  ", '60'",
-  ", 'UTC')"
-)
-res <- dbExecute(conn = db, query)
-query <- paste0(
-  "INSERT INTO ", tbl, " VALUES",
-  " ('3'",
-  ", '2018-02-16 09:00:00'",
-  ", '2018-02-16 11:40:00'",
-  ", '40'",
-  ", 'UTC')"
-)
-res <- dbExecute(conn = db, query)
+db_add_game_session(NA, "2018-02-15 09:00:00", "2018-02-15 12:00:00", 60, "UTC")
+db_add_game_session(NA, "2018-02-15 14:00:00", "2018-02-15 17:00:00", 60, "UTC")
+db_add_game_session(NA, "2018-02-16 09:00:00", "2018-02-16 11:40:00", 40, "UTC")
 ```
 
 ## Breeders
 
-Create the table for breeder information, and insert the breeder(s):
+Insert the breeder(s):
 ```{r create_table_breeders}
-tbl <- "breeders"
-if (tbl %in% dbListTables(db)) {
-  query <- paste0("DROP TABLE ", tbl)
-  res <- dbExecute(conn = db, query)
-}
-query <- paste0(
-  "CREATE TABLE ", tbl,
-  " (name TEXT",
-  ", status TEXT",
-  ", h_psw TEXT)"
-)
-res <- dbExecute(conn = db, query)
-for (breeder in breeders) {
-  query <- paste0(
-    "INSERT INTO ", tbl, " VALUES",
-    " ('", breeder
-  )
-  if (breeder == "admin") {
-    query <- paste0(
-      query,
-      "', 'game master",
-      "', '", digest("1234", "md5", serialize = FALSE), "')"
-    )
-  } else if (breeder == "test") {
-    query <- paste0(
-      query,
-      "', 'tester",
-      "', '", digest("", "md5", serialize = FALSE), "')"
-    )
-  }
-  res <- dbExecute(conn = db, query)
-}
+db_add_breeder("@ALL", NA, NA) # mandatory to add shared initial materials
+db_add_breeder("admin", "game master", digest("1234", "md5", serialize = FALSE))
+db_add_breeder("test", "tester", digest("", "md5", serialize = FALSE))
 ```
 
 ## Plant material
 
-Create one table per breeder for their plant material, as well as annother table to be easily copied if new breeders are created via the interface:
-```{r create_tables_plant_material}
-for (breeder in c(breeders, "init")) {
-  tbl <- paste0("plant_material_", breeder)
-  if (tbl %in% dbListTables(db)) {
-    query <- paste0("DROP TABLE ", tbl)
-    res <- dbExecute(conn = db, query)
-  }
-  query <- paste0(
-    "CREATE TABLE ", tbl,
-    " (parent1 TEXT",
-    ", parent2 TEXT",
-    ", child TEXT PRIMARY KEY",
-    ", avail_from TEXT)"
-  )
-  res <- dbExecute(conn = db, query)
-}
-dbListTables(db)
-```
 
 Save also the collection in the plant material table of each breeder:
+
 ```{r fill_table}
-stopifnot("coll" %in% ls())
-ind.ids <- rownames(coll$genos)
-all.values <- paste(gsub("Coll", "Ind", ind.ids),
-  rep(NA, length(ind.ids)),
-  ind.ids,
-  rep(paste0(first.year - nb.years - 1, "-01-01 00:00:00"), length(ind.ids)),
-  sep = "','", collapse = "'),('"
+initial_pltmat_request_name <- "-- Initial Plant Material --"
+db_add_request(id = NA,
+               breeder = "@ALL",
+               name = initial_pltmat_request_name,
+               type = "pltmat",
+               game_date = paste0(first.year - nb.years, "-01-01"))
+
+initial_pltmat_request <- data.frame(
+  parent1 = ind.ids,
+  parent2 = NA,
+  child = rownames(coll$genos),
+  explanations = "haplodiploidization"
 )
-for (breeder in c(breeders, "init")) {
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0(
-    "INSERT INTO ", tbl,
-    " (parent1, parent2, child, avail_from)",
-    " VALUES",
-    " ('", all.values, "')"
-  )
-  res <- dbExecute(conn = db, query)
-}
-dbDisconnect(db)
+initial_plant_mat_request_id <- db_get_game_requests(name = initial_pltmat_request_name)$id
+db_add_init_pltmat_req_data(initial_plant_mat_request_id, initial_pltmat_request)
+db_add_pltmat(req_id = initial_plant_mat_request_id)
+
+
+init_individuals <- db_get_individual()
+head(init_individuals)
+tail(init_individuals)
 ```
 
 For each individual initially given to the players, save its haplotypes into a file (slow):
 ```{r save_haplos_in_files}
-
 progress_detail = "Save initial haplotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
 
-system.time(
-  tmp <- mclapply(1:length(ind.ids), function(i) {
-    ind.id <- ind.ids[i]
+system.time({
+  haplo_id_association <- mclapply(1:length(ind.ids), function(i) {
+    ind.id <- rownames(coll$genos)[i]
     ind <- list(haplos = getHaplosInd(haplos = coll$haplos, ind.name = ind.id))
     f <- file.path(truth.dir, paste0(ind.id, "_haplos.RData"))
     save(ind, file = f)
-    for (breeder in breeders) {
-      fto <- file.path(truth.dir, breeder, paste0(ind.id, "_haplos.RData"))
-      if (!file.exists(fto)) {
-        f_relative_path <- file.path("..", paste0(ind.id, "_haplos.RData"))
-        file.symlink(f_relative_path, fto)
-      }
-    }
+    return(data.frame(
+      id = db_get_individuals_ids(breeder = "@ALL", names = ind.id),
+      haplotype_file = f
+    ))
+    # db_add_ind_haplotype(db_get_individuals_ids(breeder = "@ALL", names = ind.id),
+    #                      f)
   }, mc.cores = nb.cores)
-)
+  haplo_id_association <- do.call(rbind, haplo_id_association)
+  db_add_ind_haplotype(haplo_id_association)
+})
 ```
+
+
+Save initial phenotypes data.
+
+```{r save_phenotypes_in_db}
+additional_column <- which(colnames(p0.df) == "trait1.raw")
+initial_phenotypes <- rbind(p0.df[, -additional_column], phectls.df)
+db_add_initial_pheno_data(initial_phenotypes)
+```
+
+Save initial genotype data in db.
+
+```{r save_genotypes_in_db}
+db_add_request(id = NA,
+               breeder = "@ALL",
+               name = "-- Initial Genotypes --",
+               type = "geno",
+               game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+init_geno_req_id <- db_get_game_requests(name = "-- Initial Genotypes --")$id
+
+
+init_geno_req <- data.frame(
+  ind = initially_genotyped_inds,
+  task = "geno",
+  details = "hd"
+)
+
+db_add_geno_req_data(init_geno_req_id, init_geno_req)
+
+genotype_data_files <- list(hd = initial_genotype_file)
+db_add_geno_data(init_geno_req_id, genotype_data_files)
+```
+
+
+
+
+
 
 Save also the initial allele frequencies:
 ```{r save_afs_in_file}
@@ -1866,22 +1497,6 @@ Make an example of an "data" file:
 ```{r ex_data}
 (data.examples <- makeExampleDataFile(init.dir))
 ```
-
-
-## Evaluation file
-```{r}
-dat <- data.frame(
-  breeder = character(),
-  ind = character()
-)
-f <- file.path(shared.dir, "Evaluation.txt")
-suppressWarnings(write.table(
-  x = dat, file = f,
-  quote = FALSE, sep = "\t",
-  row.names = FALSE, col.names = TRUE
-))
-```
-
 
 
 # Export ZIP archive
