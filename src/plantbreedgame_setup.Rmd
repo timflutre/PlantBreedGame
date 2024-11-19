@@ -1392,7 +1392,7 @@ db_add_request(id = NA,
                breeder = "@ALL",
                name = initial_pltmat_request_name,
                type = "pltmat",
-               game_date = paste0(first.year - nb.years, "-01-01"))
+               game_date = paste0(first.year - nb.years - 1, "-01-01"))
 
 initial_pltmat_request <- data.frame(
   parent1 = ind.ids,
