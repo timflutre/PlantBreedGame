@@ -28,10 +28,10 @@ charSeq <- function(to, prefix = "", from = 1, suffix = "") {
 tmpdir <- "../tmp"
 unlink(tmpdir, recursive = TRUE)
 dir.create(tmpdir)
-DATA_DB <- file.path(tmpdir, "test_db.sqlite")
+options(DATA_DB = file.path(tmpdir, "test_db.sqlite"))
 
 # create db file
-dbDisconnect(dbConnect(SQLite(), dbname = DATA_DB))
+dbDisconnect(dbConnect(SQLite(), dbname = getOption("DATA_DB")))
 
 
 
@@ -73,7 +73,7 @@ test_that("db initialisation", {
 
   db_execute(query = db_schema)
 
-  db <- dbConnect(SQLite(), dbname = DATA_DB)
+  db <- dbConnect(SQLite(), dbname = getOption("DATA_DB"))
   tables <- dbListTables(db)
   dbDisconnect(db)
 

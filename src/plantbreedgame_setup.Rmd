@@ -1258,16 +1258,23 @@ progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
-DATA_DB <- dbname
-# db <- dbConnect(SQLite(), dbname = dbname)
-# dbDisconnect(db)
+
+
+# create emtpy
+options(DATA_DB = dbname)
+db <- dbConnect(SQLite(), dbname = dbname)
+dbDisconnect(db)
+
+progress_detail = paste("Initialise data-base...", dbname)
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 
 db_schema <- read_sql_file("src/db-schema.sql")
 db_execute(query = db_schema)
 
-db <- dbConnect(SQLite(), dbname = DATA_DB)
-tables <- dbListTables(db)
-dbDisconnect(db)
+tables <- db_list_tables()
 tables
 ```
 
@@ -1278,6 +1285,12 @@ tables
 Fill the table with the game's constants.
 
 ```{r table_constants}
+progress_detail = "Data-base: constants..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
+
 constants <- list(
   max.disk.usage = 10,
   version = readLines("VERSION"),
@@ -1367,6 +1380,11 @@ db_add_constants(constants)
 Fill with initial game sessions:
 
 ```{r table_sessions_fill}
+progress_detail = "Data-base: game-sessions..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 db_add_game_session(NA, "2018-02-15 09:00:00", "2018-02-15 12:00:00", 60, "UTC")
 db_add_game_session(NA, "2018-02-15 14:00:00", "2018-02-15 17:00:00", 60, "UTC")
 db_add_game_session(NA, "2018-02-16 09:00:00", "2018-02-16 11:40:00", 40, "UTC")
@@ -1376,6 +1394,11 @@ db_add_game_session(NA, "2018-02-16 09:00:00", "2018-02-16 11:40:00", 40, "UTC")
 
 Insert the breeder(s):
 ```{r create_table_breeders}
+progress_detail = "Data-base: breeders..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 db_add_breeder("@ALL", NA, NA) # mandatory to add shared initial materials
 db_add_breeder("admin", "game master", digest("1234", "md5", serialize = FALSE))
 db_add_breeder("test", "tester", digest("", "md5", serialize = FALSE))
@@ -1387,6 +1410,12 @@ db_add_breeder("test", "tester", digest("", "md5", serialize = FALSE))
 Save also the collection in the plant material table of each breeder:
 
 ```{r fill_table}
+progress_detail = "Data-base: initial plant materials..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
+
 initial_pltmat_request_name <- "-- Initial Plant Material --"
 db_add_request(id = NA,
                breeder = "@ALL",
@@ -1403,6 +1432,7 @@ initial_pltmat_request <- data.frame(
 initial_plant_mat_request_id <- db_get_game_requests(name = initial_pltmat_request_name)$id
 db_add_init_pltmat_req_data(initial_plant_mat_request_id, initial_pltmat_request)
 db_add_pltmat(req_id = initial_plant_mat_request_id)
+db_mark_as_control(controls)
 
 
 init_individuals <- db_get_individual()
@@ -1440,6 +1470,11 @@ system.time({
 Save initial phenotypes data.
 
 ```{r save_phenotypes_in_db}
+progress_detail = "Data-base: initial phenotypes..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 additional_column <- which(colnames(p0.df) == "trait1.raw")
 initial_phenotypes <- rbind(p0.df[, -additional_column], phectls.df)
 db_add_initial_pheno_data(initial_phenotypes)
@@ -1448,6 +1483,11 @@ db_add_initial_pheno_data(initial_phenotypes)
 Save initial genotype data in db.
 
 ```{r save_genotypes_in_db}
+progress_detail = "Data-base: initial genotypes..."
+progressBar$set(
+  value = progressBar$getValue() + 1,
+  detail = progress_detail
+)
 db_add_request(id = NA,
                breeder = "@ALL",
                name = "-- Initial Genotypes --",
@@ -1468,7 +1508,6 @@ genotype_data_files <- list(hd = initial_genotype_file)
 db_add_geno_data(init_geno_req_id, genotype_data_files)
 
 
-db_mark_as_control(controls)
 ```
 
 
