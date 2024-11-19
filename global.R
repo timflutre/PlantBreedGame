@@ -71,6 +71,7 @@ DATA_TRUTH <- file.path(DATA_SESSION, "truth")
 DATA_SHARED <- file.path(DATA_SESSION, "shared")
 DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
 DATA_DB <- file.path(DATA_SESSION, "breeding-game.sqlite")
+options(DATA_DB = DATA_DB)
 DATA_REPORTS <- file.path(DATA_SESSION, "reports")
 GAME_INIT_REPORT <- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
 
