@@ -1031,7 +1031,7 @@ for (j in 1:nlevels(p0.df$year)) {
 Make the "pathogen" column:
 ```{r patho_years}
 p0.df$pathogen <- FALSE
-(years.with.patho <- seq(from = first.year, by = 3, length.out = 4))
+(years.with.patho <- seq(from = first_pheno_year, by = 3, length.out = 4))
 p0.df$pathogen[p0.df$year %in% years.with.patho] <- TRUE
 ```
 
@@ -1192,7 +1192,7 @@ for (j in 1:nb.years.per.ctl) {
       length(controls)
     ),
     year = year,
-    pathogen = ifelse((year - 2005) %% 3 == 0,
+    pathogen = ifelse((year - first_pheno_year) %% 3 == 0,
       TRUE, FALSE
     )
   )
@@ -1392,7 +1392,7 @@ db_add_request(id = NA,
                breeder = "@ALL",
                name = initial_pltmat_request_name,
                type = "pltmat",
-               game_date = paste0(first.year - nb.years, "-01-01"))
+               game_date = paste0(first.year - nb.years - 1, "-01-01"))
 
 initial_pltmat_request <- data.frame(
   parent1 = ind.ids,
