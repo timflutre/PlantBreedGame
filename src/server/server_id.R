@@ -39,7 +39,7 @@ output$id_main_UI <- renderUI({
 ## get breeder list and create select input ----
 breederList <- reactive({
   values$lastDBupdate # add a dependency to the db updates
-  getBreederList(dbname = DATA_DB)
+  getBreederList()
 })
 breeder_list_server("login_breeder_list", "breederName", breederList)
 

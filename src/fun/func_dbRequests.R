@@ -83,7 +83,7 @@ read_sql_file <- function(file, collapse = " ") {
 
 
 #' connect to the db and return the connection
-connect_to_db <- function(dbname = DATA_DB) {
+connect_to_db <- function(dbname = getOption("DATA_DB")) {
   conn <- DBI::dbConnect(SQLite(), dbname = dbname)
   dbExecute(conn = conn, "PRAGMA foreign_keys = ON")
   conn
@@ -91,7 +91,7 @@ connect_to_db <- function(dbname = DATA_DB) {
 
 #' Send a get request to the db WITHOUT SQL INTERPOLATION !!!
 #' can be prone to SQL injection
-db_get <- function(query, dbname = DATA_DB) {
+db_get <- function(query, dbname = getOption("DATA_DB")) {
   # for SELECT query only
   conn <-  connect_to_db(dbname = dbname)
   tryCatch({
@@ -103,7 +103,7 @@ db_get <- function(query, dbname = DATA_DB) {
 }
 
 #' Send a get request to the db safe from SQL injection
-db_get_safe <- function(query, dbname = DATA_DB, ...) {
+db_get_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
   conn <-  connect_to_db(dbname = dbname)
   out <- tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
@@ -118,7 +118,7 @@ db_get_safe <- function(query, dbname = DATA_DB, ...) {
 
 #' Send a request that alter the db WITHOUT SQL INTERPOLATION !!!
 #' can be prone to SQL injection
-db_execute <- function(query, dbname = DATA_DB) {
+db_execute <- function(query, dbname = getOption("DATA_DB")) {
   conn <-  connect_to_db(dbname = dbname)
 
   tryCatch({
@@ -136,7 +136,7 @@ db_execute <- function(query, dbname = DATA_DB) {
 }
 
 #' Send a request that alter the db safe from SQL injection
-db_execute_safe <- function(query, dbname = DATA_DB, ...) {
+db_execute_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
   conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
@@ -196,7 +196,7 @@ db_add_data <- function(table, data, append = TRUE, overwrite = FALSE, dbname = 
 # }
 
 #' List data base tables
-db_list_tables <- function(dbname = DATA_DB) {
+db_list_tables <- function(dbname = getOption("DATA_DB")) {
   conn <-  connect_to_db(dbname = dbname)
   tryCatch({
     allTbls <- dbListTables(conn = conn)
@@ -327,13 +327,13 @@ db_delete_breeder <- function(name) {
 
 #' Get all the breeders registered in the db except the special `@ALL`
 #' breeder that is used internally
-getBreederList <- function(dbname = DATA_DB) {
+getBreederList <- function() {
   query <- paste0("SELECT name FROM breeders WHERE name != '@ALL'")
   breederNames <- db_get(query)[, 1]
   return(breederNames)
 }
 
-db_get_breeder <- function(breeder.name, dbname = DATA_DB) {
+db_get_breeder <- function(breeder.name) {
   query <- paste("SELECT * FROM breeders WHERE name = ?name")
   as.list(db_get_safe(query, name = breeder.name))
 }
