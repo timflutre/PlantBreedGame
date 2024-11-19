@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS "plant_material" (
 	"parent2_id"	INTEGER REFERENCES plant_material(id),
 	"pltmat_request_id"	INTEGER REFERENCES pltmat_requests(id),
 	"haplotype_file"	TEXT,
+	"control"	INTEGER DEFAULT 0,
 	 UNIQUE("pltmat_request_id", "name")
 );
 
@@ -97,6 +98,7 @@ SELECT
 		ELSE NULL
 	END AS avail_from,
 	pm.haplotype_file,
+	pm.control,
 	pr.id as pltmat_request_id,
 	r.id as request_id,
 	r.name as request_name,
@@ -145,6 +147,7 @@ SELECT
 	r.breeder,
 	pr.ind_id as ind_id,
 	pltmat.name as ind,
+	pltmat.control as control_ind,
 	p.year,
 	p.plot,
 	p.pathogen,

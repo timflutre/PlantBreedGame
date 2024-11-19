@@ -1175,12 +1175,6 @@ legend("topleft",
 )
 ```
 
-Save controls for the players:
-```{r savel_controls, eval=TRUE}
-f <- paste0(init.dir, "/controls.txt")
-write.table(x = controls, file = f, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
-```
-
 ## Phenotype controls
 
 Make and save phenotypes of controls in several additionnal plots the last few years to give a good reference to the players:
@@ -1472,6 +1466,9 @@ db_add_geno_req_data(init_geno_req_id, init_geno_req)
 
 genotype_data_files <- list(hd = initial_genotype_file)
 db_add_geno_data(init_geno_req_id, genotype_data_files)
+
+
+db_mark_as_control(controls)
 ```
 
 
