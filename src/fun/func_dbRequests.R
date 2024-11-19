@@ -605,6 +605,8 @@ db_get_individual <- function(ind_id = NULL,
                               request_name = NULL,
                               n_pheno_min = NULL,
                               n_geno_min = NULL) {
+                              n_geno_min = NULL,
+                              control = NULL) {
   base_query <- "SELECT * FROM v_plant_material WHERE 1=1"
 
   breeder_condition <- ""
@@ -622,7 +624,8 @@ db_get_individual <- function(ind_id = NULL,
     condition("AND", "cross_type", "IN", cross_type),
     condition("AND", "request_name", "IN", request_name),
     condition("AND", "n_pheno", ">=", n_pheno_min),
-    condition("AND", "n_geno", ">=", n_geno_min)
+    condition("AND", "n_geno", ">=", n_geno_min),
+    condition("AND", "control", "=", control)
   )
   db_get(query)
 }
@@ -637,6 +640,16 @@ db_get_individual_raw <- function(name = NULL, id = NULL) {
     condition("AND", "id", "IN", id)
   )
   db_get(query)
+}
+
+#' Mark those individuals as control
+#' @param inds individuals names
+db_mark_as_control <- function(inds) {
+  inds_ids <- db_get_individuals_ids(breeder = "@ALL", inds)
+
+  query <- paste("UPDATE plant_material SET control = 1 WHERE",
+                 condition("", "id", "IN", inds_ids))
+  db_execute(query)
 }
 
 ## phenotype requests ----
@@ -663,6 +676,7 @@ add_pheno_req_data <- function(req_id, request_data) {
                  ")")
   return(db_get(query))
 }
+
 
 ## phenotype ----
 
