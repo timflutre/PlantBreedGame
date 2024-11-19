@@ -483,7 +483,8 @@ test_that("plant material data", {
       parent1_id = numeric(),
       parent2_id = numeric(),
       pltmat_request_id = numeric(),
-      haplotype_file = character()
+      haplotype_file = character(),
+      control = numeric()
     )
   )
 
@@ -530,7 +531,8 @@ test_that("plant material data", {
       parent2_id = NA_integer_,
       pltmat_request_id = c(rep(NA, n_init_inds),
                             c(1:n_init_inds)),
-      haplotype_file = NA_character_
+      haplotype_file = NA_character_,
+      control = 0
     )
   )
   initial_plantMaterial <- db_get_individual()
@@ -684,6 +686,15 @@ test_that("plant material data", {
   expect_error({
     new_data <- db_add_pltmat_req_data(NA, mock_request)
   })
+
+  controls_names <- initial_collection_names[c(1,length(initial_collection_names))]
+  expect_no_error({
+    db_mark_as_control(controls_names)
+  })
+  expect_no_error({
+    controls <- db_get_individual(control = TRUE)
+  })
+  expect_equal(controls$name, controls_names)
 })
 
 
