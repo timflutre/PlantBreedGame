@@ -1051,6 +1051,11 @@ test_that("genotype data", {
   expect_no_error({
     db_get_genotypes(breeder = "A", result_file = "result_geno_test_geno_2-hd")
   })
+
+  expect_no_error({
+    geno_data_list <- db_get_genotypes_data_list(breeder = "A")
+  })
+  expect_true(length(geno_data_list) != 0)
 })
 
 

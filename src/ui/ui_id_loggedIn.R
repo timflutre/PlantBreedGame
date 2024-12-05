@@ -31,23 +31,13 @@ div(
       div(
         style = "display: inline-block; vertical-align:top; width: 50%;",
         div(
-          h3("Phenotyping data:"),
-          selectInput("phenoFile", "", choices = phenoFiles(), width = "75%"),
-          uiOutput("UIdwnlPheno")
-        ),
-        div(
           h3("Genotyping data:"),
-          selectInput("genoFile", "", choices = genoFiles(), width = "75%"),
+          selectInput("genoFile", "", choices = genoData(), width = "75%"),
           uiOutput("UIdwnlGeno")
         )
       ),
       div(
         style = "display: inline-block; vertical-align:top; width: 49%;",
-        div(
-          h3("Plant material data:"),
-          selectInput("pltMatFile", "", choices = pltMatFiles(), width = "75%"),
-          uiOutput("UIdwnlPltMat")
-        ),
         div(
           h3("Other:"),
           p(
@@ -64,10 +54,71 @@ div(
         )
       )
     ),
+
+    tabPanel(
+      "Phenotype data",
+      h2("Phenotype data"),
+      div(id = "pheno_info",
+        p("Three phenotypic traits are investigated:"),
+        tags$ul(
+          tags$li(code("trait1"), ": flower production in kg/ha"),
+          tags$li(code("trait2"), ": sepmetin content in g/kg"),
+          tags$li(code("trait3"), ": presence of symptoms caused by P. psychedelica",
+            tags$ul(
+              tags$li(code("1"), "indicates the individual showed symptoms"),
+              tags$li(code("0"), "indicates the individual did not show symptoms.")
+            ),
+            "Note: If", code("pathogen"), "is", code("FALSE"),
+            ", the pathogen was not observed and therefore not any individuals will show  symptoms.")
+        ),
+
+        p("Additionally, the phenotypic data provides the following variables:"),
+        tags$ul(
+          tags$li(code("ind"), ": the individual name"),
+          tags$li(code("control_ind"), ": boolean indicating if the individual will be used as control for the final evaluation"),
+          tags$li(code("year"), ": the year when this phenotyping happens."),
+          tags$li(code("plot"), ": the plot id of the phenotyping observation"),
+          tags$li(code("pathogen"), ": boolean value indicating if the pathogen have been observed during the phenotyping."),
+        )
+      ),
+
+      # h3("Summary"),
+      div(id = "pheno_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("pheno_download_ind_filter", breeder = breeder()),
+        phenotype_filtering_ui("pheno_download_pheno_filter", breeder = breeder()),
+        downloadButton("dwnlPheno_1", "Download")
+      ),
+
+      div(id = "pheno_preview_div",
+        h3("Preview"),
+        dataTableOutput("pheno_preview_DT")
+      ),
+      downloadButton("dwnlPheno_2", "Download"),
+    ),
+
     tabPanel(
       "My plant material",
-      dataTableOutput("myPltMatDT")
+      h2("Plant material"),
+      div(id = "inds_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("inds_download_ind_filter", breeder = breeder()),
+        downloadButton("dwnlInds_1", "Download")
+      ),
+
+      div(id = "inds_preview",
+        h3("Preview"),
+        dataTableOutput("plant_mat_preview")
+      ),
+      downloadButton("dwnlInds_2", "Download"),
+
+      div(id = "inds_ind_info",
+        uiOutput("selected_ind_info")
+      ),
     ),
+
     tabPanel(
       "Change my password",
       div(

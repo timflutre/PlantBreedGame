@@ -152,7 +152,7 @@ db_execute_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
 
 #' add data to a table from a data.frame.
 #' The data.frame must have have a structure matching the table
-db_add_data <- function(table, data, append = TRUE, overwrite = FALSE, dbname = DATA_DB, ...) {
+db_add_data <- function(table, data) {
   conn <- connect_to_db()
   out <- tryCatch({
     db_col_names <- paste(colnames(data), collapse = ", ")
@@ -604,10 +604,24 @@ db_get_individual <- function(ind_id = NULL,
                               cross_type = NULL,
                               request_name = NULL,
                               n_pheno_min = NULL,
-                              n_geno_min = NULL) {
                               n_geno_min = NULL,
-                              control = NULL) {
-  base_query <- "SELECT * FROM v_plant_material WHERE 1=1"
+                              control = NULL,
+                              public_columns = FALSE) {
+
+  columns <- "*"
+  if (public_columns) {
+    columns_to_keep_as <- c(
+      "name" = "Name",
+      "parent1_name" = "Parent 1",
+      "parent2_name" = "Parent 2",
+      "avail_from" = "Available date",
+      "cross_type" = "Crossing type",
+      "request_name" = "From plant material request",
+      "control" = "Is control"
+    )
+    columns <- paste(c(names(columns_to_keep_as)), collapse = ", ")
+  }
+  base_query <- paste("SELECT", columns, "FROM v_plant_material WHERE 1=1")
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -619,15 +633,20 @@ db_get_individual <- function(ind_id = NULL,
     condition("AND", "id", "IN", ind_id),
     breeder_condition,
     condition("AND", "name", "IN", name),
-    condition("AND", "parent1", "IN", parent1),
-    condition("AND", "parent2", "IN", parent2),
+    condition("AND", "parent1_name", "IN", parent1),
+    condition("AND", "parent2_name", "IN", parent2),
     condition("AND", "cross_type", "IN", cross_type),
     condition("AND", "request_name", "IN", request_name),
     condition("AND", "n_pheno", ">=", n_pheno_min),
     condition("AND", "n_geno", ">=", n_geno_min),
     condition("AND", "control", "=", control)
   )
-  db_get(query)
+  individuals <- db_get(query)
+
+  if (public_columns) {
+    colnames(individuals) <- columns_to_keep_as
+  }
+  individuals
 }
 
 
@@ -757,9 +776,22 @@ db_get_phenotypes <- function(id = NULL,
                               t3 = NULL,
                               pathogen = NULL,
                               year = NULL,
-                              initial_data_only = NULL
-                              ) {
-  base_query <- "SELECT * FROM v_phenotypes WHERE 1=1"
+                              initial_data_only = NULL,
+                              public_columns = FALSE) {
+  columns <- "*"
+  if (public_columns) {
+    columns <- paste(c(
+      "ind",
+      "control_ind",
+      "year",
+      "plot",
+      "pathogen",
+      "trait1",
+      "trait2",
+      "trait3"
+    ), collapse = ", ")
+  }
+  base_query <- paste("SELECT", columns, "FROM v_phenotypes WHERE 1=1")
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -793,6 +825,27 @@ db_get_phenotypes <- function(id = NULL,
     initial_data_condition
   )
   db_get(query)
+}
+
+
+db_get_pheno_summary <- function(breeder) {
+  query <- "
+    SELECT
+       MIN(trait1) AS minT1,
+       MAX(trait1) AS maxT1,
+       MIN(trait2) AS minT2,
+       MAX(trait2) AS maxT2,
+       MIN(year) AS minYear,
+       MAX(year) AS maxYear
+    FROM
+       v_phenotypes
+    WHERE 1=1
+  "
+  query <- paste(
+    query,
+    condition("AND", "breeder", "IN", c(breeder, "@ALL"))
+  )
+  as.list(db_get(query))
 }
 
 
@@ -885,6 +938,13 @@ db_get_genotypes <- function(id = NULL,
   db_get(query)
 }
 
+db_get_genotypes_data_list <- function(breeder) {
+  query <- paste(
+    "SELECT result_file  FROM v_genotypes WHERE 1=1",
+    condition("AND", "breeder", "IN", c(breeder, "@ALL")),
+    "GROUP BY result_file")
+  db_get(query)[,1]
+}
 
 
 

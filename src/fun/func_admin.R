@@ -52,8 +52,6 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
     stop("breeder already exist")
   }
 
-
-
   #### add breeder in the "breeders" table of database:
   if (!is.null(progressNewBreeder)) {
     progressNewBreeder$set(
@@ -63,60 +61,7 @@ addNewBreeder <- function(breederName, status, psw, progressNewBreeder = NULL) {
   }
   hashed.psw <- digest(psw, "md5", serialize = FALSE)
 
-  tbl <- "breeders"
-  query <- paste0(
-    "INSERT INTO ", tbl, " VALUES",
-    " ('", breederName, "','", status, "','", hashed.psw, "')"
-  )
-  db_execute_request(query)
-
-
-
-
-  #### create "plant_material_newBreeder"
-  if (!is.null(progressNewBreeder)) {
-    progressNewBreeder$set(
-      value = 3,
-      detail = "create \"plant_material\" table"
-    )
-  }
-  tbl <- paste0("plant_material_", breederName)
-  query <- paste0(
-    "CREATE TABLE ", tbl,
-    " (parent1 TEXT",
-    ", parent2 TEXT",
-    ", child TEXT PRIMARY KEY",
-    ", avail_from TEXT)"
-  )
-  db_execute_request(query)
-
-
-
-  #### fill "plant_material_newBreeder"
-  if (!is.null(progressNewBreeder)) {
-    progressNewBreeder$set(
-      value = 4,
-      detail = "fill \"plant_material\" table"
-    )
-  }
-  coll.ids <- gsub("_haplos.RData", "", initIndsHaplo)
-  query <- paste0(
-    "INSERT INTO ", tbl,
-    " (parent1, parent2, child, avail_from)",
-    " VALUES",
-    " ('", paste(gsub("Coll", "ind", coll.ids),
-      rep(NA, length(coll.ids)),
-      coll.ids,
-      rep(
-        paste0(getBreedingGameConstants()$first.year, "-01-01 00:00:00"),
-        length(coll.ids)
-      ),
-      sep = "','", collapse = "'),('"
-    ),
-    "')"
-  )
-  db_execute_request(query)
-
+  db_add_breeder(breederName, status, hashed.psw)
 
   #### create folders of the new breeder:
   if (!is.null(progressNewBreeder)) {

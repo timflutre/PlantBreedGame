@@ -19,34 +19,6 @@
 
 
 ## functions for the "id part"
-getDataFileList <- function(type, breeder) {
-  # function to get the list of data file of the breeder
-  # type (char) type of data (pheno or geno)
-  # breeder (char) name of the breeder
-
-  stopifnot(type %in% c("pheno", "geno", "pltMat", "request"))
-
-  dirPath <- file.path(DATA_SHARED, breeder)
-  dataFile <- list.files(dirPath)
-  dataFile <- c(dataFile, list.files(DATA_INITIAL_DATA))
-
-  ## Get the ids of the files
-  if (type == "pheno") {
-    matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_pheno"))
-  } else if (type == "geno") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "Result_geno"))
-  } else if (type == "pltMat") {
-    matchId <- matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "IndList_"))
-  } else if (type == "request") {
-    matchId <- as.logical(lapply(dataFile, FUN = grepl, pattern = "(^Request)|(^example_request_)|(^controls.txt$)|(^snp_coords_)"))
-  }
-
-
-  return(as.list(dataFile[matchId]))
-}
-
-
-
 
 availToDwnld <- function(fileName, gameTime) {
   # function to check if files are available to download

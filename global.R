@@ -30,6 +30,7 @@ source("./src/fun/func_dbRequests.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/module_gameInit_params.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_gameInit_validation.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_ui_util.R", local = TRUE, encoding = "UTF-8")
+source("./src/fun/module_data-filtering.R", local = TRUE, encoding = "UTF-8")
 
 ## -------------------------------------------------------------------
 ## parameters
