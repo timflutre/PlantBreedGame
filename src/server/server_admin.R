@@ -282,11 +282,7 @@ observeEvent(input$admin_button_seedYearEfect, {
 
   error <- valid_positive_integer(newSeed)
   if (is.null(error)) {
-    query <- paste0(
-      "UPDATE constants SET value = ",
-      newSeed, " WHERE item=='seed.year.effect'"
-    )
-    db_execute_request(query)
+    db_update_constants(list(seed.year.effect = newSeed))
 
     notifMessage <- paste("Year effect seed updated.")
     showNotification(notifMessage,
@@ -311,11 +307,7 @@ observeEvent(input$admin_button_const_initialBudget, {
 
   error <- valid_positive_number(new_initial_budget)
   if (is.null(error)) {
-    query <- paste0(
-      "UPDATE constants SET value = ",
-      new_initial_budget, " WHERE item=='initialBudget'"
-    )
-    db_execute_request(query)
+    db_update_constants(list(initialBudget = new_initial_budget))
 
     notifMessage <- paste("Initial budget updated.")
     showNotification(notifMessage,
@@ -360,9 +352,7 @@ observeEvent(input$updateMaxDiskUsage, {
   # save maximum disk usage value in the database
   # so that if the admin change the value, it will affect all connected users
   maxDiskUsage <- input$admin_maxDiskUsage
-
-  query <- paste0("UPDATE constants SET value = '", maxDiskUsage, "' WHERE item = 'max.disk.usage'")
-  db_execute_request(query)
+  db_update_constants(list(max.disk.usage = maxDiskUsage))
 })
 
 currentMaxDiskUsage <- reactive({

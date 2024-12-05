@@ -430,3 +430,106 @@ create_issue_link <- function(title = "", body = ""){
 }
 
 
+addNewBreeder <- function(breederName,
+                          status,
+                          psw,
+                          progressNewBreeder = NULL,
+                          data_truth = DATA_TRUTH,
+                          data_shared = DATA_SHARED) {
+  ## this function create a new breeder
+  ## breederName (char) name of the new breeder
+
+
+  if (!grepl("^[a-zA-Z0-9\\_]+$", breederName, perl = TRUE)) {
+    # only alpha numeric and character "_"
+    stop("Breeder's name should contain only alpha-numeric characters and special character : _  ")
+  }
+  if (status != "tester" & psw == "") {
+    stop(paste0(
+      "a breeder with another status than tester",
+      " can't have the empty string as password"
+    ))
+  }
+
+  #### initialisation:
+  initIndsHaplo <- list.files(data_truth)
+  initIndsHaplo <- initIndsHaplo[grep("Coll", initIndsHaplo)]
+
+
+  #### test if new breeder already exist
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 1,
+      detail = "Check breeder existance"
+    )
+  }
+
+  if (breederName %in% getBreederList()) {
+    stop("breeder already exist")
+  }
+
+  #### add breeder in the "breeders" table of database:
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 2,
+      detail = "Add breeder in \"breeders\" table"
+    )
+  }
+  hashed.psw <- digest(psw, "md5", serialize = FALSE)
+
+  db_add_breeder(breederName, status, hashed.psw)
+
+  #### create folders of the new breeder:
+  if (!is.null(progressNewBreeder)) {
+    progressNewBreeder$set(
+      value = 5,
+      detail = "create truth and shared folders"
+    )
+  }
+  newTruthDir <- paste0(data_truth, "/", breederName)
+  newSharedDir <- paste0(data_shared, "/", breederName)
+  dir.create(newTruthDir)
+  dir.create(newSharedDir)
+
+
+
+  funApply <- function(fileName) {
+    if (!is.null(progressNewBreeder)) {
+      progressNewBreeder$set(
+        value = 6,
+        detail = paste0("Create haplo symlink:", fileName)
+      )
+    }
+
+    fromFile <- file.path("..", fileName)
+    toFile <- file.path(newTruthDir, fileName)
+    file.symlink(fromFile, toFile)
+    return()
+  }
+
+  if (Sys.info()["sysname"] != "Windows") {
+    sapply(initIndsHaplo, FUN = funApply)
+  } else {
+    # try with one file:
+    funApply(initIndsHaplo[1])
+    if (file.exists(paste0(newTruthDir, "/", initIndsHaplo[1]))) { # if it worked
+      sapply(initIndsHaplo[-1], FUN = funApply)
+    } else {
+      # copy files
+      funApply <- function(fileName) {
+        if (!is.null(progressNewBreeder)) {
+          progressNewBreeder$set(
+            value = 6,
+            detail = paste0("Create haplo copy:", fileName)
+          )
+        }
+        fromFile <- paste0(data_truth, "/", fileName)
+        toFile <- paste0(newTruthDir, "/", fileName)
+        file.copy(fromFile, toFile) # copy
+        return()
+      }
+      sapply(initIndsHaplo, FUN = funApply)
+    }
+  }
+}
+
