@@ -316,6 +316,16 @@ test_that("read/write breeders", {
                status = "player",
                h_psw = "1234")
   )
+  expect_no_error({
+    db_update_breeder(breeder = "test-db 2",
+                      new_status = "tester")
+  })
+  expect_equal(
+    db_get_all("breeders"),
+    data.frame(name = "test-db 2",
+               status = "tester",
+               h_psw = "1234")
+  )
   db_delete_breeder("test-db 2")
 
   db_add_breeder("@ALL", NA, NA)
@@ -454,6 +464,14 @@ test_that("read/write requests", {
   expect_equal(nrow(db_get_game_requests(breeder = "A")), 11)
   expect_equal(nrow(db_get_game_requests(breeder = "B", type = "pheno")), 3)
   expect_equal(nrow(db_get_game_requests(type = "geno")), 7)
+
+
+  request_id <- db_get_game_requests(breeder = "A")[1, "id"]
+  expect_equal(db_get_game_requests(id = request_id)$processed, 0)
+  expect_no_error({
+    db_update_request(id = request_id, processed = 1)
+  })
+  expect_equal(db_get_game_requests(id = request_id)$processed, 1)
 })
 
 
@@ -719,7 +737,7 @@ test_that("phenotype data", {
       id = integer(0),
       pheno_req_id = integer(0),
       year = integer(0),
-      plot = integer(0),
+      plot = character(0),
       pathogen = integer(0),
       trait1 = numeric(0),
       trait2 = numeric(0),
@@ -1013,7 +1031,7 @@ test_that("genotype data", {
       geno_files <- list(
         hd = paste0("result_geno_", request_name, "-hd"),
         ld = paste0("result_geno_", request_name, "-ld"),
-        snp = paste0("result_geno_", request_name, "-snp")
+        singleSnp = paste0("result_geno_", request_name, "-snp")
       )
 
       # add phenotype data
@@ -1051,6 +1069,11 @@ test_that("genotype data", {
   expect_no_error({
     db_get_genotypes(breeder = "A", result_file = "result_geno_test_geno_2-hd")
   })
+
+  expect_no_error({
+    geno_data_list <- db_get_genotypes_data_list(breeder = "A")
+  })
+  expect_true(length(geno_data_list) != 0)
 })
 
 

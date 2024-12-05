@@ -95,7 +95,7 @@ SELECT
 		WHEN pr.cross_type = 'allofecundation' THEN DATE(r.game_date, '+' || d.allof || ' months')
 		WHEN pr.cross_type = 'autofecundation' THEN DATE(r.game_date, '+' || d.autof || ' months')
 		WHEN pr.cross_type = 'haplodiploidization' THEN DATE(r.game_date, '+' || d.haplodiplo || ' months')
-		ELSE NULL
+		ELSE DATE(NULL)
 	END AS avail_from,
 	pm.haplotype_file,
 	pm.control,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS "phenotypes" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	"pheno_req_id" INTEGER INTEGER NOT NULL REFERENCES pheno_requests(id),
 	"year" INTEGER NOT NULL,
-	"plot" INTEGER NOT NULL,
+	"plot" TEXT NOT NULL,
 	"pathogen" INTEGER NOT NULL,
 	"trait1" REAL,
 	"trait2" REAL,
@@ -247,7 +247,7 @@ WITH prices AS (
 	  END AS detail,
 	  CASE
 			WHEN r.type = 'pltmat' THEN COUNT(*)
-			WHEN r.type = 'pheno' THEN COUNT(pr.n_pheno)
+			WHEN r.type = 'pheno' THEN SUM(pr.n_pheno)
 			WHEN r.type = 'geno' THEN COUNT(*)
 			ELSE NULL
 	  END AS quantity

@@ -127,7 +127,7 @@ data_viz_server <- function(id, plot_data) {
         filter <- "none"
       }
       DT::datatable(data,
-        filter = filter,
+        # filter = filter, # No filter because it can conflict with the manually implemented filters can be worked on later
         style = "bootstrap4",
         options = list(
           language = list(emptyTable = 'Empty'),

@@ -43,6 +43,7 @@
           uuid
           shinyTree
           prettyunits
+          reactable
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";

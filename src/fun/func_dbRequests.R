@@ -84,9 +84,12 @@ read_sql_file <- function(file, collapse = " ") {
 
 #' connect to the db and return the connection
 connect_to_db <- function(dbname = getOption("DATA_DB")) {
-  conn <- DBI::dbConnect(SQLite(), dbname = dbname)
-  dbExecute(conn = conn, "PRAGMA foreign_keys = ON")
-  conn
+  if (file.exists(dbname)) {
+    conn <- DBI::dbConnect(SQLite(), dbname = dbname)
+    dbExecute(conn = conn, "PRAGMA foreign_keys = ON")
+    return(conn)
+  }
+  return(NULL)
 }
 
 #' Send a get request to the db WITHOUT SQL INTERPOLATION !!!
@@ -94,6 +97,9 @@ connect_to_db <- function(dbname = getOption("DATA_DB")) {
 db_get <- function(query, dbname = getOption("DATA_DB")) {
   # for SELECT query only
   conn <-  connect_to_db(dbname = dbname)
+  if (is.null(conn)) {
+    return(NULL)
+  }
   tryCatch({
     out <- dbGetQuery(conn = conn, query)
   }, finally = {
@@ -105,6 +111,9 @@ db_get <- function(query, dbname = getOption("DATA_DB")) {
 #' Send a get request to the db safe from SQL injection
 db_get_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
   conn <-  connect_to_db(dbname = dbname)
+  if (is.null(conn)) {
+    return(NULL)
+  }
   out <- tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
     dbGetQuery(conn = conn, safe_query)
@@ -120,6 +129,9 @@ db_get_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
 #' can be prone to SQL injection
 db_execute <- function(query, dbname = getOption("DATA_DB")) {
   conn <-  connect_to_db(dbname = dbname)
+  if (is.null(conn)) {
+    return(NULL)
+  }
 
   tryCatch({
     dbBegin(conn)
@@ -138,6 +150,9 @@ db_execute <- function(query, dbname = getOption("DATA_DB")) {
 #' Send a request that alter the db safe from SQL injection
 db_execute_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
   conn <-  connect_to_db(dbname = dbname)
+  if (is.null(conn)) {
+    return(NULL)
+  }
   tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
     dbExecute(conn = conn, safe_query)
@@ -152,8 +167,12 @@ db_execute_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
 
 #' add data to a table from a data.frame.
 #' The data.frame must have have a structure matching the table
-db_add_data <- function(table, data, append = TRUE, overwrite = FALSE, dbname = DATA_DB, ...) {
+db_add_data <- function(table, data) {
   conn <- connect_to_db()
+  if (is.null(conn)) {
+    return(NULL)
+  }
+
   out <- tryCatch({
     db_col_names <- paste(colnames(data), collapse = ", ")
     query <- paste0("INSERT INTO ", table, " (", db_col_names, ") VALUES ")
@@ -198,6 +217,9 @@ db_add_data <- function(table, data, append = TRUE, overwrite = FALSE, dbname = 
 #' List data base tables
 db_list_tables <- function(dbname = getOption("DATA_DB")) {
   conn <-  connect_to_db(dbname = dbname)
+  if (is.null(conn)) {
+    return(NULL)
+  }
   tryCatch({
     allTbls <- dbListTables(conn = conn)
   }, finally = {
@@ -343,7 +365,7 @@ db_update_breeder <- function(breeder, new_status = NULL, new_h_psw = NULL) {
   breeder <- dbQuoteLiteral(DBI::ANSI(), breeder)
   if (!is.null(new_status)) {
     new_status <- dbQuoteLiteral(DBI::ANSI(), new_status)
-    queries <- c(query_status, paste("UPDATE breeders SET status =",
+    queries <- c(queries, paste("UPDATE breeders SET status =",
                                      new_status,
                                      "WHERE name =",
                                      breeder))
@@ -375,12 +397,17 @@ db_add_request <- function(id,
                            name,
                            type,
                            game_date) {
+
+
+  if (is(game_date, "POSIXct")) {
+    game_date <- as.character(as.Date(game_date))
+  }
+
   query <- paste(
     "INSERT INTO requests",
     "(id, breeder, name, type, game_date)",
     "VALUES (?id, ?breeder, ?name, ?type, ?game_date)"
   )
-
   db_execute_safe(query,
                   id = id,
                   breeder = breeder,
@@ -411,7 +438,7 @@ db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = 
 #' appear on 2 lines, one for "pheno-field" and one for "pheno-patho".
 #' this also give the detail price of each requests.
 #' The initial request (ie. own by `@ALL`) are not returned.
-db_get_game_requests_history <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
+db_get_game_requests_history <- function(breeder = NULL, name = NULL, type = NULL, detail = NULL, id = NULL) {
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -422,7 +449,8 @@ db_get_game_requests_history <- function(breeder = NULL, name = NULL, type = NUL
     "SELECT * FROM v_request_history WHERE 1=1",
     breeder_condition,
     condition("AND", "name", "IN", name),
-    condition("AND", "type", "IN", type),
+    condition("AND", "request_type", "IN", type),
+    condition("AND", "detail", "IN", detail),
     condition("AND", "id", "IN", id)
   )
   db_get(query)
@@ -439,9 +467,9 @@ db_get_game_requests_history <- function(breeder = NULL, name = NULL, type = NUL
 #' @param name
 #' @param id
 db_get_game_requests_data <- function(breeder = NULL,
-                                   type = NULL,
-                                   name = NULL,
-                                   id = NULL) {
+                                      type = NULL,
+                                      name = NULL,
+                                      id = NULL) {
 
   requests <- db_get_game_requests(breeder = breeder, name = name, type = type, id = id)
   # requests <- requests[, c("id", "type")]
@@ -475,6 +503,23 @@ db_get_game_requests_data <- function(breeder = NULL,
 
   return(full_data)
 }
+
+
+
+db_update_request <- function(id, processed = NULL) {
+  queries <- c()
+  if (!is.null(processed)) {
+    processed <- dbQuoteLiteral(DBI::ANSI(), processed)
+    queries <- c(queries, paste("UPDATE requests SET processed =",
+                                processed,
+                                "WHERE id =",
+                                id))
+  }
+  queries <- paste(queries,
+                   collapse = "; ")
+  db_execute(queries)
+}
+
 
 
 ## plant material requests ----
@@ -604,10 +649,24 @@ db_get_individual <- function(ind_id = NULL,
                               cross_type = NULL,
                               request_name = NULL,
                               n_pheno_min = NULL,
-                              n_geno_min = NULL) {
                               n_geno_min = NULL,
-                              control = NULL) {
-  base_query <- "SELECT * FROM v_plant_material WHERE 1=1"
+                              control = NULL,
+                              public_columns = FALSE) {
+
+  columns <- "*"
+  if (public_columns) {
+    columns_to_keep_as <- c(
+      "name" = "Name",
+      "parent1_name" = "Parent 1",
+      "parent2_name" = "Parent 2",
+      "avail_from" = "Available date",
+      "cross_type" = "Crossing type",
+      "request_name" = "From plant material request",
+      "control" = "Is control"
+    )
+    columns <- paste(c(names(columns_to_keep_as)), collapse = ", ")
+  }
+  base_query <- paste("SELECT", columns, "FROM v_plant_material WHERE 1=1")
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -619,15 +678,20 @@ db_get_individual <- function(ind_id = NULL,
     condition("AND", "id", "IN", ind_id),
     breeder_condition,
     condition("AND", "name", "IN", name),
-    condition("AND", "parent1", "IN", parent1),
-    condition("AND", "parent2", "IN", parent2),
+    condition("AND", "parent1_name", "IN", parent1),
+    condition("AND", "parent2_name", "IN", parent2),
     condition("AND", "cross_type", "IN", cross_type),
     condition("AND", "request_name", "IN", request_name),
     condition("AND", "n_pheno", ">=", n_pheno_min),
     condition("AND", "n_geno", ">=", n_geno_min),
     condition("AND", "control", "=", control)
   )
-  db_get(query)
+  individuals <- db_get(query)
+
+  if (public_columns) {
+    colnames(individuals) <- columns_to_keep_as
+  }
+  individuals
 }
 
 
@@ -757,9 +821,22 @@ db_get_phenotypes <- function(id = NULL,
                               t3 = NULL,
                               pathogen = NULL,
                               year = NULL,
-                              initial_data_only = NULL
-                              ) {
-  base_query <- "SELECT * FROM v_phenotypes WHERE 1=1"
+                              initial_data_only = NULL,
+                              public_columns = FALSE) {
+  columns <- "*"
+  if (public_columns) {
+    columns <- paste(c(
+      "ind",
+      "control_ind",
+      "year",
+      "plot",
+      "pathogen",
+      "trait1",
+      "trait2",
+      "trait3"
+    ), collapse = ", ")
+  }
+  base_query <- paste("SELECT", columns, "FROM v_phenotypes WHERE 1=1")
 
   breeder_condition <- ""
   if (!is.null(breeder)) {
@@ -796,6 +873,27 @@ db_get_phenotypes <- function(id = NULL,
 }
 
 
+db_get_pheno_summary <- function(breeder) {
+  query <- "
+    SELECT
+       MIN(trait1) AS minT1,
+       MAX(trait1) AS maxT1,
+       MIN(trait2) AS minT2,
+       MAX(trait2) AS maxT2,
+       MIN(year) AS minYear,
+       MAX(year) AS maxYear
+    FROM
+       v_phenotypes
+    WHERE 1=1
+  "
+  query <- paste(
+    query,
+    condition("AND", "breeder", "IN", c(breeder, "@ALL"))
+  )
+  as.list(db_get(query))
+}
+
+
 ## genotype requests ----
 
 db_add_geno_req_data <- function(req_id, request_data) {
@@ -826,9 +924,9 @@ db_add_geno_req_data <- function(req_id, request_data) {
 
 #' add genetic data to the data base
 #'
-#' @param geno_req_id genotype request id (in geno_requests table)
+#' @param geno_req_id main request id of the genotype request to process
 #' @param genotype_data_files named list of the path of the results files
-#' names should be `hd`, `ld`, `snp` and the associated values must be the path
+#' names should be `hd`, `ld`, `singleSnp` and the associated values must be the path
 #' of the corresponding result files
 db_add_geno_data <- function(geno_req_id, genotype_data_files) {
   geno_request <- db_get_game_requests_data(id = geno_req_id, type = "geno")
@@ -842,7 +940,7 @@ db_add_geno_data <- function(geno_req_id, genotype_data_files) {
   geno_data_ld$result_file <- genotype_data_files$ld
 
   geno_data_snp <- geno_request[!geno_request$type %in% c("hd", "ld"),]
-  geno_data_snp$result_file <- genotype_data_files$snp
+  geno_data_snp$result_file <- genotype_data_files$singleSnp
 
   geno_data <- rbind(geno_data_hd, geno_data_ld, geno_data_snp)
 
@@ -885,6 +983,13 @@ db_get_genotypes <- function(id = NULL,
   db_get(query)
 }
 
+db_get_genotypes_data_list <- function(breeder) {
+  query <- paste(
+    "SELECT result_file  FROM v_genotypes WHERE 1=1",
+    condition("AND", "breeder", "IN", c(breeder, "@ALL")),
+    "GROUP BY result_file")
+  db_get(query)[,1]
+}
 
 
 

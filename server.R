@@ -72,12 +72,10 @@ shinyServer(function(input, output, session) {
     session,
     function() {
       if (file.exists(DATA_DB)) {
-        file.info(DATA_DB)$mtime[1]
-      } else {
-        ""
+        return(file.info(DATA_DB)$mtime[1])
       }
+      return("")
     },
     getBreedingGameConstants
   )
-
 })

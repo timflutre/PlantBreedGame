@@ -69,11 +69,10 @@ accessGranted <- eventReactive(input$submitPSW,
     }
 
     # 1. get breeder status
-    status <- getBreederStatus(input$breederName)
+    breeder <- db_get_breeder(input$breederName)
 
     # 2. check given password
-    query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
-    hashPsw <- db_get_request(query)
+    hashPsw <- breeder$h_psw
 
     if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
       goodPswd <- TRUE
@@ -84,7 +83,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
     # 3. check disk usage
     goodDiskUsage <- FALSE
-    if (goodPswd && status != "game master") {
+    if (goodPswd && breeder$status != "game master") {
       withProgress(
         {
           maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
@@ -94,7 +93,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
           if (currentSize < maxDiskUsage) {
             goodDiskUsage <- TRUE
-          } else if (status != "game master") {
+          } else if (breeder$status != "game master") {
             goodDiskUsage <- FALSE
             alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
           } else {
@@ -110,31 +109,10 @@ accessGranted <- eventReactive(input$submitPSW,
         },
         message = "Connecting..."
       )
-    } else if (goodPswd && status == "game master") {
+    } else if (goodPswd && breeder$status == "game master") {
       # the game master can always log in
       goodDiskUsage <- TRUE
     }
-
-    # 4. check db (in case of "corrupted" data-base)
-    if (goodPswd) {
-      allTbls <- db_list_tables()
-      tbl_pltMat <- paste0("plant_material_", input$breederName)
-      if (!tbl_pltMat %in% allTbls) {
-        alert(paste(
-          "Sorry, our data-base have corrupted information",
-          "regarding your account, and you will not be able to play",
-          "the game anymore. Please ask a game master to delete your",
-          "account, and create a new one for you.\n",
-          "If you are a game master, you can connect, but please",
-          "be aware that some game features will not work."
-        ))
-        if (status != "game master") {
-          # do not allow access if user is not "game master"
-          return(FALSE)
-        }
-      }
-    }
-
 
     # 5. output
     if (goodPswd && goodDiskUsage) {
@@ -157,7 +135,7 @@ breeder <- reactive({
 
 breederStatus <- reactive({
   if (accessGranted()) {
-    return(getBreederStatus(input$breederName))
+    return(db_get_breeder(input$breederName)$status)
   } else {
     return("No Identification")
   }
@@ -168,33 +146,11 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-    query <- paste0("SELECT * FROM log WHERE breeder='", breeder(), "'")
-    res <- db_get_request(query)
 
+    req_history <- db_get_game_requests_history(breeder = breeder())
+    expenses <- sum(req_history$costs, na.rm = TRUE)
 
-    constants <- getBreedingGameConstants()
-    prices <- list(
-      "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
-      "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
-      "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
-      "pheno-field" = constants$cost.pheno.field,
-      "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
-      "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
-      "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
-      "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
-      "register" = constants$cost.register * constants$cost.pheno.field
-    )
-
-    if (nrow(res) > 0) {
-      funApply <- function(x) {
-        prices[x[3]][[1]] * as.integer(x[4])
-      }
-      expenses <- sum(apply(res, MARGIN = 1, FUN = funApply))
-    } else {
-      expenses <- 0
-    }
-
-    initialBuget <- constants$initialBudget
+    initialBuget <- getBreedingGameConstants()$initialBudget
     return(round(initialBuget - expenses, 2))
   }
 })
@@ -209,22 +165,21 @@ budget <- reactive({
 # list of avaiable files (this must be reactive value to be refresh)
 phenoFiles <- reactive({
   input$leftMenu
-  getDataFileList(type = "pheno", breeder = breeder())
+  db_get_game_requests(breeder = breeder(), type = "pheno")$name
+  # getDataFileList(type = "pheno", breeder = breeder())
 })
-genoFiles <- reactive({
+genoData <- reactive({
   input$leftMenu
-  choices <- tools::file_path_sans_ext(
-    getDataFileList(type = "geno", breeder = breeder()),
-    compression = TRUE
-  )
+  full_files <- db_get_genotypes_data_list(breeder = breeder())
+  tools::file_path_sans_ext(basename(full_files), compression = TRUE)
 })
 pltMatFiles <- reactive({
   input$leftMenu
-  choices <- getDataFileList(type = "pltMat", breeder = breeder())
+  # choices <- getDataFileList(type = "pltMat", breeder = breeder())
 })
 requestFiles <- reactive({
   input$leftMenu
-  choices <- getDataFileList(type = "request", breeder = breeder())
+  # choices <- getDataFileList(type = "request", breeder = breeder())
 })
 
 
@@ -312,21 +267,6 @@ output$dwnlRequest <- downloadHandler(
   }
 )
 
-# UI of dwnl buttons ----
-output$UIdwnlPheno <- renderUI({
-  if (input$phenoFile != "") {
-    if (breederStatus() == "player" && !availToDwnld(input$phenoFile, currentGTime())$isAvailable) {
-      p(paste0(
-        "Sorry, your data are not available yet. Delivery date: ",
-        availToDwnld(input$phenoFile, currentGTime())$availDate
-      ))
-    } else {
-      downloadButton("dwnlPheno", "Download your file")
-    }
-  } else {
-    p("No file selected.")
-  }
-})
 
 output$UIdwnlGeno <- renderUI({
   if (input$genoFile != "") {
@@ -347,13 +287,6 @@ output$UIdwnlGeno <- renderUI({
   }
 })
 
-output$UIdwnlPltMat <- renderUI({
-  if (input$pltMatFile != "") {
-    downloadButton("dwnlPltMat", "Download your file")
-  } else {
-    p("No file selected.")
-  }
-})
 
 output$UIdwnlRequest <- renderUI({
   if (input$requestFile != "") {
@@ -367,16 +300,57 @@ output$UIdwnlRequest <- renderUI({
 ## My plant-material ----
 myPltMat <- reactive({
   if (input$leftMenu == "id") {
-    tbl <- paste0("plant_material_", breeder())
-    query <- paste0("SELECT * FROM ", tbl)
-    res <- db_get_request(query)
-    res$avail_from <- strftime(res$avail_from, format = "%Y-%m-%d")
-    res
+    individuals <- db_get_individual(breeder = breeder())
+
+    columns_to_keep_as <- c(
+      "name" = "Name",
+      "parent1_name" = "Parent 1",
+      "parent2_name" = "Parent 2",
+      "avail_from" = "Available date",
+      "cross_type" = "Crossing type",
+      "request_name" = "From plant material request",
+      "control" = "Is control"
+    )
+    individuals <- individuals[, c(
+      names(columns_to_keep_as)
+    )]
+    colnames(individuals) <- columns_to_keep_as
+    return(individuals)
   }
 })
 
-output$myPltMatDT <- DT::renderDataTable({
-  DT::datatable(myPltMat(),
+
+
+
+pltmat_preview_filter <- individual_filtering_server("inds_download_ind_filter", breeder = breeder())
+
+plant_mat_preview_data <- reactive({
+
+  individuals <- db_get_individual(breeder = breeder(),
+     ind_id = pltmat_preview_filter$inds_ids(),
+     public_columns = TRUE
+  )
+
+  # columns_to_keep_as <- c(
+  #   "name" = "Name",
+  #   "parent1_name" = "Parent 1",
+  #   "parent2_name" = "Parent 2",
+  #   "avail_from" = "Available date",
+  #   "cross_type" = "Crossing type",
+  #   "request_name" = "From plant material request",
+  #   "control" = "Is control"
+  # )
+  # individuals <- individuals[, c(
+  #   names(columns_to_keep_as)
+  # )]
+  # colnames(individuals) <- columns_to_keep_as
+  return(individuals)
+})
+
+output$plant_mat_preview <- DT::renderDataTable({
+  DT::datatable(
+    plant_mat_preview_data(),
+    selection = 'single',
     options = list(
       lengthMenu = c(10, 20, 50),
       pageLength = 10,
@@ -385,7 +359,135 @@ output$myPltMatDT <- DT::renderDataTable({
   )
 })
 
+.download_inds <- function(){
+  downloadHandler(
+    filename = "plant-material.tsv",
+    content = function(file) {
+      write.table(
+        plant_mat_preview_data(),
+        file = file,
+        sep = "\t",
+        row.names = FALSE
+      )
+    }
+  )
+}
 
+output$dwnlInds_1 <- .download_inds()
+output$dwnlInds_2 <- .download_inds()
+
+output$selected_ind_info <- renderUI({
+  selected_row <- input$plant_mat_preview_rows_selected
+
+  if (is.null(selected_row)) {
+    return(
+      div(
+        h3("Selected individual information:"),
+        p("No individual selected. Click on an individual on the table to view more information.")
+      )
+    )
+  }
+  ind_name <- plant_mat_preview_data()[selected_row, "Name"]
+  ind_id <- db_get_individuals_ids(breeder = breeder(), name = ind_name)
+  ind_info <- db_get_individual(breeder = breeder(), ind_id = ind_id)
+  phenotypes <- db_get_phenotypes(breeder = breeder(), ind_id = ind_id, public_columns = TRUE)
+  genotypes <- db_get_genotypes(breeder = breeder(), ind_id = ind_id)
+  offsprings <- rbind(db_get_individual(breeder = breeder(), parent1 = ind_info$name, public_columns = TRUE),
+                  db_get_individual(breeder = breeder(), parent2 = ind_info$name, public_columns = TRUE))
+  offsprings <- offsprings[!duplicated(offsprings),]
+
+  div(
+    h3(ind_info$name, ":"),
+    tags$ul(
+      tags$li("Requested on", ind_info$request_date, "with", code(ind_info$request_name)),
+      tags$li("Available on", ind_info$avail_from),
+      tags$li("Cross type:", ind_info$cross_type),
+      tags$li("Parent 1:", code(ind_info$parent1_name)),
+      tags$li("Parent 2:", code(ind_info$parent2_name)),
+      tags$li("Offsprings:", nrow(offsprings)),
+      tags$li("Phenotypic records:", nrow(phenotypes)),
+      tags$li("Genotypic records:", nrow(genotypes),
+        tags$ul(
+          lapply(seq_len(nrow(genotypes)), function(x) {
+            geno_res_file <- genotypes$result_file[x]
+            geno_res_file <- tools::file_path_sans_ext(
+              basename(geno_res_file),
+              compression = TRUE
+            )
+            tags$li(genotypes$type[x], ":", code(geno_res_file))
+          })
+        )
+      ),
+    ),
+    h4("Phenotypic records:"),
+    reactable::reactable(phenotypes),
+
+    h4("Offsprings records:"),
+    reactable::reactable(offsprings)
+  )
+})
+
+
+
+pheno_inds_filters <- individual_filtering_server("pheno_download_ind_filter", breeder = breeder())
+pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter", breeder = breeder())
+
+pheno_data_preview <- reactive({
+
+  pheno_data <- db_get_phenotypes(
+    breeder = breeder(),
+    # ind_id = inds_ids,
+    ind_id = pheno_inds_filters$inds_ids(),
+    request_name = pheno_pheno_filters$pheno_request(),
+    pathogen = pheno_pheno_filters$pathogen(),
+    year = pheno_pheno_filters$years(),
+    public_columns = TRUE
+  )
+})
+
+
+output$pheno_preview_DT <- DT::renderDataTable({
+  DT::datatable(
+    isolate(pheno_data_preview()), # use isolate, the data refresh is done with the observer below
+    # filter = "top", # this can conflict with manual filters,
+                      # add this only if this filtering is taken
+                      # into account for data-download (and it is explained in the UI)
+    # style = "bootstrap4",
+    rownames = FALSE,
+    options = list(
+      language = list(emptyTable = 'Empty'),
+      pageLength = 10,
+      lengthMenu = c(10, 25, 50, 100),
+      searchDelay = 500
+    )
+  )
+}, server = TRUE)
+
+observe({
+  pheno_table_proxy <- DT::dataTableProxy("pheno_preview_DT", deferUntilFlush = FALSE)
+  DT::replaceData(pheno_table_proxy, pheno_data_preview(), resetPaging = TRUE, rownames = FALSE)
+  # we could use `resetPaging = FALSE` to keep the current page,
+  # but the table will be empty if the current page would not exist with
+  # the updated data
+})
+
+
+.download_pheno <- function(){
+  downloadHandler(
+    filename = "phenotypes.tsv",
+    content = function(file) {
+      write.table(
+        pheno_data_preview(),
+        file = file,
+        sep = "\t",
+        row.names = FALSE
+      )
+    }
+  )
+}
+
+output$dwnlPheno_1 <- .download_pheno()
+output$dwnlPheno_2 <- .download_pheno()
 
 
 
@@ -393,17 +495,13 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
-  hashPsw <- db_get_request(query)[, 1]
+  hashPsw <- db_get_breeder(breeder = breeder())$h_psw
   if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
-
-    query <- paste0("UPDATE breeders SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
-    db_execute_request(query)
+    db_update_breeder(breeder = breeder(), new_h_psw = newHashed)
     return(TRUE)
-  } else {
-    return(FALSE)
   }
+  return(FALSE)
 })
 
 output$UIpswChanged <- renderUI({
