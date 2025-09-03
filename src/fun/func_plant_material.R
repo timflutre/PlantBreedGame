@@ -20,123 +20,75 @@
 
 ## Contain functions used in "plant material" section.
 
-create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMat = NULL, fileName = NULL) {
+process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   # function which create the new generations (see game_master_plant-material.R)
 
-  # breeder (character) name of the breeder
-  # crosses.todo (data frame) output of "readCheckBreedPlantFile"
-  # gameTime ("POSIXlt") of the request (given by getGameTime function)
+  request <- db_get_game_requests(id = request_id)
+  stopifnot(request$type == "pltmat")
 
-
-
-
-  ## Initialisation
-  breederList <- getBreederList()
-  stopifnot(breeder %in% breederList)
-
-  stopifnot(!is.null(crosses.todo))
-  cross.types <- countRequestedBreedTypes(crosses.todo)
-
-  year <- data.table::year(gameTime)
-
-  ## file name
-  if (is.null(fileName)) {
-    fout <- paste0(
-      DATA_SHARED, "/", breeder, "/", "IndList_",
-      strftime(gameTime, format = "%Y-%m-%d"), ".txt"
-    )
-    n <- 0
-    while (file.exists(fout)) {
-      n <- n + 1
-      fout <- paste0(
-        DATA_SHARED, "/", breeder, "/", "IndList_",
-        strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt"
-      )
-    }
-  } else {
-    fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
-    fout <- paste0(
-      DATA_SHARED, "/", breeder, "/", "IndList_", fileName, "_",
-      strftime(gameTime, format = "%Y-%m-%d"), ".txt"
-    )
-    n <- 0
-    while (file.exists(fout)) {
-      n <- n + 1
-      fout <- paste0(
-        DATA_SHARED, "/", breeder, "/", "IndList_", fileName, "_",
-        strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt"
-      )
-    }
-  }
-
+  breeder <- request$breeder
+  pltmat_request_dta <- db_get_game_requests_data(id = request_id)
 
 
   ## check the presence of new individuals in the set of existing individuals
-  flush.console()
-  parent.ids <- unique(c(crosses.todo$parent1, crosses.todo$parent2))
-  parent.ids <- parent.ids[!is.na(parent.ids)]
-  child.ids <- crosses.todo$child
-
-  all_breeder_inds <- getBreedersIndividuals(breeder)
-
-  stopifnot(all(parent.ids %in% all_breeder_inds$child))
-  stopifnot(all(!child.ids %in% all_breeder_inds$child))
+  existing_childs <- db_get_individual(breeder = breeder, name = pltmat_request_dta$child_name)
+  stopifnot(nrow(existing_childs) == 0)
 
 
-  ## load the haplotypes of all parents
-  flush.console()
+
+  ## get parent's informations
+  requested_parents <- db_get_individual(ind_id = unique(c(pltmat_request_dta$parent1_id,
+                                                           pltmat_request_dta$parent2_id)))
+  pltmat_request_dta <- merge(pltmat_request_dta,
+                              requested_parents[, c("id", "name")],
+                              by.x = "parent1_id", by.y = "id")
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] = "parent1" # new name respecting `drawLocCrossovers` convention
+  pltmat_request_dta <- merge(pltmat_request_dta,
+                              requested_parents[, c("id", "name")],
+                              by.x = "parent2_id", by.y = "id")
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] = "parent2" # new name respecting `drawLocCrossovers` convention
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "child_name"] = "child" # new name respecting `drawLocCrossovers` convention
+
 
   # initialise parent haplotypes
-  parents <- list(haplos = list())
-  f <- list.files(
-    path = DATA_TRUTH,
-    pattern = "*_haplos.RData",
-    full.names = T
-  )[1]
-  if (!file.exists(f)) {
-    stop(paste0("No '*_haplos.RData' file found in /data folder"))
-  }
-  load(f)
+  load(requested_parents$haplotype_file[1]) # load the haplotype of one parent to get the general structure of the haplotypes
+  parents_haplotypes <- list()
   for (chr.id in names(ind$haplos)) {
-    parents$haplos[[chr.id]] <- matrix(
+    ploidy <- nrow(ind$haplos[[chr.id]])
+    parents_haplotypes[[chr.id]] <- matrix(
       data = NA,
       ncol = ncol(ind$haplos[[chr.id]]),
-      nrow = length(parent.ids) * nrow(ind$haplos[[chr.id]]),
-      dimnames = list(seq(length(parent.ids) * nrow(ind$haplos[[chr.id]])), colnames(ind$haplos[[chr.id]]))
+      nrow = nrow(requested_parents) * ploidy,
+      dimnames = list(paste0(rep(requested_parents$name, each = ploidy),
+                             rep(paste0("_h", 1:ploidy), length(requested_parents$name))),
+                      colnames(ind$haplos[[chr.id]]))
     )
-    colnames(parents$haplos[[chr.id]]) <- colnames(ind$haplos[[chr.id]])
   }
 
-  lines <- seq(nrow(ind$haplos[[chr.id]]))
-  i <- 1
-  for (parent.id in parent.ids) {
+  for (i in 1:nrow(requested_parents)) {
+    parent_name <- requested_parents$name[i]
     if (!is.null(progressPltMat)) {
       progressPltMat$set(
         value = 1,
         detail = paste0(
           "Load haplotypes: ",
-          i, "/", length(parent.ids), ": ",
-          parent.id
+          i, "/", nrow(requested_parents), ": ",
+          parent_name
         )
       )
-      i <- i + 1
     }
     if ("ind" %in% ls()) {
       rm(ind)
     }
-    f <- paste0(DATA_TRUTH, "/", breeder, "/", parent.id, "_haplos.RData")
+    f <- requested_parents$haplotype_file[i]
     if (!file.exists(f)) {
-      stop(paste0(f, " doesn't exist"))
+      stop(paste0("Haplotype file of ", parent_name, " doesn't exist"))
     }
     load(f)
-    for (chr.id in names(parents$haplos)) {
-      parents$haplos[[chr.id]][lines, ] <- ind$haplos[[chr.id]]
-      row.names(parents$haplos[[chr.id]])[lines] <- row.names(ind$haplos[[chr.id]])
+    for (chr.id in names(parents_haplotypes)) {
+      parents_haplotypes[[chr.id]][row.names(ind$haplos[[chr.id]]), ] <- ind$haplos[[chr.id]]
     }
-    lines <- lines + nrow(ind$haplos[[chr.id]])
   }
-  stopifnot(sapply(parents$haplos, nrow) / 2 == length(parent.ids))
-
 
   ## perform the requested crosses
   if (!is.null(progressPltMat)) {
@@ -147,22 +99,24 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
   }
 
 
-  flush.console()
-  new.inds <- list()
+  new_inds_haplo <- list()
   loc.crossovers <- drawLocCrossovers(
-    crosses = crosses.todo,
-    nb.snps = sapply(parents$haplos, ncol)
+    crosses = pltmat_request_dta[,c("parent1", "parent2", "child")],
+    nb.snps = sapply(parents_haplotypes, ncol)
   )
-  new.inds$haplos <- makeCrosses(
-    haplos = parents$haplos,
-    crosses = crosses.todo,
+  new_inds_haplo <- makeCrosses(
+    haplos = parents_haplotypes,
+    crosses = pltmat_request_dta[,c("parent1", "parent2", "child")],
     loc.crossovers = loc.crossovers, verbose = 0
   )
 
 
   ## save the haplotypes of the new individuals
-  flush.console()
-  for (new.ind.id in getIndNamesFromHaplos(new.inds$haplos)) {
+  haplotype_file_data <- data.frame(
+    haplotype_file = rep(NA, nrow(pltmat_request_dta)),
+    row.names = pltmat_request_dta$child
+  )
+  for (new.ind.id in getIndNamesFromHaplos(new_inds_haplo)) {
     if (!is.null(progressPltMat)) {
       progressPltMat$set(
         value = 3,
@@ -170,66 +124,16 @@ create_plant_material <- function(breeder, crosses.todo, gameTime, progressPltMa
       )
     }
     # message(new.ind.id)
-    ind <- list(haplos = getHaplosInd(new.inds$haplos, new.ind.id))
+    ind <- list(haplos = getHaplosInd(new_inds_haplo, new.ind.id))
     f <- paste0(DATA_TRUTH, "/", breeder, "/", new.ind.id, "_haplos.RData")
     save(ind, file = f)
+    haplotype_file_data[new.ind.id, "haplotype_file"] <- f
   }
-
-
-
-  ## insert the requested crosses into their table
-  flush.console()
-
-  constants <- getBreedingGameConstants()
-  getAvailDate <- function(type) {
-    if (type == "allofecundation") {
-      availableDate <- seq(from = gameTime, by = paste0(constants$duration.allof, " month"), length.out = 2)[2]
-    } else if (type == "autofecundation") {
-      availableDate <- seq(from = gameTime, by = paste0(constants$duration.autof, " month"), length.out = 2)[2]
-    } else if (type == "haplodiploidization") {
-      availableDate <- seq(from = gameTime, by = paste0(constants$duration.haplodiplo, " month"), length.out = 2)[2]
-    }
-    return(strftime(availableDate, format = "%Y-%m-%d %H:%M:%S"))
-  }
-  crosses.todo$availableDate <- sapply(crosses.todo$explanations, FUN = getAvailDate)
-  crosses.todo
-
-
-  query <- paste((crosses.todo$parent1),
-    (crosses.todo$parent2),
-    (crosses.todo$child),
-    (crosses.todo$availableDate),
-    sep = "','", collapse = "'),('"
-  )
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("INSERT INTO ", tbl, " (parent1, parent2, child, avail_from) VALUES ('", query, "')")
-  db_execute_request(query)
-
-  ## write table
-  write.table(
-    x = crosses.todo[, -4], file = fout, quote = FALSE,
-    sep = "\t", row.names = FALSE, col.names = TRUE
-  )
-
-
-  ## log
-  flush.console()
-  for (type in names(cross.types)) {
-    if (cross.types[type] > 0) {
-      query <- paste0(
-        "INSERT INTO log(breeder,request_date,task,quantity)",
-        " VALUES ('", breeder,
-        "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
-        "', '", type,
-        "', '", cross.types[type], "')"
-      )
-      db_execute_request(query)
-    }
-  }
-
-
-
-  return("done")
+  db_add_pltmat(req_id = request_id)
+  haplotype_file_data$id <- db_get_individuals_ids(breeder = breeder(),
+                                                   names = row.names(haplotype_file_data))
+  db_add_ind_haplotype(haplotype_file_data)
+  db_update_request(id = request_id, processed = 1)
 }
 
 
@@ -283,7 +187,7 @@ indExist <- function(indList, breeder) {
   # breeder (charracter) breeder name
 
   # get requested individuals information
-  all_breeder_inds <- getBreedersIndividuals(breeder)
+  all_breeder_inds <- db_get_individual(breeder = breeder)
 
-  return(any(indList %in% all_breeder_inds$child))
+  return(any(indList %in% all_breeder_inds$name))
 }

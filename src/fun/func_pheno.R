@@ -21,76 +21,26 @@
 
 ## Contain functions used in "phenotyping" section.
 
-phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileName = NULL) {
-  # function which phenotype the requested individuals (see game_master_pheno-geno.R)
-  # create a result file in shared folder of the breeder
+process_pheno_request <- function(request_id, progressPheno = NULL) {
+  # function which phenotype the requested individuals
+  # request_id the request id in the DB
 
-  # breeder (character) name of the breeder
-  # inds.todo (data frame) output of "readCheckBreedDataFile"
-  # gameTime ("POSIXlt") of the request (given by getGameTime function)
+
+  request <- db_get_game_requests(id = request_id)
+  stopifnot(request$type == "pheno")
+
+  breeder <- request$breeder
+  request_time <- request$game_date
+  pheno_request_dta <- db_get_game_requests_data(id = request_id)
 
   constants <- getBreedingGameConstants()
 
-  ## Initialisations
-  breederList <- getBreederList()
-  stopifnot(breeder %in% breederList)
-
-  data.types <- countRequestedBreedTypes(inds.todo)
-
-
-  ## calculate output file names:
-  fout <- list("pheno-field" = NULL, "pheno-patho" = NULL)
-  for (dty in c("pheno-field", "pheno-patho")) {
-    if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)) { # fileName must not contain a date
-      fout[dty] <- paste0(
-        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
-        strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
-      )
-      n <- 0
-      while (file.exists(fout[[dty]])) {
-        n <- n + 1
-        fout[dty] <- paste0(
-          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_",
-          strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
-        )
-      }
-    } else {
-      fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
-      fout[dty] <- paste0(
-        DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
-        strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
-      )
-      n <- 0
-      while (file.exists(fout[[dty]])) {
-        n <- n + 1
-        fout[dty] <- paste0(
-          DATA_SHARED, "/", breeder, "/", "Result_", dty, "_", fileName, "_",
-          strftime(gameTime, format = "%Y-%m-%d"),
-          "_", n, ".txt.gz"
-        )
-      }
-    }
-  }
-
 
   ## Calculate the year of the phenotyping
-  maxDate <- strptime(
-    paste0(
-      data.table::year(gameTime), "-",
-      constants$max.upload.pheno.field
-    ),
-    format = "%Y-%m-%d"
-  )
-  if (gameTime > maxDate) {
-    year <- data.table::year(gameTime) + 1
-  } else {
-    year <- data.table::year(gameTime)
-  }
-
+  year <- get_phenotyping_year(request_time)
 
 
   ## 0. load required data
-  flush.console()
   f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
   f <- paste0(DATA_TRUTH, "/afs0.RData")
@@ -115,61 +65,31 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
   )
   .GlobalEnv$.Random.seed <- saved_seed
 
-  ## 2. check that the requested individuals already exist
-  flush.console()
-  all_breeder_inds <- getBreedersIndividuals(breeder)
-  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
+  ## 2. Get the phenotyped individuals
+  phenotyped_inds_ids <- unique(pheno_request_dta$ind_id)
+  phenotyped_inds <- db_get_individual(ind_id = phenotyped_inds_ids)
+  pheno_request_dta <- merge(pheno_request_dta,
+                             phenotyped_inds[, c("id", "name")],
+                             by.x = "ind_id", by.y = "id")
+  colnames(pheno_request_dta)[colnames(pheno_request_dta) == "name"] <- "ind_name"
+
+  X <- load_genotypes(inds_ids = phenotyped_inds_ids, UIprogress = progressPheno)
 
 
-  ## 3. load the haplotypes and convert to genotypes
-  flush.console()
-
-  X <- matrix(
-    nrow = length(unique(inds.todo$ind)),
-    ncol = constants$nb.snps
-  )
-
-
-  for (i in 1:length(unique(inds.todo$ind))) {
-    ind.id <- unique(inds.todo$ind)[i]
+  ## 4.1 handle the 'pheno-field' tasks for the requested individuals
+  pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field",]
+  if (nrow(pheno_field_request_dta) > 0) {
 
     if (!is.null(progressPheno)) {
       progressPheno$set(
-        value = 1,
-        detail = paste0("Load haplotypes: ", paste0(i, "/", nrow(inds.todo), " ", ind.id))
+        value = 2,
+        detail = "pheno simulation (field)..."
       )
     }
 
-    # message(paste0(i, "/", nrow(inds.todo), " ", ind.id))
-
-    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
-    if (!file.exists(f)) {
-      stop(paste0(f, " doesn't exist"))
-    }
-    load(f)
-
-    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
-    X[i, ] <- ind$genos
-  }
-  rownames(X) <- unique(inds.todo$ind)
-  colnames(X) <- colnames(ind$genos)
-
-  ## 4.1 handle the 'pheno-field' tasks for the requested individuals
-  flush.console()
-  idx <- which(inds.todo$task == "pheno-field")
-
-  if (!is.null(progressPheno)) {
-    progressPheno$set(
-      value = 2,
-      detail = "pheno simulation (field)..."
-    )
-  }
-
-
-  if (length(idx) > 0) {
     phenosField.df <- makeDfPhenos(
-      ind.ids = inds.todo$ind[idx],
-      nb.plots = as.numeric(inds.todo$details[idx]),
+      ind.ids = pheno_field_request_dta$ind_name,
+      nb.plots.per.ind = pheno_field_request_dta$n_pheno,
       year = year,
       pathogen = ifelse((year - 2005) %% 3 == 0,
         TRUE, FALSE
@@ -199,44 +119,30 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
     phenosField.df$trait2 <- phenosField$Y[, 2]
     phenosField.df$trait3 <- phenosField$trait3$y
     phenosField.df$trait1 <- phenosField.df$trait1.raw
-    tmp <- (phenosField.df$pathogen & as.logical(phenosField.df$trait3))
-    if (any(tmp)) {
-      phenosField.df$trait1[tmp] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[tmp]
-    }
-
-    ## write the phenotypes (all inds into the same file)
-
-    write.table(
-      x = phenosField.df[, -grep("raw", colnames(phenosField.df))],
-      file = gzfile(fout[["pheno-field"]]), quote = FALSE,
-      sep = "\t", row.names = FALSE, col.names = TRUE
-    )
+    inds_with_t3 <- (phenosField.df$pathogen & as.logical(phenosField.df$trait3))
+    phenosField.df$trait1[inds_with_t3] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[inds_with_t3]
   }
-
-
-
 
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
-  flush.console()
-  idx <- which(inds.todo$task == "pheno-patho")
+  pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho",]
+  if (nrow(pheno_patho_request_dta) > 0) {
 
-  if (!is.null(progressPheno)) {
-    progressPheno$set(
-      value = 3,
-      detail = "pheno simulation (patho)..."
-    )
-  }
+    if (!is.null(progressPheno)) {
+      progressPheno$set(
+        value = 3,
+        detail = "pheno simulation (patho)..."
+      )
+    }
 
-  if (length(idx) > 0) {
     phenosPatho.df <- makeDfPhenos(
-      ind.ids = inds.todo$ind[idx],
-      nb.plots = as.numeric(inds.todo$details[idx]),
+      ind.ids = pheno_patho_request_dta$ind_name,
+      nb.plots.per.ind = pheno_patho_request_dta$n_pheno,
       year = year,
       pathogen = TRUE
     )
+    phenosPatho.df$plot <- paste0("lab-", phenosPatho.df$plot)
 
     phenosPatho <- list()
-
     phenosPatho$trait3 <- simulTrait3(
       dat = phenosPatho.df,
       X = X[levels(phenosPatho.df$ind), , drop = FALSE],
@@ -245,37 +151,15 @@ phenotype <- function(breeder, inds.todo, gameTime, progressPheno = NULL, fileNa
       prob.resist.no.qtl = 0
     )
 
-    phenosPatho.df$trait1.raw <- "--"
-    phenosPatho.df$trait2 <- "--"
+    phenosPatho.df$trait1.raw <- NA
+    phenosPatho.df$trait2 <- NA
     phenosPatho.df$trait3 <- phenosPatho$trait3$y
-    phenosPatho.df$trait1 <- "--"
-
-    ## write the phenotypes (all inds into the same file)
-    write.table(
-      x = phenosPatho.df[, -grep("raw", colnames(phenosPatho.df))],
-      file = gzfile(fout[["pheno-patho"]]), quote = FALSE,
-      sep = "\t", row.names = FALSE, col.names = TRUE
-    )
+    phenosPatho.df$trait1 <- NA
   }
 
-
-
-
-  ## 7. log
-  flush.console()
-  for (type in names(data.types)) {
-    if ((type == "pheno-field" | type == "pheno-patho") && data.types[type] > 0) {
-      query <- paste0(
-        "INSERT INTO log(breeder,request_date,task,quantity)",
-        " VALUES ('", breeder,
-        "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
-        "', '", type, "', '",
-        data.types[type], "')"
-      )
-      res <- db_execute_request(query)
-    }
-  }
-
+  db_add_pheno_data(phenosField.df, request_id)
+  db_add_pheno_data(phenosPatho.df, request_id)
+  db_update_request(id = request_id, processed = 1)
 
   # output
   return("done")
@@ -327,59 +211,47 @@ createInvoicePheno <- function(request.df) {
 
 
 
-plotAvailable <- function(breeder, inds.todo, gameTime) {
-  # function which check if all plot are available for phenotyping
+get_phenotyping_year <- function(request_dates) {
+  # from a vector of request date return the corresponding phenotyping years
+  if (length(request_dates) == 0) {
+    return(request_dates)
+  }
+  request_year <- data.table::year(request_dates)
+  limitDate <- as.Date(paste(request_year,
+                             getBreedingGameConstants()$max.upload.pheno.field,
+                             sep = "-"))
 
+  pheno_year <- ifelse(request_dates > limitDate, request_year + 1, request_year)
+  return(pheno_year)
+}
+
+get_remaining_pheno_plot <- function(breeder, request_date) {
+
+  historyPheno <- db_get_game_requests_history(breeder = breeder,
+                                               type = "pheno",
+                                               detail = "pheno-field")
+  historyPheno$pheno_year <- get_phenotyping_year(historyPheno$game_date)
+  historyPheno <- historyPheno[historyPheno$pheno_year == get_phenotyping_year(request_date),]
+
+  used_plots <- sum(historyPheno$quantity)
+  remaining_plots <- max(0, getBreedingGameConstants()$nb.plots - used_plots)
+  return(remaining_plots)
+}
+
+
+plotAvailable <- function(breeder, inds.todo, gameTime) {
+  # function which check if all plots are available for phenotyping
   # breeder (character) name of the breeder
   # inds.todo (data frame) output of "readCheckBreedDataFile"
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
-
-  ## Initialisations
-  breederList <- getBreederList()
-  stopifnot(breeder %in% breederList)
-
-
-  ## get the historic of pheno requests
-  query <- paste0("SELECT * FROM log WHERE breeder='", breeder, "' AND task='pheno-field' ")
-  historyPheno <- db_get_request(query)
-
-  ## get game constants
-  constants <- getBreedingGameConstants()
-
-  ## Calculate the start date of the current pheno session:
-  limitDate <- strptime(
-    paste0(
-      data.table::year(gameTime), "-",
-      constants$max.upload.pheno.field
-    ),
-    format = "%Y-%m-%d"
-  )
-  if (gameTime > limitDate) {
-    yearRequest <- data.table::year(gameTime) + 1
-  } else {
-    yearRequest <- data.table::year(gameTime)
-  }
-
-  limitDate <- strptime(
-    paste0(
-      yearRequest - 1, "-",
-      constants$max.upload.pheno.field
-    ),
-    format = "%Y-%m-%d"
-  )
-
-
-  ## Calculate the number of plot already used:
-  historyPheno$request_date <- strptime(historyPheno$request_date, format = "%Y-%m-%d")
-  usedPlot <- sum(historyPheno$quantity[historyPheno$request_date >= limitDate])
-
-  ## compare with the request:
-  requestPlot <- sum(as.numeric(inds.todo$details[inds.todo$task == "pheno-field"]))
-
-  if (constants$nb.plots - usedPlot - requestPlot < 0) {
-    return(FALSE)
-  } else {
+  breeder_info <- db_get_breeder(breeder.name = breeder)
+  if (breeder_info$status %in% c("game master", "tester")) {
     return(TRUE)
   }
+
+  remaining_plots <- get_remaining_pheno_plot(breeder, gameTime)
+  requested_plots <- sum(as.numeric(inds.todo$details[inds.todo$task == "pheno-field"]))
+
+  return(remaining_plots >= requested_plots)
 }

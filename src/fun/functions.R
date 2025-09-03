@@ -345,28 +345,19 @@ countRequestedBreedTypes <- function(df) {
 indAvailable <- function(indList, gameTime, breeder) {
   # function to check if individuals are available
   # indList (character vector), list of individuals to check
-  # gameTime ("POSIXlt") (given by getGameTime function)
+  # gameTime ("POSIXct") (given by getGameTime function)
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  all_breeder_inds <- getBreedersIndividuals(breeder)
-
-  indExist <- all(indList %in% all_breeder_inds$child)
+  breeder_inds <- db_get_individual(breeder = breeder, name = indList)
+  indExist <- all(indList %in% breeder_inds$name)
 
   ## 2. check available date
-  indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")
-
-  ## 3. get requested individuals information
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
-  res <- db_get_request(query)
-
   # compare dates
   funApply <- function(x) {
-    difftime(gameTime, strptime(x, format = "%Y-%m-%d %H:%M:%S")) >= 0
+    difftime(gameTime, strptime(x, format = "%Y-%m-%d")) >= 0
   }
-  indGrown <- all(sapply(res$avail_from, FUN = funApply))
-
+  indGrown <- all(sapply(breeder_inds$avail_from, FUN = funApply))
   return(list("indExist" = indExist, "indGrown" = indGrown))
 }
 
@@ -428,6 +419,7 @@ create_issue_link <- function(title = "", body = ""){
   )
   return(issue_link)
 }
+
 
 
 addNewBreeder <- function(breederName,
@@ -531,5 +523,21 @@ addNewBreeder <- function(breederName,
       sapply(initIndsHaplo, FUN = funApply)
     }
   }
+}
+
+
+
+get_unique_request_name <- function(breeder, request_base_name) {
+  # from a breeder and a request_name return a request name that is not
+  # already used in the DB (by adding a "- <number>" suffix)
+  request_name <- request_base_name
+  existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
+  suffix <- 1
+  while (nrow(existing_requests) != 0 ) {
+    suffix <- suffix + 1
+    request_name <- paste(request_base_name, "-", suffix)
+    existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
+  }
+  return(request_name)
 }
 
