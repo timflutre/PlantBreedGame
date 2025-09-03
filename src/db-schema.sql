@@ -142,6 +142,13 @@ CREATE TABLE IF NOT EXISTS "phenotypes" (
 );
 
 CREATE VIEW v_phenotypes AS
+WITH duration AS (
+	SELECT
+		MAX(CASE WHEN key = 'max.upload.pheno.field' THEN value END) AS start_day_pheno_field,
+		MAX(CASE WHEN key = 'duration.pheno.field' THEN value END) AS duration_pheno_field,
+		MAX(CASE WHEN key = 'duration.pheno.patho' THEN value END) AS duration_pheno_patho
+	FROM constants
+)
 SELECT
 	p.id,
 	r.breeder,
@@ -156,10 +163,17 @@ SELECT
 	p.trait3,
 	p.pheno_req_id,
 	pr.type as type,
-	r.name as request_name
+	r.name as request_name,
+	r.game_date as request_game_date,
+	CASE
+		WHEN pr.type = 'pheno-patho' THEN DATE(r.game_date, '+' || d.duration_pheno_patho || ' months')
+		WHEN pr.type = 'pheno-field' THEN DATE(p.year || '-' || d.start_day_pheno_field, '+' || d.duration_pheno_field || ' months')
+		ELSE DATE(NULL)
+	END AS avail_from
 FROM phenotypes p
 	LEFT JOIN pheno_requests pr ON (p.pheno_req_id = pr.id)
 	LEFT JOIN plant_material pltmat ON (pr.ind_id = pltmat.id)
+	JOIN duration d
 	LEFT JOIN requests r ON (pr.req_id = r.id);
 
 

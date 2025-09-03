@@ -873,8 +873,8 @@ test_that("phenotype data", {
 
   # test access to phenotypes data
   expect_no_error({
-  db_get_phenotypes()
-})
+    db_get_phenotypes()
+  })
   expect_no_error({
     db_get_phenotypes(breeder = "A",
                       ind_name = initial_collection_names[1])
@@ -939,6 +939,31 @@ test_that("phenotype data", {
   expect_no_error({
     db_get_phenotypes(year = c(1950:2000))
   })
+
+
+  # available date calculation
+  pheno <- db_get_phenotypes()
+  pheno_field <- pheno[pheno$type == "pheno-field",]
+
+  constants <- getBreedingGameConstants()
+  expected_available_dates <- as.character(
+    lubridate::add_with_rollback(
+      as.Date(paste0(pheno_field$year, "-", constants$max.upload.pheno.field)),
+      months(constants$duration.pheno.field),
+      roll_to_first = TRUE
+    )
+  )
+  expect_equal(pheno_field$avail_from, expected_available_dates)
+
+  pheno_patho <- pheno[pheno$type == "pheno-patho",]
+  expected_available_dates <- as.character(
+    lubridate::add_with_rollback(
+      as.Date(pheno_patho$request_game_date),
+      months(constants$duration.pheno.patho),
+      roll_to_first = TRUE
+    )
+  )
+  expect_equal(pheno_patho$avail_from, expected_available_dates)
 })
 
 
