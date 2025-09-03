@@ -93,6 +93,7 @@ div(
 
       div(id = "pheno_preview_div",
         h3("Preview"),
+        actionButton("refresh_pheno_preview", label = "Refresh", icon = icon("rotate")),
         dataTableOutput("pheno_preview_DT")
       ),
       downloadButton("dwnlPheno_2", "Download"),

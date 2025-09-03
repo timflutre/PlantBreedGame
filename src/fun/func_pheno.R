@@ -37,7 +37,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
 
 
   ## Calculate the year of the phenotyping
-  year <- get_phenotyping_year(request_time)
+  pheno_field_year <- get_phenotyping_year(request_time)
 
 
   ## 0. load required data
@@ -53,7 +53,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
 
   # set seed
   saved_seed <- .GlobalEnv$.Random.seed
-  set.seed(yearEffectSeed + year) # seed depend of the year
+  set.seed(yearEffectSeed + pheno_field_year) # seed depend of the year
   # calculate year effect
   alphas <- c(
     stats::rnorm(n = 1, mean = 0, sd = sqrt(p0$sigma.alpha2[1])),
@@ -61,7 +61,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   )
   Alpha <- matrix(alphas,
     nrow = 1, ncol = 2,
-    dimnames = list(year, c("trait1", "trait2"))
+    dimnames = list(pheno_field_year, c("trait1", "trait2"))
   )
   .GlobalEnv$.Random.seed <- saved_seed
 
@@ -90,8 +90,8 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     phenosField.df <- makeDfPhenos(
       ind.ids = pheno_field_request_dta$ind_name,
       nb.plots.per.ind = pheno_field_request_dta$n_pheno,
-      year = year,
-      pathogen = ifelse((year - 2005) %% 3 == 0,
+      year = pheno_field_year,
+      pathogen = ifelse((pheno_field_year - 2005) %% 3 == 0,
         TRUE, FALSE
       )
     )
@@ -134,10 +134,12 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
       )
     }
 
+
+
     phenosPatho.df <- makeDfPhenos(
       ind.ids = pheno_patho_request_dta$ind_name,
       nb.plots.per.ind = pheno_patho_request_dta$n_pheno,
-      year = year,
+      year = year(request_time),
       pathogen = TRUE
     )
     phenosPatho.df$plot <- paste0("lab-", phenosPatho.df$plot)

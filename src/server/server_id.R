@@ -434,15 +434,36 @@ pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter",
 
 pheno_data_preview <- reactive({
 
+  download_pheno_button_clicks() # dependency on download buttons
+  input$refresh_pheno_preview # dependency on refresh buttons
+
+  breeder <- breeder()
   pheno_data <- db_get_phenotypes(
-    breeder = breeder(),
+    breeder = breeder,
     # ind_id = inds_ids,
     ind_id = pheno_inds_filters$inds_ids(),
     request_name = pheno_pheno_filters$pheno_request(),
     pathogen = pheno_pheno_filters$pathogen(),
     year = pheno_pheno_filters$years(),
-    public_columns = TRUE
+    public_columns = FALSE
   )
+
+  # mask phenotype data that are not yet available for players
+  if (breederStatus() == "player") {
+    not_available <- pheno_data$avail_from > getGameTime()
+    pheno_data[not_available, c("pathogen", "trait1", "trait2", "trait3")] <- paste0("available on ", pheno_data$avail_from[not_available])
+  }
+  pheno_data <- pheno_data[, c(
+    "ind",
+    "control_ind",
+    "year",
+    "plot",
+    "pathogen",
+    "trait1",
+    "trait2",
+    "trait3"
+  )]
+  return(pheno_data)
 })
 
 
@@ -472,10 +493,13 @@ observe({
 })
 
 
+download_pheno_button_clicks <- reactiveVal(value = 0)
 .download_pheno <- function(){
   downloadHandler(
     filename = "phenotypes.tsv",
     content = function(file) {
+
+      download_pheno_button_clicks(download_pheno_button_clicks() + 1)
       write.table(
         pheno_data_preview(),
         file = file,
