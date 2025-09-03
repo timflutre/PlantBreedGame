@@ -20,8 +20,7 @@
 
 ## Contain functions used in "genotyping" section.
 
-
-genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName = NULL) {
+process_geno_request <- function(request_id, progressGeno = NULL) {
   # function which genotype the requested individuals (see game_master_pheno-geno.R)
   # create a result file in shared folder of the breeder
 
@@ -30,47 +29,14 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
 
+  request <- db_get_game_requests(id = request_id)
+  stopifnot(request$type == "geno")
 
-  ## Initialisations
-  breederList <- getBreederList()
-  stopifnot(breeder %in% breederList)
+  breeder <- request$breeder
+  request_time <- request$game_date
+  geno_request_dta <- db_get_game_requests_data(id = request_id)
 
-  data.types <- countRequestedBreedTypes(inds.todo)
-
-  ## calculate output file names:
-  fout <- list(ld = NULL, hd = NULL, "single-snps" = NULL)
-  for (dty in c("ld", "hd", "single-snps")) {
-    if (is.null(fileName) | grepl("[0-9]{4}[-][0-9]{2}[-][0-9]{2}", fileName)) { # fileName must not contain a date
-
-      fout[dty] <- paste0(
-        DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_",
-        strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
-      )
-      n <- 0
-      while (file.exists(fout[[dty]])) {
-        n <- n + 1
-        fout[dty] <- paste0(
-          DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_",
-          strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
-        )
-      }
-    } else {
-      fileName <- strsplit(fileName, split = "[.]")[[1]][1] # delete extention
-      fout[dty] <- paste0(
-        DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
-        strftime(gameTime, format = "%Y-%m-%d"), ".txt.gz"
-      )
-      n <- 0
-      while (file.exists(fout[[dty]])) {
-        n <- n + 1
-        fout[dty] <- paste0(
-          DATA_SHARED, "/", breeder, "/", "Result_genos-", dty, "_", fileName, "_",
-          strftime(gameTime, format = "%Y-%m-%d"), "_", n, ".txt.gz"
-        )
-      }
-    }
-  }
-
+  constants <- getBreedingGameConstants()
 
   ## 0. load required data
   flush.console()
@@ -80,128 +46,84 @@ genotype <- function(breeder, inds.todo, gameTime, progressGeno = NULL, fileName
 
 
   ## 2. check that the requested individuals already exist
-  flush.console()
-  all_breeder_inds <- getBreedersIndividuals(breeder)
-  stopifnot(all(inds.todo$ind %in% all_breeder_inds$child))
-
-
-
-  ## 3. load the haplotypes and convert to genotypes
-  flush.console()
-
-  X <- matrix(
-    nrow = length(unique(inds.todo$ind)),
-    ncol = getBreedingGameConstants()$nb.snps
+  genotyped_inds_ids <- unique(geno_request_dta$ind_id)
+  genotyped_inds <- db_get_individual(ind_id = genotyped_inds_ids)
+  geno_request_dta <- merge(geno_request_dta,
+    genotyped_inds[, c("id", "name")],
+    by.x = "ind_id", by.y = "id"
   )
+  colnames(geno_request_dta)[colnames(geno_request_dta) == "name"] <- "ind_name"
 
-  for (i in 1:length(unique(inds.todo$ind))) {
-    ind.id <- unique(inds.todo$ind)[i]
-
-    if (!is.null(progressGeno)) {
-      progressGeno$set(
-        value = 1,
-        detail = paste0("Load haplotypes: ", paste0(i, "/", nrow(inds.todo), " ", ind.id))
-      )
-    }
-
-    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
-    if (!file.exists(f)) {
-      stop(paste0(f, " doesn't exist"))
-    }
-    load(f)
+  genotypes <- load_genotypes(inds_ids = genotyped_inds_ids, UIprogress = progressGeno)
 
 
-    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
-    X[i, ] <- ind$genos
-  }
-  rownames(X) <- unique(inds.todo$ind)
-  colnames(X) <- colnames(ind$genos)
+  file_types <- c("ld", "hd", "singleSnp")
+  geno_file_names <- as.list(
+    paste0(
+      DATA_SHARED, "/", breeder, "/",
+      "Result_genos-", file_types, "_",
+      request$name,
+      ".txt.gz"
+    ) # file name is unique as request$name is unique per breeder
+  )
+  names(geno_file_names) <- file_types
 
 
   ## 5. handle the 'geno' tasks for the requested individuals
-  flush.console()
-  for (dty in c("ld", "hd")) {
+  for (genotyping_density in c("ld", "hd")) {
     if (!is.null(progressGeno)) {
       progressGeno$set(
         value = 2,
-        detail = paste0("Process ", dty)
+        detail = paste0("Process ", genotyping_density)
       )
     }
 
-    idx <- which(inds.todo$task == "geno" & inds.todo$details == dty &
-      inds.todo$ind %in% rownames(X))
-    # message(paste0(dty, ": ", length(idx)))
-    if (length(idx) > 0) {
-      ## write the genotypes (all inds into the same file)
-      write.table(
-        x = X[inds.todo$ind[idx], subset.snps[[dty]], drop = FALSE],
-        file = gzfile(fout[[dty]]), quote = FALSE,
-        sep = "\t", row.names = TRUE, col.names = TRUE
-      )
+    geno_request_dta_filtered <- geno_request_dta[geno_request_dta$type == genotyping_density, ]
+
+    if (nrow(geno_request_dta_filtered) == 0) {
+      next
     }
+
+    filtered_genotype <- genotypes[geno_request_dta_filtered$ind_name,
+      subset.snps[[genotyping_density]],
+      drop = FALSE
+    ]
+
+    write.table(
+      x = filtered_genotype,
+      file = gzfile(geno_file_names[[genotyping_density]]), quote = FALSE,
+      sep = "\t", row.names = TRUE, col.names = TRUE
+    )
   }
 
-
-
-
-
   ## 6. handle the 'snp' tasks for the requested individuals
-  flush.console()
-  idx <- which(inds.todo$task == "geno" & !inds.todo$details %in% c("ld", "hd"))
-  length(idx)
-  if (length(idx) > 0) {
-    all.genos <- data.frame(
-      ind = inds.todo$ind[idx],
-      snp = inds.todo$details[idx],
+  geno_request_dta_single_snp <- geno_request_dta[!geno_request_dta$type %in% c("ld", "hd"), ]
+  if (nrow(geno_request_dta_single_snp) > 0) {
+    single_snp_genotypes <- data.frame(
+      ind = geno_request_dta_single_snp$ind_name,
+      snp = geno_request_dta_single_snp$type,
       geno = NA,
       stringsAsFactors = FALSE
     )
-    for (i in idx) {
-      ind.id <- inds.todo$ind[i]
 
-      if (!is.null(progressGeno)) {
-        progressGeno$set(
-          value = 3,
-          detail = paste0("Process single SNP: ", ind.id)
-        )
-      }
+    single_snp_genotypes$geno <- mapply(
+      function(i, s) genotypes[i, s],
+      single_snp_genotypes$ind,
+      single_snp_genotypes$snp
+    )
 
-      snp <- inds.todo$details[i]
-      all.genos$geno[all.genos$ind == ind.id &
-        all.genos$snp == snp] <- X[ind.id, snp]
-    }
-
-    ## write the genotypes (all inds into the same file)
     write.table(
-      x = all.genos,
-      file = gzfile(fout[["single-snps"]]), quote = FALSE,
+      x = single_snp_genotypes,
+      file = gzfile(geno_file_names$singleSnp), quote = FALSE,
       sep = "\t", row.names = FALSE, col.names = TRUE
     )
-  } else {
-    all.genos <- NULL
   }
 
-
-
-  ## 7. log
-  year <- data.table::year(gameTime)
-
-  flush.console()
-  for (type in names(data.types)) {
-    if ((type == "geno-hd" || type == "geno-ld" || type == "geno-single-snp") && data.types[type] > 0) {
-      query <- paste0(
-        "INSERT INTO log(breeder,request_date,task,quantity)",
-        " VALUES ('", breeder,
-        "', '", strftime(gameTime, format = "%Y-%m-%d %H:%M:%S"),
-        "', '", type, "', '",
-        data.types[type], "')"
-      )
-      res <- db_execute_request(query)
-    }
-  }
-
-
-
+  db_add_geno_data(
+    geno_req_id = request_id,
+    genotype_data_files = geno_file_names
+  )
+  db_update_request(id = request_id, processed = 1)
   # output
   return("done")
 }
@@ -248,4 +170,43 @@ createInvoiceGeno <- function(request.df) {
   invoice <- invoice[c("Task", "Unitary_Price", "Quantity", "Total")]
 
   return(invoice)
+}
+
+
+
+load_genotypes <- function(inds_ids, UIprogress = NULL) {
+  # return the genotypes of the given individuals as a matrix:
+  # one row per individuals
+  # one column per SNP
+  # row names are the individuals names
+  inds <- db_get_individual(ind_id = inds_ids)
+  n_inds <- nrow(inds)
+
+  genotypes <- matrix(
+    nrow = n_inds,
+    ncol = getBreedingGameConstants()$nb.snps
+  )
+  rownames(genotypes) <- inds$name
+
+  for (i in 1:n_inds) {
+    ind_name <- inds$name[i]
+
+    if (!is.null(UIprogress)) {
+      UIprogress$set(
+        value = 1, # TODO: to be calculated using the current "value" +1
+        detail = paste0("Load haplotypes: ", paste0(i, "/", n_inds, " ", ind_name))
+      )
+    }
+    haplotype_file <- inds$haplotype_file[i]
+    if (!file.exists(haplotype_file)) {
+      stop(paste0("Haplotype file of ", ind_name, " doesn't exist"))
+    }
+    load(haplotype_file) # load the `ind` variable
+    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind_name)
+    genotypes[ind_name, ] <- ind$genos
+    if (i == 1) {
+      colnames(genotypes) <- colnames(ind$genos)
+    }
+  }
+  return(genotypes)
 }

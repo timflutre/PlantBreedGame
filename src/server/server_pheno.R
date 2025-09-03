@@ -69,18 +69,29 @@ readQryPheno <- reactive({
 
     # list individuals
     indList <- unique(as.character(df$ind))
-    indAvail <- indAvailable(indList, getGameTime(), breeder())
+    pheno_start_date <- as.Date(paste(get_phenotyping_year(getGameTime()),
+                                      getBreedingGameConstants()$max.upload.pheno.field,
+                                      sep = "-"))
+
+    indAvail <- indAvailable(indList, pheno_start_date, breeder())
 
     # check if plot are available
     plotAvail <- plotAvailable(breeder(), df, getGameTime())
 
     # check if individuals are available
-    if (((indAvail$indGrown & plotAvail) | breederStatus() != "player") &
-      indAvail$indExist) {
-      return(df)
-    } else {
-      return("error - Individuals or Plots not availables")
+    if (!indAvail$indExist) {
+      return("error - Some requested individuals do not exist")
     }
+    if (breederStatus() != "player") {
+      return(df)
+    }
+    if (!indAvail$indGrown) {
+      return("error - Some requested individuals are not available for phenotyping this season")
+    }
+    if (!plotAvail) {
+      return("error - No more phenotyping plots are available for this season")
+    }
+    return(df)
   } else {
     return(test)
   }
@@ -133,6 +144,7 @@ output$submitPhenoRequest <- renderUI({
 
 # output
 pheno_data <- eventReactive(input$requestPheno, {
+  request_time <- getGameTime()
   if (is.data.frame(readQryPheno())) {
     # Create a Progress object
     progressPheno <- shiny::Progress$new(session, min = 0, max = 4)
@@ -142,13 +154,18 @@ pheno_data <- eventReactive(input$requestPheno, {
       detail = "Initialisation..."
     )
 
-    res <- try(phenotype(
-      breeder(),
-      readQryPheno(),
-      getGameTime(),
-      progressPheno,
-      input$file.pheno$name
-    ))
+    request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.pheno$name))
+
+    db_add_request(id = NA,
+                   breeder = breeder(),
+                   name = request_name,
+                   type = "pheno",
+                   game_date = request_time)
+    new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
+    add_pheno_req_data(req_id = new_request$id, request_data = readQryPheno())
+
+    res <- try(process_pheno_request(new_request$id, progressPheno = progressPheno))
+
     if (res == "done") {
       writeRequest(readQryPheno(), breeder(), input$file.pheno$name)
       progressPheno$set(

@@ -144,6 +144,7 @@ output$submitPlmatRequest <- renderUI({
 
 # output
 plantMatRequested <- eventReactive(input$requestPlmat, {
+  request_time <- getGameTime()
   if (is.data.frame(readQryPlmat())) {
     # Create a Progress object
     progressPltMat <- shiny::Progress$new(session, min = 0, max = 5)
@@ -153,26 +154,28 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
       detail = "Initialisation..."
     )
 
+    request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.plmat$name))
+    db_add_request(id = NA,
+                   breeder = breeder(),
+                   name = request_name,
+                   type = "pltmat",
+                   game_date = request_time)
+    new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
+    db_add_pltmat_req_data(new_request$id, readQryPlmat())
 
-    res <- try(create_plant_material(
-      breeder(),
-      readQryPlmat(),
-      getGameTime(),
-      progressPltMat
-    ))
+    res <- try(process_plantmat_request(new_request$id, progressPltMat = progressPltMat))
 
-    if (res == "done") {
-      writeRequest(readQryPlmat(), breeder(), input$file.plmat$name)
-      progressPltMat$set(
-        value = 5,
-        detail = "Done !"
-      )
-
-      return(res)
-    } else {
+    if (class(res) == "try-error") {
       progressPltMat$set(detail = "ERROR !")
       return("error")
     }
+
+    progressPltMat$set(
+      value = 5,
+      detail = "Done !"
+    )
+
+    return("done")
   } else {
     return(NULL)
   }

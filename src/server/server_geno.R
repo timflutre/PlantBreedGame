@@ -69,18 +69,22 @@ readQryGeno <- reactive({
 
     # list individuals
     indList <- unique(as.character(df$ind))
-    indAvail <- indAvailable(indList, getGameTime(), breeder())
+    geno_start_date <- getGameTime()
+    indAvail <- indAvailable(indList, geno_start_date, breeder())
 
-    # check if individuals are available
-    if ((indAvail$indGrown | breederStatus() != "player") &
-      indAvail$indExist) {
-      return(df)
-    } else {
-      return("error - Individuals not availables")
+    if (!indAvail$indExist) {
+      return("error - Some requested individuals do not exist")
     }
+    if (breederStatus() != "player") {
+      return(df)
+    }
+    if (!indAvail$indGrown) {
+      return("error - Some requested individuals are not available for phenotyping this season")
+    }
+    return(df)
   } else {
     return(test)
-  } # wrong file
+  }
 })
 
 
@@ -131,6 +135,7 @@ output$submitGenoRequest <- renderUI({
 
 ## output
 geno_data <- eventReactive(input$requestGeno, {
+  request_time <- getGameTime()
   if (is.data.frame(readQryGeno())) {
     # Create a Progress object
     progressGeno <- shiny::Progress$new(session, min = 0, max = 4)
@@ -140,13 +145,18 @@ geno_data <- eventReactive(input$requestGeno, {
       detail = "Initialisation..."
     )
 
-    res <- try(genotype(
-      breeder(),
-      readQryGeno(),
-      getGameTime(),
-      progressGeno,
-      input$file.geno$name
-    ))
+
+    request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.geno$name))
+    db_add_request(id = NA,
+                   breeder = breeder(),
+                   name = request_name,
+                   type = "geno",
+                   game_date = request_time)
+    new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
+    db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
+    res <- try(process_geno_request(new_request$id, progressGeno = progressGeno))
+
+
     if (res == "done") {
       writeRequest(readQryGeno(), breeder(), input$file.geno$name)
       progressGeno$set(
