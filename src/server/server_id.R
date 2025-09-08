@@ -117,6 +117,12 @@ accessGranted <- eventReactive(input$submitPSW,
     # 5. output
     if (goodPswd && goodDiskUsage) {
       removeUI("#logInDiv")
+
+      submitted_inds <- db_get_individual(breeder = breeder$name,
+                                          selected_for_eval = 1,
+                                          public_columns = TRUE)
+      submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
+
       return(TRUE)
     } else {
       return(FALSE)
@@ -298,33 +304,14 @@ output$UIdwnlRequest <- renderUI({
 
 
 ## My plant-material ----
-myPltMat <- reactive({
-  if (input$leftMenu == "id") {
-    individuals <- db_get_individual(breeder = breeder())
-
-    columns_to_keep_as <- c(
-      "name" = "Name",
-      "parent1_name" = "Parent 1",
-      "parent2_name" = "Parent 2",
-      "avail_from" = "Available date",
-      "cross_type" = "Crossing type",
-      "request_name" = "From plant material request",
-      "control" = "Is control"
-    )
-    individuals <- individuals[, c(
-      names(columns_to_keep_as)
-    )]
-    colnames(individuals) <- columns_to_keep_as
-    return(individuals)
-  }
-})
-
-
-
-
 pltmat_preview_filter <- individual_filtering_server("inds_download_ind_filter", breeder = breeder())
 
 plant_mat_preview_data <- reactive({
+
+  # input dependencies
+  input$leftMenu
+  input$id_submitInds
+  input$id_delSubmitInds
 
   individuals <- db_get_individual(breeder = breeder(),
      ind_id = pltmat_preview_filter$inds_ids(),
@@ -597,76 +584,41 @@ output$UIbreederInfoID <- renderUI({
 
 # add new inds for submission
 observeEvent(input$id_submitInds, priority = 10, {
-  # load data
-  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-    header = T, sep = "\t"
-  )
-  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-  subIndsDta
-
   if (is.null(input$id_evalInds)) {
-    return(subIndsDta)
+    return(NULL)
   }
 
-  # load input
-  inds <- input$id_evalInds
-  nSubmitted <- nrow(subIndsDta)
+  submitted_inds <- db_get_individual(breeder = breeder(), selected_for_eval = 1)
+  ind_ids <- db_get_individuals_ids(breeder = breeder(), names = input$id_evalInds)
+  ind_ids <- setdiff(ind_ids, submitted_inds$id)
 
-
-  # checks
-  if (any(inds %in% subIndsDta$Individual)) {
-    alert(paste(
-      "individuals:",
-      paste0(inds[inds %in% subIndsDta$Individual],
-        collapse = ", "
-      ),
-      "have already been submitted."
-    ))
-    inds <- inds[!inds %in% subIndsDta$Individual]
-
-    if (length(inds) == 0) {
-      return(subIndsDta)
-    }
+  if (any(db_get_individual(ind_id = ind_ids)$breeder == "@ALL")) {
+    alert("You can not submit individuals from the initial collection.")
+    return(NULL)
   }
 
   constants <- getBreedingGameConstants()
-  if (length(inds) > constants$maxEvalInds - nSubmitted) {
-    alert(paste("Sorry, you have already submitted", nSubmitted, "individuals, on a total of", constants$maxEvalInds, ". You can only submit", constants$maxEvalInds - nSubmitted, "more individuals."))
-    return(subIndsDta)
+  remaining_submission <- constants$maxEvalInds - nrow(submitted_inds)
+
+  if (length(ind_ids) > remaining_submission) {
+
+    alert(paste("Sorry, you have already submitted", nrow(submitted_inds), "individuals, on a total of", constants$maxEvalInds, ". You can only submit", remaining_submission, "more individuals."))
+    return(NULL)
   }
 
-  if (length(inds) > constants$maxEvalInds) {
-    alert(paste("Sorry, you can submit a maximum of ", constants$maxEvalInds, "individuals"))
-    return(subIndsDta)
-  }
+  db_add_evaluation_requests(breeder = breeder(),
+                             ind_ids = ind_ids,
+                             game_date = getGameTime())
 
-  # add submitted individuals
-  submitDta <- data.frame(
-    breeder = breeder(),
-    ind = inds
-  )
-  query <- paste0(
-    "INSERT INTO log(breeder,request_date,task,quantity)",
-    " VALUES ('", breeder(),
-    "', '", strftime(getGameTime(), format = "%Y-%m-%d %H:%M:%S"),
-    "', 'register', '",
-    nrow(submitDta), "')"
-  )
-  res <- db_execute_request(query)
-  b <- budget()
-
-  write.table(submitDta,
-    file = file.path(DATA_SHARED, "Evaluation.txt"),
-    append = TRUE,
-    quote = FALSE, sep = "\t",
-    row.names = FALSE, col.names = FALSE
-  )
+  # update submittedInds table
+  submitted_inds <- db_get_individual(breeder = breeder(),
+                                      selected_for_eval = 1,
+                                      public_columns = TRUE)
+  submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
 
   # reset input
   reset("id_evalInds", asis = FALSE)
+  return(TRUE)
 })
 
 
@@ -677,46 +629,25 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   if (is.null(input$submittedIndsDT_rows_selected)) {
     return(NULL)
   }
+  names_of_inds_to_delete <- submittedInds()[input$submittedIndsDT_rows_selected, "Name"]
+  ind_ids <- db_get_individuals_ids(breeder = breeder(), names = names_of_inds_to_delete)
+  db_remove_evlauation_inds(ind_ids)
 
-  # load data
-  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-    header = T, sep = "\t"
-  )
-  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-  delInds <- subIndsDta[input$submittedIndsDT_rows_selected, "Individual"]
-
-  delLines <- which(evalDta$breeder == breeder() & evalDta$ind %in% delInds)
-  # delete lines
-  evalDta <- evalDta[-delLines, ]
-
-  write.table(evalDta,
-    file = file.path(DATA_SHARED, "Evaluation.txt"),
-    append = FALSE,
-    quote = FALSE, sep = "\t",
-    row.names = FALSE, col.names = TRUE
-  )
+  # update submittedInds table
+  submitted_inds <- db_get_individual(breeder = breeder(),
+                                      selected_for_eval = 1,
+                                      public_columns = TRUE)
+  submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
+  return(TRUE)
 })
 
 
-submittedInds <- eventReactive(
-  (input$id_submitInds | input$id_delSubmitInds),
-  ignoreNULL = FALSE,
-  {
-    evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-      header = T, sep = "\t"
-    )
-    subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-    subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-    colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-    subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-    subIndsDta
-  }
-)
-
-
+submittedInds <- reactiveVal(value = data.frame(
+  "Name" = character(),
+  `Parent 1` = character(),
+  `Parent 2` = character(),
+  check.names = FALSE
+))
 
 output$submittedIndsDT <- renderDataTable({
   DT::datatable(submittedInds(),

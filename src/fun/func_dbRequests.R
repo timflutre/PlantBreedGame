@@ -392,7 +392,7 @@ db_update_breeder <- function(breeder, new_status = NULL, new_h_psw = NULL) {
 
 ## Main game requests ----
 
-db_add_request <- function(id,
+db_add_request <- function(id = NA,
                            breeder,
                            name,
                            type,
@@ -651,7 +651,9 @@ db_get_individual <- function(ind_id = NULL,
                               n_pheno_min = NULL,
                               n_geno_min = NULL,
                               control = NULL,
-                              public_columns = FALSE) {
+                              selected_for_eval = NULL,
+                              public_columns = FALSE,
+                              exclude_initial_coll = FALSE) {
 
   columns <- "*"
   if (public_columns) {
@@ -662,7 +664,8 @@ db_get_individual <- function(ind_id = NULL,
       "avail_from" = "Available date",
       "cross_type" = "Crossing type",
       "request_name" = "From plant material request",
-      "control" = "Is control"
+      "control" = "Is control",
+      "selected_for_evaluation" = "Selected for evaluation"
     )
     columns <- paste(c(names(columns_to_keep_as)), collapse = ", ")
   }
@@ -672,6 +675,12 @@ db_get_individual <- function(ind_id = NULL,
   if (!is.null(breeder)) {
     breeder_condition <- condition("AND", "breeder", "IN", c(breeder, "@ALL"))
   }
+
+  init_coll_condition <- ""
+  if (exclude_initial_coll) {
+    init_coll_condition <- "AND breeder != '@ALL'"
+  }
+
 
   query <- paste(
     base_query,
@@ -684,7 +693,9 @@ db_get_individual <- function(ind_id = NULL,
     condition("AND", "request_name", "IN", request_name),
     condition("AND", "n_pheno", ">=", n_pheno_min),
     condition("AND", "n_geno", ">=", n_geno_min),
-    condition("AND", "control", "=", control)
+    condition("AND", "control", "=", control),
+    condition("AND", "selected_for_evaluation", "=", selected_for_eval),
+    init_coll_condition
   )
   individuals <- db_get(query)
 
@@ -717,7 +728,6 @@ db_mark_as_control <- function(inds) {
 }
 
 ## phenotype requests ----
-
 add_pheno_req_data <- function(req_id, request_data) {
   game_requests <- db_get_game_requests(id = req_id, type = "pheno")
   if (length(game_requests) == 0) {
@@ -993,8 +1003,41 @@ db_get_genotypes_data_list <- function(breeder) {
 
 
 
+# evaluation requests ----
+db_add_evaluation_requests <- function(breeder, ind_ids, game_date) {
+  if (length(ind_ids) == 0) {
+    return(data.frame())
+  }
+
+  request_name <- get_unique_request_name(breeder = breeder, request_base_name = "evaluation")
+  db_add_request(id = NA,
+                 breeder = breeder,
+                 name = request_name,
+                 type = "evaluation",
+                 game_date = game_date)
+
+  new_request <- db_get_game_requests(breeder = breeder, name = request_name)
+
+  db_add_data("evaluation_requests",
+              data.frame(
+                "req_id" = new_request$id,
+                "ind_id" = ind_ids
+              ))
+}
 
 
+db_get_evaluation_requests <- function() {
+  query <- paste("SELECT * FROM evaluation_requests")
+  return(db_get(query))
+}
+
+db_remove_evlauation_inds <- function(ind_ids) {
+  query <- paste("DELETE FROM evaluation_requests WHERE ind_id IN (",
+                 paste(ind_ids, collapse = ", "),
+                 ")")
+  db_execute(query)
+  return(TRUE)
+}
 
 
 
