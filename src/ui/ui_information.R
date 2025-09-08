@@ -100,8 +100,8 @@ tabItem(
         ),
         h2("Final trial"),
         p(
-          "At the end of the game, each team will have to propose to register their best genotypes (up to", constants_ui("info_maxEvalInds"), ").",
-          " The registration fee is ", constants_ui("info_cost.register.mendels"), " Mendels per genotype."
+          "At the end of the game, each team will have to propose to register their best genotypes (excluding those from the initial collection and not more than", constants_ui("info_maxEvalInds"), ").",
+          " The registration fee is ", constants_ui("info_cost.register.mendels")
         ),
         p(
           " Each of them must meet the DHS criteria, which will be assessed primarily on their heterozygosity: < 3%.",

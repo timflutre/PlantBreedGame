@@ -163,7 +163,7 @@ div(
         div(
           selectInput("id_evalInds",
             HTML("Select your best individuals<sup>*</sup>:"),
-            choices = myPltMat()$child,
+            choices = db_get_individual(breeder = breeder(), exclude_initial_coll = TRUE)$name,
             multiple = TRUE
           ),
           actionButton("id_submitInds", "Submit"),

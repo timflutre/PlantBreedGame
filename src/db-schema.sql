@@ -99,6 +99,10 @@ SELECT
 	END AS avail_from,
 	pm.haplotype_file,
 	pm.control,
+	CASE
+		WHEN er.ind_id IS NOT NULL THEN 1
+		ELSE 0
+	END as selected_for_evaluation,
 	pr.id as pltmat_request_id,
 	r.id as request_id,
 	r.name as request_name,
@@ -114,6 +118,7 @@ FROM plant_material pm
 	JOIN duration d
 	LEFT JOIN v_phenotypes pheno ON (pm.id = pheno.ind_id)
 	LEFT JOIN v_genotypes geno ON (pm.id = geno.ind_id)
+	LEFT JOIN evaluation_requests er ON (er.ind_id = pm.id)
 GROUP BY pm.id;
 
 
@@ -140,6 +145,16 @@ CREATE TABLE IF NOT EXISTS "phenotypes" (
 	"trait2" REAL,
 	"trait3" INTEGER NOT NULL
 );
+
+
+DROP TABLE IF EXISTS "evaluation_requests";
+CREATE TABLE IF NOT EXISTS "evaluation_requests" (
+	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+	"req_id" INTEGER NOT NULL REFERENCES requests(id),
+	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id),
+	UNIQUE("ind_id")
+);
+
 
 CREATE VIEW v_phenotypes AS
 WITH duration AS (

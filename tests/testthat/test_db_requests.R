@@ -77,25 +77,27 @@ test_that("db initialisation", {
   tables <- dbListTables(db)
   dbDisconnect(db)
 
-  expect_identical(
-    sort(tables),
-    sort(c(
-      "breeders",
-      "constants",
-      "genotypes",
-      "geno_requests",
-      "pheno_requests",
-      "phenotypes",
-      "plant_material",
-      "pltmat_requests",
-      "requests",
-      "sessions",
-      "sqlite_sequence",
-      "v_plant_material",
-      "v_phenotypes",
-      "v_genotypes",
-      "v_request_history"
-    ))
+  expect_true(
+    setequal(tables,
+             c(
+               "breeders",
+               "constants",
+               "genotypes",
+               "geno_requests",
+               "pheno_requests",
+               "phenotypes",
+               "plant_material",
+               "pltmat_requests",
+               "evaluation_requests",
+               "requests",
+               "sessions",
+               "sqlite_sequence",
+               "v_plant_material",
+               "v_phenotypes",
+               "v_genotypes",
+               "v_request_history"
+             )
+    )
   )
 })
 
@@ -713,6 +715,11 @@ test_that("plant material data", {
     controls <- db_get_individual(control = TRUE)
   })
   expect_equal(controls$name, controls_names)
+
+
+  # request without initial collection
+  not_init_coll <- db_get_individual(exclude_initial_coll = TRUE)
+  expect_true(!any(not_init_coll$breeder == "@ALL"))
 })
 
 
@@ -1100,6 +1107,45 @@ test_that("genotype data", {
   })
   expect_true(length(geno_data_list) != 0)
 })
+
+
+test_that("evaluation requests", {
+  A_inds <- db_get_individual(breeder = "A", request_name = "test_pltmat_1")
+
+  selected_inds_A <- A_inds[1:3,]
+  expect_no_error({
+    db_add_evaluation_requests(breeder = "A",
+                               ind_ids = selected_inds_A$id,
+                               game_date = "2000-02-01")
+  })
+  expect_no_error({
+    eval_req <- db_get_evaluation_requests()
+  })
+  expect_equal(nrow(eval_req), nrow(selected_inds_A))
+  expect_true(setequal(eval_req$ind_id, selected_inds_A$id))
+
+  inds <- db_get_individual()
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% selected_inds_A$id] == 1))
+  expect_true(all(inds$selected_for_evaluation[!inds$id %in% selected_inds_A$id] == 0))
+
+
+  # remove 1 selected ind
+  db_remove_evlauation_inds(selected_inds_A$id[1])
+  eval_req <- db_get_evaluation_requests()
+  expect_equal(nrow(eval_req), nrow(selected_inds_A) - 1)
+  expect_true(setequal(eval_req$ind_id, selected_inds_A$id[-1]))
+  inds <- db_get_individual()
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% selected_inds_A$id[-1]] == 1))
+  expect_true(all(inds$selected_for_evaluation[!inds$id %in% selected_inds_A$id[-1]] == 0))
+
+  # remove 2 selected ind
+  db_remove_evlauation_inds(selected_inds_A$id[2:3])
+  eval_req <- db_get_evaluation_requests()
+  expect_equal(nrow(eval_req), 0)
+  inds <- db_get_individual()
+  expect_true(!any(as.logical(inds$selected_for_evaluation)))
+})
+
 
 
 
