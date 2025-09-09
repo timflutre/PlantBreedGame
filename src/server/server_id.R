@@ -606,9 +606,9 @@ observeEvent(input$id_submitInds, priority = 10, {
     return(NULL)
   }
 
-  db_add_evaluation_requests(breeder = breeder(),
-                             ind_ids = ind_ids,
-                             game_date = getGameTime())
+  db_add_evaluation_inds(breeder = breeder(),
+                         ind_ids = ind_ids,
+                         game_date = getGameTime())
 
   # update submittedInds table
   submitted_inds <- db_get_individual(breeder = breeder(),
@@ -631,7 +631,10 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   }
   names_of_inds_to_delete <- submittedInds()[input$submittedIndsDT_rows_selected, "Name"]
   ind_ids <- db_get_individuals_ids(breeder = breeder(), names = names_of_inds_to_delete)
-  db_remove_evlauation_inds(ind_ids)
+  db_remove_evaluation_inds(breeder = breeder(),
+                            ind_ids = ind_ids,
+                            game_date = getGameTime())
+
 
   # update submittedInds table
   submitted_inds <- db_get_individual(breeder = breeder(),

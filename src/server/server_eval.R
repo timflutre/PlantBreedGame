@@ -53,22 +53,34 @@ evalRawFile <- reactiveFileReader(500, session, file.path(DATA_SHARED, "Evaluati
   read.table,
   header = T, sep = "\t", stringsAsFactors = FALSE
 )
-readQryEval <- reactive({
-  # read input file
-  df <- evalRawFile()
 
-  # add controls in the data.frame
-  df.controls <- read.table(paste0(DATA_INITIAL_DATA, "/controls.txt"), col.names = "ind")
-  df.controls$breeder <- rep("control", length(df.controls))
-  df <- rbind(df, df.controls)
-  df <- df[order(df$breeder), ]
-  df
+
+inds_for_eval <- reactivePoll(1, session, function() {
+  info <- file.info(DATA_DB)
+  return(paste(info$mtime, info$size))
+}, function() {
+  controls <- db_get_individual(control = 1)
+  controls$breeder <- "Controls"
+
+  submitted <- db_get_individual(selected_for_eval = 1)
+
+  inds_for_eval <- rbind(controls, submitted)
+  inds_for_eval <- inds_for_eval[, c("breeder", "name")]
+  colnames(inds_for_eval) <- c("Breeder", "Individuals")
+
+  return(
+    dplyr::summarise(
+      dplyr::group_by(inds_for_eval, Breeder),
+      n = dplyr::n(),
+      `Submitted Individuals` = paste(Individuals, collapse = ", "),
+      # .groups = "drop"
+    )
+  )
+
 })
 
-
-
 output$evalFileDT <- renderDataTable({
-  DT::datatable(readQryEval(),
+  DT::datatable(inds_for_eval(),
     filter = c("none"),
     style = "bootstrap4",
     options = list(
@@ -80,10 +92,14 @@ output$evalFileDT <- renderDataTable({
 
 
 dfPhenoEval <- eventReactive(input$requestEval, {
-  dfPheno <- phenotype4Eval(readQryEval(), nRep = input$nRep)
+  dfPheno <- phenotype4Eval(nRep = input$nRep)
   dfPheno$breeder <- sapply(as.character(dfPheno$ind), FUN = function(x) {
     strsplit(x, split = "\\*")[[1]][1]
   })
+
+  dfPheno$breeder <- gsub("^@ALL", "Controls", dfPheno$breeder)
+  dfPheno$ind <- gsub("^@ALL", "Controls", dfPheno$ind)
+  dfPheno$ind <- gsub("\\*", " ", dfPheno$ind)
   return(dfPheno)
 })
 
@@ -318,7 +334,7 @@ output$evalGraphT1vT2 <- renderPlotly({
 output$evalUIAfsPlot <- renderUI({
   if (exists("dfPhenoEval")) {
     breeders <- unique(dfPhenoEval()$breeder)
-    breeders <- breeders[breeders != "control"]
+    breeders <- breeders[breeders != "Controls"]
     list(
       selectInput("afsBreeder", "Breeder", choices = breeders),
       numericInput("propAFS", "Proportion of last individuals to take", 10, min = 1, max = 100),
@@ -340,12 +356,12 @@ afsEval <- reactive({
 
 
   # get all individuals
-  query <- paste0("SELECT * FROM plant_material_", breeder)
-  res <- db_get_request(query)
+  all_inds <- db_get_individual(breeder = breeder)
+  all_inds <- all_inds[order(as.Date(all_inds$avail_from), decreasing = T),]
 
   # select sample
-  sampleSize <- round(nrow(res) * prop)
-  selectedInd <- res[c((nrow(res) - sampleSize + 1):nrow(res)), ]
+  sampleSize <- round(nrow(all_inds) * prop)
+  selectedInd <- all_inds[1:sampleSize, ]
 
   # calculate AFS
   progressAFS <- shiny::Progress$new(session, min = 0, max = 1)
@@ -353,7 +369,7 @@ afsEval <- reactive({
     value = 0,
     message = "Calculate AFs"
   )
-  afs1 <- getAFs(selectedInd$child, breeder, progressAFS)
+  afs1 <- getAFs(selectedInd$id, progressAFS)
 
   dta <- data.frame(afs0 = afs0, afs1 = afs1)
   return(dta)
@@ -416,7 +432,7 @@ output$evalGraphAFsScatter <- renderPlotly({
 output$evalUIpedigree <- renderUI({
   if (exists("dfPhenoEval")) {
     breeders <- unique(dfPhenoEval()$breeder)
-    breeders <- breeders[breeders != "control"]
+    breeders <- breeders[breeders != "Controls"]
     list(
       selectInput("pedigreeBreeder", "Breeder", choices = breeders),
       div(
@@ -431,16 +447,15 @@ output$evalUIpedigree <- renderUI({
 
 genealogy <- reactive({
   breeders <- unique(dfPhenoEval()$breeder)
-  breeders <- breeders[breeders != "control"]
+  breeders <- breeders[breeders != "Controls"]
 
   gene <- lapply(breeders, function(b) {
-    # extract all individuals
-    query <- paste0("SELECT * FROM plant_material_", b)
-    allInds <- db_get_request(query)
+    allInds <- db_get_individual(breeder = b)
+    allInds <- allInds[, c("name", "parent1_name", "parent2_name", "selected_for_evaluation")]
+    colnames(allInds) <- c("child", "parent1", "parent2", "selected")
+    allInds$parent2[is.na(allInds$parent2)] <- "NA"
 
-    # get submitted individuals
-    inds <- readQryEval()$ind[readQryEval()$breeder == b]
-    subsetPedigree(allInds, inds)
+    subsetPedigree(allInds, allInds$child[allInds$selected == 1])
   })
   names(gene) <- breeders
   gene
@@ -467,7 +482,7 @@ output$evalPlotPedigree <- renderPlot({
 output$evalUIaddRelation <- renderUI({
   if (exists("dfPhenoEval")) {
     breeders <- unique(dfPhenoEval()$breeder)
-    breeders <- breeders[breeders != "control"]
+    breeders <- breeders[breeders != "Controls"]
     list(
       selectInput("addRelBreeder", "Breeder", choices = breeders),
       tableOutput("addRelTable")
@@ -477,13 +492,9 @@ output$evalUIaddRelation <- renderUI({
   }
 })
 
-output$addRelTable <- renderTable(
-  {
-    calcAdditiveRelation(
-      breeder = input$addRelBreeder,
-      query = readQryEval(),
-      setup = setup,
-    )
+output$addRelTable <- renderTable({
+  submitted_inds <- db_get_individual(breeder = input$addRelBreeder, selected_for_eval = 1)
+  calcAdditiveRelation(submitted_inds$id)
   },
   rownames = TRUE,
   spacing = "s",
@@ -499,7 +510,7 @@ output$addRelTable <- renderTable(
 output$evalUIrequestHistory <- renderUI({
   if (exists("dfPhenoEval")) {
     breeders <- unique(dfPhenoEval()$breeder)
-    breeders <- breeders[breeders != "control"]
+    breeders <- breeders[breeders != "Controls"]
     list(
       selectInput("historyBreeder", "Breeder", choices = c(breeders, "--- All Breeders ---")),
       # dataTableOutput("historyTable")
@@ -510,88 +521,86 @@ output$evalUIrequestHistory <- renderUI({
   }
 })
 
-breederHistory <- reactive({
-  breeders <- unique(dfPhenoEval()$breeder)
-  breeders <- breeders[breeders != "control"]
-
-  breedHist <- lapply(breeders, function(b) {
-    getBreederHistory(
-      breeder = b,
-      setup = setup
-    )
-  })
-  names(breedHist) <- breeders
-  breedHist
-})
-
 breederHistoryTimeLines <- reactive({
   p <- list()
 
-  for (breeder in c("--- All Breeders ---", names(breederHistory()))) {
+  colorGenoHD <- "#2c82e6"
+  colorGenoLD <- "#42cbf5"
+  colorGenoSin <- "#42cbf5"
+  colorAllof <- "#47db25"
+  colorAutof <- "#47db25"
+  colorHaplo <- "#47db25"
+  colorPhenoF <- "#ed8b3b"
+  colorPhenoP <- "#ed9e5c"
+  colorEvalsub <- "#b81a1a"
+  colorEvalwit <- "#4d1717"
+
+  constants <- getBreedingGameConstants()
+  browser()
+
+  breeders <- unique(dfPhenoEval()$breeder)
+  breeders <- breeders[breeders != "Controls"]
+  breederHistory <- db_get_game_requests_history(breeder = breeders)
+
+  for (breeder in c("--- All Breeders ---", breeders)) {
     if (breeder != "--- All Breeders ---") {
-      dta <- breederHistory()[[breeder]]
+      dta <- breederHistory[breederHistory$breeder == breeder,]
       optY <- FALSE
       lw <- 25
     } else {
-      dta <- do.call(rbind, breederHistory())
+      dta <- breederHistory
       optY <- FALSE # TRUE
       lw <- 15
     }
 
-    names(dta) <- c("group", "task", "quantity", "start")
-    dta$content <- paste(dta$task, "quantity:", dta$quantity)
-    dta$duration <- 0
-    dta$color <- NA
+    dta$duration[dta$detail == "hd"] <- constants$duration.geno.hd
+    dta$color[dta$detail == "hd"] <- colorGenoHD
 
-    colorGenoHD <- "#2c82e6"
-    colorGenoLD <- "#42cbf5"
-    colorGenoSin <- "#42cbf5"
-    colorAllof <- "#47db25"
-    colorAutof <- "#47db25"
-    colorHaplo <- "#47db25"
-    colorPhenoF <- "#ed8b3b"
-    colorPhenoP <- "#ed9e5c"
+    dta$duration[dta$detail == "ld"] <- constants$duration.geno.ld
+    dta$color[dta$detail == "ld"] <- colorGenoLD
 
-    constants <- getBreedingGameConstants()
+    dta$duration[dta$detail == "geno-single-snp"] <- constants$duration.geno.single
+    dta$color[dta$detail == "geno-single-snp"] <- colorGenoSin
 
-    dta$duration[dta$task == "geno-hd"] <- constants$duration.geno.hd
-    dta$color[dta$task == "geno-hd"] <- colorGenoHD
+    dta$duration[dta$detail == "allofecundation"] <- constants$duration.allof
+    dta$color[dta$detail == "allofecundation"] <- colorAllof
 
-    dta$duration[dta$task == "geno-ld"] <- constants$duration.geno.ld
-    dta$color[dta$task == "geno-ld"] <- colorGenoLD
+    dta$duration[dta$detail == "autofecundation"] <- constants$duration.autof
+    dta$color[dta$detail == "autofecundation"] <- colorAutof
 
-    dta$duration[dta$task == "geno-single-snp"] <- constants$duration.geno.single
-    dta$color[dta$task == "geno-single-snp"] <- colorGenoSin
+    dta$duration[dta$detail == "haplodiploidization"] <- constants$duration.haplodiplo
+    dta$color[dta$detail == "haplodiploidization"] <- colorHaplo
 
-    dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
-    dta$color[dta$task == "allofecundation"] <- colorAllof
+    dta$duration[dta$detail == "allofecundation"] <- constants$duration.allof
+    dta$color[dta$detail == "allofecundation"] <- colorAllof
 
-    dta$duration[dta$task == "autofecundation"] <- constants$duration.autof
-    dta$color[dta$task == "autofecundation"] <- colorAutof
+    dta$duration[dta$detail == "pheno-field"] <- constants$duration.pheno.field
+    dta$color[dta$detail == "pheno-field"] <- colorPhenoF
 
-    dta$duration[dta$task == "haplodiploidization"] <- constants$duration.haplodiplo
-    dta$color[dta$task == "haplodiploidization"] <- colorHaplo
+    dta$duration[dta$detail == "pheno-patho"] <- constants$duration.pheno.patho
+    dta$color[dta$detail == "pheno-patho"] <- colorPhenoP
 
-    dta$duration[dta$task == "allofecundation"] <- constants$duration.allof
-    dta$color[dta$task == "allofecundation"] <- colorAllof
+    dta$color[dta$detail == "evaluation submission"] <- colorEvalsub
+    dta$color[dta$detail == "evaluation withdrawal"] <- colorEvalwit
 
-    dta$duration[dta$task == "pheno-field"] <- constants$duration.pheno.field
-    dta$color[dta$task == "pheno-field"] <- colorPhenoF
+    dta$end <- as.Date(dta$game_date) + months(dta$duration)
 
-    dta$duration[dta$task == "pheno-patho"] <- constants$duration.pheno.patho
-    dta$color[dta$task == "pheno-patho"] <- colorPhenoP
+    dta$detail[is.na(dta$detail)] <- dta$request_type[is.na(dta$detail)]
 
-    dta$end <- dta$start + months(dta$duration)
+    dta$tooltip <- paste(dta$name,
+                         paste("quantity:", dta$quantity),
+                         paste("cost:", dta$cost),
+                         sep = "\n")
 
-
-    p[[breeder]] <- vistime(dta,
-      col.event = "task",
-      col.start = "start",
+    p[[breeder]] <- vistime(
+      dta,
+      col.event = "detail",
+      col.start = "game_date",
       col.end = "end",
-      col.group = "group",
+      col.group = "breeder",
       col.color = "color",
       # col.fontcolor = "fontcolor",
-      col.tooltip = "content",
+      col.tooltip = "tooltip",
       optimize_y = optY,
       linewidth = lw
     )

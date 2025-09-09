@@ -1004,16 +1004,18 @@ db_get_genotypes_data_list <- function(breeder) {
 
 
 # evaluation requests ----
-db_add_evaluation_requests <- function(breeder, ind_ids, game_date) {
+db_add_evaluation_inds <- function(breeder, ind_ids, game_date) {
   if (length(ind_ids) == 0) {
     return(data.frame())
   }
 
-  request_name <- get_unique_request_name(breeder = breeder, request_base_name = "evaluation")
+  request_name <- get_unique_request_name(
+    breeder = breeder,
+    request_base_name = "evaluation submission")
   db_add_request(id = NA,
                  breeder = breeder,
                  name = request_name,
-                 type = "evaluation",
+                 type = "evaluation submission",
                  game_date = game_date)
 
   new_request <- db_get_game_requests(breeder = breeder, name = request_name)
@@ -1021,22 +1023,36 @@ db_add_evaluation_requests <- function(breeder, ind_ids, game_date) {
   db_add_data("evaluation_requests",
               data.frame(
                 "req_id" = new_request$id,
+                "action" = "add",
                 "ind_id" = ind_ids
               ))
 }
-
 
 db_get_evaluation_requests <- function() {
   query <- paste("SELECT * FROM evaluation_requests")
   return(db_get(query))
 }
 
-db_remove_evlauation_inds <- function(ind_ids) {
-  query <- paste("DELETE FROM evaluation_requests WHERE ind_id IN (",
-                 paste(ind_ids, collapse = ", "),
-                 ")")
-  db_execute(query)
-  return(TRUE)
+db_remove_evaluation_inds <- function(breeder, ind_ids, game_date) {
+  if (length(ind_ids) == 0) {
+    return(data.frame())
+  }
+
+  request_name <- get_unique_request_name(breeder = breeder, request_base_name = "evaluation withdrawal")
+  db_add_request(id = NA,
+                 breeder = breeder,
+                 name = request_name,
+                 type = "evaluation withdrawal",
+                 game_date = game_date)
+
+  new_request <- db_get_game_requests(breeder = breeder, name = request_name)
+
+  db_add_data("evaluation_requests",
+              data.frame(
+                "req_id" = new_request$id,
+                "action" = "remove",
+                "ind_id" = ind_ids
+              ))
 }
 
 

@@ -100,7 +100,7 @@ SELECT
 	pm.haplotype_file,
 	pm.control,
 	CASE
-		WHEN er.ind_id IS NOT NULL THEN 1
+		WHEN ers.ind_id IS NOT NULL AND ers.selected == 1 THEN 1
 		ELSE 0
 	END as selected_for_evaluation,
 	pr.id as pltmat_request_id,
@@ -118,7 +118,7 @@ FROM plant_material pm
 	JOIN duration d
 	LEFT JOIN v_phenotypes pheno ON (pm.id = pheno.ind_id)
 	LEFT JOIN v_genotypes geno ON (pm.id = geno.ind_id)
-	LEFT JOIN evaluation_requests er ON (er.ind_id = pm.id)
+	LEFT JOIN v_evaluation_requests_summary ers ON (ers.ind_id = pm.id)
 GROUP BY pm.id;
 
 
@@ -151,9 +151,16 @@ DROP TABLE IF EXISTS "evaluation_requests";
 CREATE TABLE IF NOT EXISTS "evaluation_requests" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	"req_id" INTEGER NOT NULL REFERENCES requests(id),
-	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id),
-	UNIQUE("ind_id")
+	"action" TEXT NOT NULL,
+	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id)
 );
+
+CREATE VIEW v_evaluation_requests_summary AS
+SELECT
+	ind_id,
+	SUM(CASE WHEN action = 'add' THEN 1 ELSE -1 END) as selected
+FROM evaluation_requests
+GROUP BY ind_id;
 
 
 CREATE VIEW v_phenotypes AS
@@ -239,13 +246,14 @@ WITH prices AS (
 			WHEN key = "cost.geno.hd" THEN "hd"
 			WHEN key = "cost.geno.ld" THEN "ld"
 			WHEN key = "cost.geno.single" THEN "geno-snp"
+			WHEN key = "cost.register" THEN "evaluation submission"
 			ELSE NULL
 		END AS detail,
 		CASE
-			WHEN key = "cost.pheno.field" THEN value
-			ELSE value * (
+			WHEN key = "cost.pheno.field" THEN CAST(value AS FLOAT)
+			ELSE CAST(value AS FLOAT) * (
 			SELECT
-				value
+				CAST(value AS FLOAT)
 			FROM
 				constants
 			WHERE
@@ -272,18 +280,21 @@ WITH prices AS (
 					WHEN gr."type" LIKE "snp%" THEN "geno-snp"
 					else gr.type
 				END
+			WHEN r.type LIKE 'evaluation%' THEN r.type
 			ELSE NULL
 	  END AS detail,
 	  CASE
 			WHEN r.type = 'pltmat' THEN COUNT(*)
 			WHEN r.type = 'pheno' THEN SUM(pr.n_pheno)
 			WHEN r.type = 'geno' THEN COUNT(*)
+			WHEN r.type LIKE 'evaluation%' THEN COUNT(*)
 			ELSE NULL
 	  END AS quantity
 	FROM requests r
 	  FULL JOIN pheno_requests pr ON (pr.req_id = r.id)
 	  FULL JOIN pltmat_requests pltr ON (pltr.req_id = r.id)
 	  FULL JOIN geno_requests gr ON (gr.req_id = r.id)
+	  FULL JOIN evaluation_requests er ON (er.req_id = r.id)
 	GROUP BY r.id, detail
 ) SELECT
 	d.*,
@@ -292,4 +303,19 @@ WITH prices AS (
 FROM request_details d
 LEFT JOIN prices p ON d.detail = p.detail
 ORDER BY d.time;
+
+
+
+CREATE VIEW v_remaining_budget AS
+SELECT
+	breeder,
+	total_spent,
+	(SELECT value FROM constants WHERE key = 'initialBudget') - total_spent as remaining_budget
+FROM (
+	SELECT
+		rh.breeder,
+		sum(rh.cost) as total_spent
+	FROM v_request_history rh
+	GROUP BY rh.breeder
+)
 
