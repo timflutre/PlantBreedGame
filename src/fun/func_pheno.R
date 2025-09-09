@@ -78,6 +78,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
 
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field",]
+  phenosField.df <- NULL
   if (nrow(pheno_field_request_dta) > 0) {
 
     if (!is.null(progressPheno)) {
@@ -125,6 +126,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
 
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
   pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho",]
+  phenosPatho.df <- NULL
   if (nrow(pheno_patho_request_dta) > 0) {
 
     if (!is.null(progressPheno)) {
@@ -159,8 +161,12 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     phenosPatho.df$trait1 <- NA
   }
 
-  db_add_pheno_data(phenosField.df, request_id)
-  db_add_pheno_data(phenosPatho.df, request_id)
+  if (!is.null(phenosPatho.df)) {
+    db_add_pheno_data(phenosPatho.df, request_id)
+  }
+  if (!is.null(phenosField.df)) {
+    db_add_pheno_data(phenosField.df, request_id)
+  }
   db_update_request(id = request_id, processed = 1)
 
   # output
