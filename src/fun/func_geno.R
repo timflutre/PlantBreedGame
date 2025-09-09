@@ -174,7 +174,7 @@ createInvoiceGeno <- function(request.df) {
 
 
 
-load_genotypes <- function(inds_ids, UIprogress = NULL) {
+load_genotypes <- function(inds_ids, UIprogress = NULL, add_breeder_to_inds_names = FALSE) {
   # return the genotypes of the given individuals as a matrix:
   # one row per individuals
   # one column per SNP
@@ -186,10 +186,17 @@ load_genotypes <- function(inds_ids, UIprogress = NULL) {
     nrow = n_inds,
     ncol = getBreedingGameConstants()$nb.snps
   )
-  rownames(genotypes) <- inds$name
+  inds_names <- inds$name
+  if (add_breeder_to_inds_names) {
+    inds_names <- paste(inds$breeder, inds$name, sep = "*")
+  }
+  rownames(genotypes) <- inds_names
 
   for (i in 1:n_inds) {
     ind_name <- inds$name[i]
+    if (add_breeder_to_inds_names) {
+      ind_name <- paste(inds$breeder[i], inds$name[i], sep = "*")
+    }
 
     if (!is.null(UIprogress)) {
       UIprogress$set(

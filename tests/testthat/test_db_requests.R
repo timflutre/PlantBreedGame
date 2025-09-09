@@ -95,7 +95,9 @@ test_that("db initialisation", {
                "v_plant_material",
                "v_phenotypes",
                "v_genotypes",
-               "v_request_history"
+               "v_request_history",
+               "v_evaluation_requests_summary",
+               "v_remaining_budget"
              )
     )
   )
@@ -1114,9 +1116,9 @@ test_that("evaluation requests", {
 
   selected_inds_A <- A_inds[1:3,]
   expect_no_error({
-    db_add_evaluation_requests(breeder = "A",
-                               ind_ids = selected_inds_A$id,
-                               game_date = "2000-02-01")
+    db_add_evaluation_inds(breeder = "A",
+                           ind_ids = selected_inds_A$id,
+                           game_date = "2000-02-01")
   })
   expect_no_error({
     eval_req <- db_get_evaluation_requests()
@@ -1130,20 +1132,40 @@ test_that("evaluation requests", {
 
 
   # remove 1 selected ind
-  db_remove_evlauation_inds(selected_inds_A$id[1])
+  ind_to_remove <- selected_inds_A$id[1]
+  removed_inds <- ind_to_remove
+  expect_no_error({
+    db_remove_evaluation_inds(breeder = "A", ind_ids = ind_to_remove, game_date = "2000-02-02")
+  })
   eval_req <- db_get_evaluation_requests()
-  expect_equal(nrow(eval_req), nrow(selected_inds_A) - 1)
-  expect_true(setequal(eval_req$ind_id, selected_inds_A$id[-1]))
+  expect_equal(nrow(eval_req), nrow(selected_inds_A) + length(removed_inds))
+  expect_equal(nrow(eval_req[eval_req$action == "remove",]), length(removed_inds))
+  expect_true(setequal(eval_req$ind_id[eval_req$action == "remove"], ind_to_remove))
   inds <- db_get_individual()
-  expect_true(all(inds$selected_for_evaluation[inds$id %in% selected_inds_A$id[-1]] == 1))
-  expect_true(all(inds$selected_for_evaluation[!inds$id %in% selected_inds_A$id[-1]] == 0))
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% setdiff(selected_inds_A$id, removed_inds)] == 1))
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% ind_to_remove] == 0))
 
   # remove 2 selected ind
-  db_remove_evlauation_inds(selected_inds_A$id[2:3])
+  ind_to_remove <- selected_inds_A$id[2:3]
+  removed_inds <- c(removed_inds, ind_to_remove)
+  expect_no_error({
+    db_remove_evaluation_inds(breeder = "A", ind_ids = ind_to_remove, game_date = "2000-02-03")
+  })
   eval_req <- db_get_evaluation_requests()
-  expect_equal(nrow(eval_req), 0)
+  expect_equal(nrow(eval_req), nrow(selected_inds_A) + length(removed_inds))
+  expect_equal(nrow(eval_req[eval_req$action == "remove",]), length(removed_inds))
+  expect_true(setequal(eval_req$ind_id[eval_req$action == "remove"], removed_inds))
   inds <- db_get_individual()
-  expect_true(!any(as.logical(inds$selected_for_evaluation)))
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% setdiff(selected_inds_A$id, removed_inds)] == 1))
+  expect_true(all(inds$selected_for_evaluation[inds$id %in% ind_to_remove] == 0))
+
+  # add back a removed ind
+  added_back_ind <- selected_inds_A$id[1]
+  db_add_evaluation_inds(breeder = "A",
+                         ind_ids = added_back_ind,
+                         game_date = "2000-02-01")
+  inds <- db_get_individual(ind_id = added_back_ind)
+  expect_equal(inds$selected_for_evaluation, 1)
 })
 
 
@@ -1163,4 +1185,6 @@ test_that("request history", {
 
 
 unlink(tmpdir, recursive = TRUE)
+
+
 

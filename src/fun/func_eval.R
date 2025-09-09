@@ -45,7 +45,7 @@ readCheckEvalFile <- function(f = NULL, df = NULL) {
 
 
 
-phenotype4Eval <- function(df, nRep = 50) {
+phenotype4Eval <- function(nRep = 50) {
   # function which evaluate the phenotype of individuals
 
   # df (data.frame) given by readCheckEvalFile function
@@ -67,59 +67,13 @@ phenotype4Eval <- function(df, nRep = 50) {
   subset.snps <- getSNPsubset()
 
 
-
-  ## 2. check that the requested individuals already exist
-  flush.console()
-  for (breeder in unique(df$breeder)) {
-    if (breeder != "control") {
-      all_breeder_inds <- getBreedersIndividuals(breeder)
-      stopifnot(all(df$ind[df$breeder == breeder] %in% all_breeder_inds$child))
-    }
-  }
-
-
-
   ## 3. load the haplotypes and convert to genotypes
-  flush.console()
-  X <- NULL # TODO: allocate whole matrix at this stage
-
-  for (breeder in unique(df$breeder)) {
-    inds.todo <- df$ind[df$breeder == breeder]
-    for (i in 1:length(inds.todo)) {
-      ind.id <- inds.todo[i]
-      indName <- paste0(c(breeder, ind.id), collapse = "*")
-      if (ind.id %in% rownames(X)) {
-        next
-      }
-      # message(paste0(i, "/", length(inds.todo), " ", ind.id))
-
-      if (breeder == "control") {
-        f <- paste0(DATA_TRUTH, "/", ind.id, "_haplos.RData")
-      } else {
-        f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
-      }
-
-
-      if (!file.exists(f)) {
-        stop(paste0(f, " doesn't exist"))
-      }
-      load(f)
-
-      ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
-      rownames(ind$genos) <- indName
-      if (is.null(X)) {
-        X <- ind$genos
-      } else {
-        X <- rbind(X, ind$genos)
-      }
-    }
-  }
+  evaluated_inds <- rbind(db_get_individual(control = 1),
+                          db_get_individual(selected_for_eval = 1))
+  X = load_genotypes(evaluated_inds$id, add_breeder_to_inds_names = TRUE)
 
 
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
-  flush.console()
-
-  nrow(X)
   if (nrow(X) > 0) {
     phenosField.df <- makeDfPhenos(
       ind.ids = rownames(X),
@@ -159,17 +113,6 @@ phenotype4Eval <- function(df, nRep = 50) {
     phenosField.df$GAT2 <- rep(phenosField$G.A[, 2], each = nRep)
   }
 
-
-  ## 7. log
-  query <- paste0(
-    "INSERT INTO log(breeder,request_date,task,quantity)",
-    " VALUES ('", "evaluation",
-    "', '", strftime(getGameTime(), format = "%Y-%m-%d %H:%M:%S"),
-    "', '", "evaluation", "', '",
-    "1", "')"
-  )
-  db_execute_request(query)
-
   # output
   return(phenosField.df)
 }
@@ -177,35 +120,8 @@ phenotype4Eval <- function(df, nRep = 50) {
 
 
 ## allalic frequency
-getAFs <- function(pop, breeder, progressAFS = NULL) {
-  # pop (character verctor) names of individuals
-  X <- matrix(
-    nrow = length(pop),
-    ncol = getBreedingGameConstants()$nb.snps
-  )
-  rownames(X) <- pop
-
-  for (i in 1:length(pop)) {
-    ind.id <- pop[i]
-    indName <- paste0(c(breeder, ind.id), collapse = "_")
-
-    if (!is.null(progressAFS)) {
-      progressAFS$set(
-        value = i / length(pop),
-        detail = indName
-      )
-    }
-
-    # message(paste0(i, "/", length(pop), " ", ind.id))
-    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
-    load(f)
-
-    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
-    rownames(ind$genos) <- indName
-    X[i, ] <- ind$genos
-  }
-  colnames(X) <- colnames(ind$genos)
-
+getAFs <- function(inds_ids, progressAFS = NULL) {
+  X <- load_genotypes(inds_ids = inds_ids, UIprogress = progressAFS)
   return(estimSnpAf(X = X))
 }
 
@@ -237,44 +153,9 @@ getBreederHistory <- function(breeder, setup) {
 #' calcAdditiveRelation
 #' @description Get the additive relationship between individuals
 #' @param breeder breeder's name as a character string.
-#' @param query \code{data.frame} containing individuals list
-#' (\code{ind} column is required)
-#' @param setup game's setup.
 #' @param progressBar (optional) a \code{shiny} progress bar
 #'
-#' @return
-#' @export
-#'
-#' @examples
-calcAdditiveRelation <- function(breeder, query, setup, progressBar = NULL) {
-  query <- query[query$breeder == breeder, ]
-  ## 1. load the haplotypes and convert to genotypes
-  X <- matrix(
-    nrow = length(unique(query$ind)),
-    ncol = getBreedingGameConstants()$nb.snps
-  )
-
-  for (i in 1:length(unique(query$ind))) {
-    ind.id <- unique(query$ind)[i]
-
-    if (!is.null(progressBar)) {
-      progressBar$inc(
-        amount = 1 / length(unique(query$ind)),
-        detail = paste0("Load haplotypes: ", paste0(i, "/", nrow(query), " ", ind.id))
-      )
-    }
-
-    f <- paste0(DATA_TRUTH, "/", breeder, "/", ind.id, "_haplos.RData")
-    if (!file.exists(f)) {
-      stop(paste0(f, " doesn't exist"))
-    }
-    load(f)
-
-    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind.id)
-    X[i, ] <- ind$genos
-  }
-  rownames(X) <- unique(query$ind)
-  colnames(X) <- colnames(ind$genos)
-
+calcAdditiveRelation <- function(inds_ids, progressBar = NULL) {
+  X <- load_genotypes(inds_ids = inds_ids, UIprogress = progressBar)
   rutilstimflutre::estimGenRel(X = X, relationships = "additive", method = "vanraden1", verbose = 0)
 }
