@@ -1057,7 +1057,19 @@ db_remove_evaluation_inds <- function(breeder, ind_ids, game_date) {
 
 
 
+# Budget ----
+db_get_budget <- function(breeder = NULL) {
+  breeder_condition <- ""
+  if (!is.null(breeder)) {
+    breeder_condition <- condition("AND", "breeder", "IN", c(breeder))
+  }
 
+  query <- paste(
+    "SELECT * FROM v_remaining_budget WHERE 1=1",
+    breeder_condition
+  )
+  return(db_get(query))
+}
 
 
 

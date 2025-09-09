@@ -152,12 +152,8 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-
-    req_history <- db_get_game_requests_history(breeder = breeder())
-    expenses <- sum(req_history$costs, na.rm = TRUE)
-
-    initialBuget <- getBreedingGameConstants()$initialBudget
-    return(round(initialBuget - expenses, 2))
+    budget <- db_get_budget(breeder = breeder())
+    return(round(budget$remaining_budget[1], 2))
   }
 })
 
