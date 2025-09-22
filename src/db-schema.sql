@@ -226,6 +226,13 @@ CREATE TABLE IF NOT EXISTS "genotypes" (
 );
 
 CREATE VIEW v_genotypes AS
+WITH duration AS (
+	SELECT
+		MAX(CASE WHEN key = 'duration.geno.hd' THEN value END) AS duration_geno_hd,
+		MAX(CASE WHEN key = 'duration.geno.ld' THEN value END) AS duration_geno_ld,
+		MAX(CASE WHEN key = 'duration.geno.single' THEN value END) AS duration_geno_snp
+	FROM constants
+)
 SELECT
 	g.id,
 	r.breeder,
@@ -234,11 +241,17 @@ SELECT
 	g.type,
 	g.result_file,
 	g.geno_req_id,
-	r.name as request_name
+	r.name as request_name,
+	CASE
+		WHEN gr.type = 'hd' THEN DATE(r.game_date, '+' || d.duration_geno_hd || ' months')
+		WHEN gr.type = 'ld' THEN DATE(r.game_date, '+' || d.duration_geno_ld || ' months')
+		ELSE DATE(r.game_date, '+' || d.duration_geno_snp || ' months')
+	END AS avail_from
 FROM genotypes g
 	LEFT JOIN geno_requests gr ON (g.geno_req_id = gr.id)
 	LEFT JOIN plant_material pltmat ON (gr.ind_id = pltmat.id)
-	LEFT JOIN requests r ON (gr.req_id = r.id);
+	LEFT JOIN requests r ON (gr.req_id = r.id)
+	JOIN duration d;
 
 CREATE VIEW v_request_history AS
 WITH prices AS (

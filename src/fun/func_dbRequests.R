@@ -459,7 +459,8 @@ db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = 
     breeder_condition,
     condition("AND", "name", "IN", name),
     condition("AND", "type", "IN", type),
-    condition("AND", "id", "IN", id)
+    condition("AND", "id", "IN", id),
+    "ORDER BY DATE(game_date) DESC"
   )
   db_get(query)
 }
