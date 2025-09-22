@@ -49,13 +49,7 @@ output$evalUI <- renderUI({
 
 
 ## read uploaded file ----
-evalRawFile <- reactiveFileReader(500, session, file.path(DATA_SHARED, "Evaluation.txt"),
-  read.table,
-  header = T, sep = "\t", stringsAsFactors = FALSE
-)
-
-
-inds_for_eval <- reactivePoll(1, session, function() {
+inds_for_eval <- reactivePoll(2000, session, function() {
   info <- file.info(DATA_DB)
   return(paste(info$mtime, info$size))
 }, function() {
@@ -76,7 +70,6 @@ inds_for_eval <- reactivePoll(1, session, function() {
       # .groups = "drop"
     )
   )
-
 })
 
 output$evalFileDT <- renderDataTable({
@@ -357,7 +350,7 @@ afsEval <- reactive({
 
   # get all individuals
   all_inds <- db_get_individual(breeder = breeder)
-  all_inds <- all_inds[order(as.Date(all_inds$avail_from), decreasing = T),]
+  all_inds <- all_inds[order(as.Date(all_inds$avail_from), decreasing = T), ]
 
   # select sample
   sampleSize <- round(nrow(all_inds) * prop)
@@ -492,9 +485,10 @@ output$evalUIaddRelation <- renderUI({
   }
 })
 
-output$addRelTable <- renderTable({
-  submitted_inds <- db_get_individual(breeder = input$addRelBreeder, selected_for_eval = 1)
-  calcAdditiveRelation(submitted_inds$id)
+output$addRelTable <- renderTable(
+  {
+    submitted_inds <- db_get_individual(breeder = input$addRelBreeder, selected_for_eval = 1)
+    calcAdditiveRelation(submitted_inds$id)
   },
   rownames = TRUE,
   spacing = "s",
@@ -536,7 +530,6 @@ breederHistoryTimeLines <- reactive({
   colorEvalwit <- "#4d1717"
 
   constants <- getBreedingGameConstants()
-  browser()
 
   breeders <- unique(dfPhenoEval()$breeder)
   breeders <- breeders[breeders != "Controls"]
@@ -544,7 +537,7 @@ breederHistoryTimeLines <- reactive({
 
   for (breeder in c("--- All Breeders ---", breeders)) {
     if (breeder != "--- All Breeders ---") {
-      dta <- breederHistory[breederHistory$breeder == breeder,]
+      dta <- breederHistory[breederHistory$breeder == breeder, ]
       optY <- FALSE
       lw <- 25
     } else {
@@ -588,9 +581,10 @@ breederHistoryTimeLines <- reactive({
     dta$detail[is.na(dta$detail)] <- dta$request_type[is.na(dta$detail)]
 
     dta$tooltip <- paste(dta$name,
-                         paste("quantity:", dta$quantity),
-                         paste("cost:", dta$cost),
-                         sep = "\n")
+      paste("quantity:", dta$quantity),
+      paste("cost:", dta$cost),
+      sep = "\n"
+    )
 
     p[[breeder]] <- vistime(
       dta,
@@ -619,11 +613,11 @@ output$elvalReport <- downloadHandler(
     paste0("PlantBreedGame_report_", format(Sys.time(), "%F_%H-%M-%S"), ".html")
   },
   content = function(file) {
-    if (is.null(readQryEval())) {
-      alert("Please run an evaluation before downloading the report.s")
+    if (input$requestEval == 0) {
+      alert("Please run an evaluation before downloading the report.")
       return(NULL)
     }
-    # start progresse bar:
+    # start progress bar:
     progBar <- shiny::Progress$new(session, min = 0, max = 20)
     progBar$set(
       value = 0,
@@ -631,7 +625,7 @@ output$elvalReport <- downloadHandler(
       detail = ""
     )
 
-    allBV <- calcGameProgress(progBar)
+    allBV <- calcGameProgress()
 
     # parameters to pass to Rmd document
     params <- list(
@@ -643,8 +637,9 @@ output$elvalReport <- downloadHandler(
       genealogy = genealogy(),
       breederHistoryTimeLines = breederHistoryTimeLines(),
       BVdta = allBV,
-      selInds = readQryEval()
+      selInds = NULL
     )
+
     # execute the R-markdown with given parameters
     rmarkdown::render("./src/evalReport.Rmd",
       output_file = file,

@@ -236,12 +236,7 @@ for (breeder in names(breederHistoryTimeLines)) {
 
 ```{r include=FALSE}
 BVdta <- params$BVdta
-selInds <- params$selInds
-BVdta$selected <- 0
-apply(selInds, 1, function(l) {
-  BVdta$selected[BVdta$breeder == l[1] & BVdta$ind == l[2]] <<- 1
-  invisible()
-})
+BVdta$selected <- as.logical(BVdta$selected_for_evaluation) | as.logical(BVdta$control)
 ```
 
 ## BV of all individuals {.tabset .tabset-fade .tabset-pills}
@@ -531,9 +526,9 @@ plot_ly(
   color = ~breeder,
   hoverinfo = "text",
   text = ~ paste0(
-    "<b>", ind, "</b>", # (in bold)
-    "\nparent1: ", parent1,
-    "\nparent2: ", parent2,
+    "<b>", name, "</b>", # (in bold)
+    "\nparent1: ", parent1_name,
+    "\nparent2: ", parent2_name,
     "\nBV trait1 = ", round(trait1, 2),
     "\nBV trait2 = ", round(trait2, 2),
     "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -595,9 +590,9 @@ plot_ly(
   color = ~breeder,
   hoverinfo = "text",
   text = ~ paste0(
-    "<b>", ind, "</b>", # (in bold)
-    "\nparent1: ", parent1,
-    "\nparent2: ", parent2,
+    "<b>", name, "</b>", # (in bold)
+    "\nparent1: ", parent1_name,
+    "\nparent2: ", parent2_name,
     "\nBV trait1 = ", round(trait1, 2),
     "\nBV trait2 = ", round(trait2, 2),
     "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -663,16 +658,16 @@ plot_ly(
   color = ~breeder,
   hoverinfo = "text",
   text = ~ paste0(
-    "<b>", ind, "</b>", # (in bold)
-    "\nparent1: ", parent1,
-    "\nparent2: ", parent2,
+    "<b>", name, "</b>", # (in bold)
+    "\nparent1: ", parent1_name,
+    "\nparent2: ", parent2_name,
     "\nBV trait1 = ", round(trait1, 2),
     "\nBV trait2 = ", round(trait2, 2),
     "\nBV trait1 x trait2 = ", round(t1t2, 2)
   )
 ) %>%
   layout(
-    title = paste0("Best individuals (Trait 2)"),
+    title = paste0("Best individuals (Trait 1 x Trait 2)"),
     xaxis = list(
       title = "Generation",
       dtick = 1
@@ -696,89 +691,105 @@ if (!is.null(progressBar)) {
 }
 
 myColors <- c(
-  "#bbbbbb", "#165b16", "#0c246f", "#da4a3b", "#ffbe00",
+  "#bbbbbb", "#165b16", "#da4a3b", "#0c246f", "#ffbe00",
   "#03A13D", "#7E28AD", "#1ED5E6", "#C78A1A", "#BF1B26"
 )
 
 
-
-# p <- htmltools::tagList()
 p <- list()
 for (breeder in unique(BVdta$breeder)) {
   # extract BV of the requested breeder
   if (breeder == "Initial collection") next()
   dta <- BVdta[BVdta$breeder %in% c(breeder, "Initial collection"), ]
   dta$gen <- sprintf("%02d", dta$gen)
-
-
+  
   plt <- plot_ly(
     data = dta,
     type = "scatter",
     mode = "markers",
     colors = myColors
   )
-  dta2 <- dta[dta$selected == 0, ]
-
-  plt <- plt %>% add_markers(
-    data = dta2,
-    x = ~trait1,
-    y = ~trait2,
-    color = ~gen,
-    size = ~ selected / 5,
-    opacity = 0.95,
-    hoverinfo = "text",
-    text = ~ paste0(
-      ind,
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
-      "\nBV trait1 = ", round(trait1, 2),
-      "\nBV trait2 = ", round(trait2, 2),
-      "\nBV trait1 x trait2 = ", round(t1t2, 2)
+  generations <- sort(unique(dta$gen))
+  
+  for (i_gen in seq(unique(dta$gen))) {
+    color_id <- ((i_gen - 1) %% length(myColors)) + 1
+    color = myColors[color_id]
+    .gen = generations[i_gen]
+    for (.control in c(0,1)) {
+      for (.selected in c(0,1)) {
+        plt_dta <- dta[dta$gen == .gen &
+                         dta$control == .control &
+                         dta$selected_for_evaluation == .selected
+                       ,]
+        if (nrow(plt_dta) == 0) {
+          next
+        }
+        symbol = NA 
+        size <- 6 
+        line <- list(
+          color = "black",
+          width = 0
+        )
+        if (.selected == 1) {
+          symbol = "star" 
+          size <- size + 3 
+        }
+        if (.control == 1) {
+          size <- size + 3 
+        }
+        if (.selected + .control >= 1) {
+          line$width <- 1
+        }
+        
+        name <- paste("Generation", .gen,
+                      ifelse(.control == 1, "- Controls", ""),
+                      ifelse(.selected == 1, "- Selected", "")
+                      )
+        plt <- plt %>% add_trace(
+          data = plt_dta,
+          x = ~trait1,
+          y = ~trait2,
+          type = "scatter",
+          mode = "markers",
+          name = name,
+          opacity = 0.75,
+          marker = list(
+            symbol = symbol,
+            color = color,
+            size = size,
+            line = line
+          ),
+          hoverinfo = "text",
+          text = ~ paste0(
+            "\n<b>", name, ifelse(selected == 1, "*", ""), "</b>", # (in bold)
+            "\nparent1: ", parent1_name,
+            "\nparent2: ", parent2_name,
+            "\nBV trait1 = ", round(trait1, 2),
+            "\nBV trait2 = ", round(trait2, 2),
+            "\nBV trait1 x trait2 = ", round(t1t2, 2)
+          )
+        )
+      }
+    }
+  }
+  
+  
+  plt <- plt %>% layout(
+    title = paste0("Trait 1 vs Trait 2 (", breeder, ")"),
+    xaxis = list(
+      title = "Trait 1"
+    ),
+    yaxis = list(
+      title = "Trait 2"
     )
   )
-
-  dta2 <- dta[dta$selected == 1, ]
-
-  plt <- plt %>%
-    add_markers(
-      data = dta2,
-      x = ~trait1,
-      y = ~trait2,
-      color = ~gen,
-      marker = list(
-        symbol = "star",
-        size = 9,
-        line = list(
-          color = "rgb(0, 0, 0)",
-          width = 1
-        )
-      ),
-      size = ~ selected / 5,
-      opacity = 0.95,
-      hoverinfo = "text",
-      text = ~ paste0(
-        "\n<b>", ind, ifelse(selected == 1, "*", ""), "</b>", # (in bold)
-        "\nparent1: ", parent1,
-        "\nparent2: ", parent2,
-        "\nBV trait1 = ", round(trait1, 2),
-        "\nBV trait2 = ", round(trait2, 2),
-        "\nBV trait1 x trait2 = ", round(t1t2, 2)
-      )
-    ) %>%
-    layout(
-      title = paste0("Trait 1 vs Trait 2 (", breeder, ")"),
-      xaxis = list(
-        title = "Trait 1"
-      ),
-      yaxis = list(
-        title = "Trait 2"
-      )
-    )
 
 
   p[[breeder]] <- plt
 }
 ```
+
+
 
 ```{r, results='asis'}
 for (breeder in unique(BVdta$breeder)) {

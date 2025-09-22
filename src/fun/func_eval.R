@@ -68,9 +68,11 @@ phenotype4Eval <- function(nRep = 50) {
 
 
   ## 3. load the haplotypes and convert to genotypes
-  evaluated_inds <- rbind(db_get_individual(control = 1),
-                          db_get_individual(selected_for_eval = 1))
-  X = load_genotypes(evaluated_inds$id, add_breeder_to_inds_names = TRUE)
+  evaluated_inds <- rbind(
+    db_get_individual(control = 1),
+    db_get_individual(selected_for_eval = 1)
+  )
+  X <- load_genotypes(evaluated_inds$id, add_breeder_to_inds_names = TRUE)
 
 
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
@@ -119,35 +121,11 @@ phenotype4Eval <- function(nRep = 50) {
 
 
 
-## allalic frequency
+## allelic frequency
 getAFs <- function(inds_ids, progressAFS = NULL) {
   X <- load_genotypes(inds_ids = inds_ids, UIprogress = progressAFS)
   return(estimSnpAf(X = X))
 }
-
-
-
-#' getBreederHistory
-#' @description Get the breeder's requests history.
-#' @param breeder breeder's name as a character string.
-#' @param setup game's setup.
-#'
-#' @return \code{data.frame} with all breeder's request.
-#' @export
-getBreederHistory <- function(breeder, setup) {
-  # get data
-  query <- paste0("SELECT * FROM log WHERE breeder=\'", breeder, "\'")
-  res <- db_get_request(query)
-
-  # manage variable class
-  res$task <- as.factor(res$task)
-  res$request_date <- as.Date(res$request_date)
-
-  res[, c("breeder", "task", "quantity", "request_date")]
-}
-
-
-
 
 
 #' calcAdditiveRelation
