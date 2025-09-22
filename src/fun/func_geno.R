@@ -211,9 +211,7 @@ load_genotypes <- function(inds_ids, UIprogress = NULL, add_breeder_to_inds_name
     load(haplotype_file) # load the `ind` variable
     ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = ind_name)
     genotypes[ind_name, ] <- ind$genos
-    if (i == 1) {
-      colnames(genotypes) <- colnames(ind$genos)
-    }
   }
+  colnames(genotypes) <- colnames(ind$genos)
   return(genotypes)
 }
