@@ -110,7 +110,9 @@ calcGameProgress <- function() {
     "parent1_name",
     "parent2_name",
     "GV_trait1",
-    "GV_trait2"
+    "GV_trait2",
+    "control",
+    "selected_for_evaluation"
   )]
   colnames(all_inds) <- c(
     "id",
@@ -121,7 +123,9 @@ calcGameProgress <- function() {
     "parent1_name",
     "parent2_name",
     "trait1",
-    "trait2"
+    "trait2",
+    "control",
+    "selected_for_evaluation"
   )
   load(file.path(DATA_TRUTH, "p0.RData"))
   all_inds$trait1 <- all_inds$trait1 + p0$mu["trait1"]
