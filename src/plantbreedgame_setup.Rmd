@@ -49,8 +49,12 @@ progressBar <- params$progressBar
 
 if (is.null(progressBar)) {
   progressBar <- list(
-    set = function(...){return(invisible(NULL))},
-    getValue = function(...){return(invisible(NULL))}
+    set = function(...) {
+      return(invisible(NULL))
+    },
+    getValue = function(...) {
+      return(invisible(NULL))
+    }
   )
 }
 
@@ -90,7 +94,7 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 # Set up the environment
 
 ```{r load_pkgs, warning = FALSE}
-progress_detail = "Load R packages..."
+progress_detail <- "Load R packages..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -140,7 +144,7 @@ This new session have id: ` `r session_id` `
 Validation and overview of the parameters used to initialised this game session.
 
 ```{r}
-progress_detail = "Parameter validation..."
+progress_detail <- "Parameter validation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -176,7 +180,7 @@ invisible({
   valid_variance(t1_sig_a2, "genetic values T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
   t1_sig2 <- calc_sigma2(params$t1_h2, t1_sig_a2)
   valid_variance(t1_sig2, "noise T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
-  t1_sig_y2 <- calc_sigma_y2(t1_sig_p2, t1_sig_a2, t1_sig2 )
+  t1_sig_y2 <- calc_sigma_y2(t1_sig_p2, t1_sig_a2, t1_sig2)
   valid_variance(t1_sig_y2, "year effects T1", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
 
   t2_sig_p2 <- calc_sigma_p2(params$t2_mu, params$t2_min)
@@ -185,7 +189,7 @@ invisible({
   valid_variance(t2_sig_a2, "genetic values T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
   t2_sig2 <- calc_sigma2(params$t2_h2, t2_sig_a2)
   valid_variance(t2_sig2, "noise T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
-  t2_sig_y2 <- calc_sigma_y2(t2_sig_p2, t2_sig_a2, t2_sig2 )
+  t2_sig_y2 <- calc_sigma_y2(t2_sig_p2, t2_sig_a2, t2_sig2)
   valid_variance(t2_sig_y2, "year effects T2", accept_na = FALSE, accept_null = FALSE, raise_error = TRUE)
 
   valid_prop_pleio(params$prop_pleio, accept_null = FALSE, raise_error = TRUE)
@@ -203,7 +207,7 @@ print(params[names(params) != "progressBar"])
 # Set up data directories and RNG seed
 
 ```{r setup_dir}
-progress_detail = "Setup directories..."
+progress_detail <- "Setup directories..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -317,8 +321,7 @@ Enhancement: simulate two sub-populations, quite differenciated (by crossing ind
 
 Simulate genotypes via the coalescent:
 ```{r simul_geno_coalescent}
-
-progress_detail = "Genotype simulation..."
+progress_detail <- "Genotype simulation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -351,7 +354,7 @@ g0$genos[1:2, 1:6]
 
 Look at the AFs and MAFs:
 ```{r look_mafs}
-progress_detail = "AF calculation..."
+progress_detail <- "AF calculation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -386,8 +389,7 @@ plotHaplosMatrix(g0$haplos$chr1[
 
 Estimate and plot pairwise LD per chromosome:
 ```{r estim_plot_ld}
-
-progress_detail = "Generate LD plot..."
+progress_detail <- "Generate LD plot..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -430,8 +432,7 @@ abline(v = 500, lty = 2)
 
 Look at distances between consecutive SNPs:
 ```{r dist_btw_snps}
-
-progress_detail = "SNP distances calculation..."
+progress_detail <- "SNP distances calculation..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -516,8 +517,7 @@ write.table(
 
 Make collection of lines via haplodiploidization:
 ```{r coll_lines}
-
-progress_detail = "Generate initial collection's genotype..."
+progress_detail <- "Generate initial collection's genotype..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -568,8 +568,7 @@ gc()
 
 Make data frame encoding the design for the initial phenotypes given to the players:
 ```{r init_pheno}
-
-progress_detail = "Simulate initial phenotypes..."
+progress_detail <- "Simulate initial phenotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1076,8 +1075,7 @@ Enhancement: add missing data
 
 Save data:
 ```{r save_phenos}
-
-progress_detail = "Save initial phenotypes..."
+progress_detail <- "Save initial phenotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1248,7 +1246,7 @@ Enhancement: add spatial coordinates and missing data
 
 Create the database:
 ```{r setup_db}
-progress_detail = "Initialise data-base..."
+progress_detail <- "Initialise data-base..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1260,7 +1258,7 @@ options(DATA_DB = dbname)
 db <- dbConnect(SQLite(), dbname = dbname)
 dbDisconnect(db)
 
-progress_detail = paste("Initialise data-base...", dbname)
+progress_detail <- paste("Initialise data-base...", dbname)
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1280,7 +1278,7 @@ tables
 Fill the table with the game's constants.
 
 ```{r table_constants}
-progress_detail = "Data-base: constants..."
+progress_detail <- "Data-base: constants..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1375,7 +1373,7 @@ db_add_constants(constants)
 Fill with initial game sessions:
 
 ```{r table_sessions_fill}
-progress_detail = "Data-base: game-sessions..."
+progress_detail <- "Data-base: game-sessions..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1389,7 +1387,7 @@ db_add_game_session(NA, "2018-02-16 09:00:00", "2018-02-16 11:40:00", 40, "UTC")
 
 Insert the breeder(s):
 ```{r create_table_breeders}
-progress_detail = "Data-base: breeders..."
+progress_detail <- "Data-base: breeders..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1402,18 +1400,20 @@ db_add_breeder("@ALL", NA, NA) # mandatory to add shared initial materials
 Save also the collection in the plant material table of each breeder:
 
 ```{r fill_table}
-progress_detail = "Data-base: initial plant materials..."
+progress_detail <- "Data-base: initial plant materials..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
 
 initial_pltmat_request_name <- "-- Initial Plant Material --"
-db_add_request(id = NA,
-               breeder = "@ALL",
-               name = initial_pltmat_request_name,
-               type = "pltmat",
-               game_date = paste0(first.year - nb.years - 1, "-01-01"))
+db_add_request(
+  id = NA,
+  breeder = "@ALL",
+  name = initial_pltmat_request_name,
+  type = "pltmat",
+  game_date = paste0(first.year - nb.years - 1, "-01-01")
+)
 
 initial_pltmat_request <- data.frame(
   parent1 = ind.ids,
@@ -1434,7 +1434,7 @@ tail(init_individuals)
 
 For each individual initially given to the players, save its haplotypes into a file (slow):
 ```{r save_haplos_in_files}
-progress_detail = "Save initial haplotypes..."
+progress_detail <- "Save initial haplotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1457,8 +1457,10 @@ system.time({
 
 afs0 <- afs[thin.snps]
 GV <- calculate_genetic_values(coll$genos, p0 = p0, afs0 = afs0)
-GV$id <- db_get_individuals_ids(breeder = "@ALL",
-                                names = row.names(GV))
+GV$id <- db_get_individuals_ids(
+  breeder = "@ALL",
+  names = row.names(GV)
+)
 db_update_pltmat(GV)
 ```
 
@@ -1466,7 +1468,7 @@ db_update_pltmat(GV)
 Save initial phenotypes data.
 
 ```{r save_phenotypes_in_db}
-progress_detail = "Data-base: initial phenotypes..."
+progress_detail <- "Data-base: initial phenotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1479,16 +1481,18 @@ db_add_initial_pheno_data(initial_phenotypes)
 Save initial genotype data in db.
 
 ```{r save_genotypes_in_db}
-progress_detail = "Data-base: initial genotypes..."
+progress_detail <- "Data-base: initial genotypes..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
-db_add_request(id = NA,
-               breeder = "@ALL",
-               name = "-- Initial Genotypes --",
-               type = "geno",
-               game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+db_add_request(
+  id = NA,
+  breeder = "@ALL",
+  name = "-- Initial Genotypes --",
+  type = "geno",
+  game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01")
+)
 init_geno_req_id <- db_get_game_requests(name = "-- Initial Genotypes --")$id
 
 
@@ -1502,8 +1506,6 @@ db_add_geno_req_data(init_geno_req_id, init_geno_req)
 
 genotype_data_files <- list(hd = initial_genotype_file)
 db_add_geno_data(init_geno_req_id, genotype_data_files)
-
-
 ```
 
 
@@ -1513,7 +1515,7 @@ db_add_geno_data(init_geno_req_id, genotype_data_files)
 
 Save also the initial allele frequencies:
 ```{r save_afs_in_file}
-progress_detail = "Save allele frequencies..."
+progress_detail <- "Save allele frequencies..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1526,7 +1528,7 @@ save(afs0, file = f)
 
 Make an example of a "plant material" file:
 ```{r ex_cross}
-progress_detail = "Create example files..."
+progress_detail <- "Create example files..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1544,21 +1546,23 @@ Make an example of an "data" file:
 ## Create initial "Admin" and "tests" breeders
 
 ```{r add_breeders}
-progress_detail = "Create initial breeders..."
+progress_detail <- "Create initial breeders..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
 )
 addNewBreeder("admin",
-              "game master",
-              "1234",
-              data_truth = truth.dir,
-              data_shared = shared.dir)
+  "game master",
+  "1234",
+  data_truth = truth.dir,
+  data_shared = shared.dir
+)
 addNewBreeder("test",
-              "tester",
-              "",
-              data_truth = truth.dir,
-              data_shared = shared.dir)
+  "tester",
+  "",
+  data_truth = truth.dir,
+  data_shared = shared.dir
+)
 ```
 
 
@@ -1567,7 +1571,7 @@ addNewBreeder("test",
 
 Make a zip archive of the whole directory:
 ```{r make_zip}
-progress_detail = "Create zip archive..."
+progress_detail <- "Create zip archive..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1587,7 +1591,7 @@ system.time(
 # Specify this new session should be use
 
 ```{r, new_session_specification}
-progress_detail = "Save session to use..."
+progress_detail <- "Save session to use..."
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail
@@ -1604,7 +1608,7 @@ t1 <- proc.time()
 t1 - t0
 print(sessionInfo(), locale = FALSE)
 
-progress_detail = "Game setup script DONE"
+progress_detail <- "Game setup script DONE"
 progressBar$set(
   value = progressBar$getValue() + 1,
   detail = progress_detail

@@ -1,4 +1,3 @@
-
 library(testthat)
 source("../../src/fun/func_gameInit_validation.R", local = TRUE, encoding = "UTF-8")
 
@@ -7,7 +6,6 @@ is_error <- function(x) {
 }
 
 test_that("valid_positive_integer", {
-
   # OK cases
   expect_null(valid_positive_integer(42))
   expect_null(valid_positive_integer(0))
@@ -24,12 +22,10 @@ test_that("valid_positive_integer", {
 
   # invalid cases (error)
   expect_error(valid_positive_integer(24.234, raise_error = TRUE))
-
 })
 
 
 test_that("valid_positive_number", {
-
   # OK cases
   expect_null(valid_positive_number(42))
   expect_null(valid_positive_number(42.42))
@@ -47,11 +43,9 @@ test_that("valid_positive_number", {
 
   # invalid cases (error)
   expect_error(valid_positive_number("abc", raise_error = TRUE))
-
 })
 
 test_that("valid_number", {
-
   # OK cases
   expect_null(valid_number(42))
   expect_null(valid_number(42.42))
@@ -69,12 +63,10 @@ test_that("valid_number", {
 
   # invalid cases (error)
   expect_error(valid_number("abc", FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_range", {
-
   # OK cases
   expect_null(valid_range(42, 41, 43))
   expect_null(valid_range(-42, -43, -41))
@@ -94,13 +86,11 @@ test_that("valid_range", {
 
   # invalid cases (error)
   expect_error(valid_range("abc", FALSE, raise_error = TRUE))
-
 })
 
 
 
 test_that("valid_mu", {
-
   # OK cases
   expect_null(valid_mu(42))
   expect_null(valid_mu(42.42))
@@ -119,12 +109,10 @@ test_that("valid_mu", {
 
   # invalid cases (error)
   expect_error(valid_mu("abc", FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_Tmin", {
-
   # OK cases
   expect_null(valid_Tmin(42, 100))
   expect_null(valid_Tmin(42.42, 100))
@@ -145,12 +133,10 @@ test_that("valid_Tmin", {
 
   # invalid cases (error)
   expect_error(valid_Tmin(42.42, 0, FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_cv_g", {
-
   # OK cases
   expect_null(valid_cv_g(12))
   expect_null(valid_cv_g(0.13))
@@ -168,11 +154,9 @@ test_that("valid_cv_g", {
 
   # invalid cases (error)
   expect_error(valid_cv_g(-1, FALSE, raise_error = TRUE))
-
 })
 
 test_that("valid_h2", {
-
   # OK cases
   expect_null(valid_h2(0.3))
   expect_null(valid_h2(NULL))
@@ -191,12 +175,10 @@ test_that("valid_h2", {
 
   # invalid cases (error)
   expect_error(valid_h2(42, FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_variance", {
-
   # OK cases
   expect_null(valid_variance(0.3))
   expect_null(valid_variance(100))
@@ -215,12 +197,10 @@ test_that("valid_variance", {
 
   # invalid cases (error)
   expect_error(valid_variance(-42, FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_prop_pleio", {
-
   # OK cases
   expect_null(valid_prop_pleio(0.7))
   expect_null(valid_prop_pleio(NULL))
@@ -237,12 +217,10 @@ test_that("valid_prop_pleio", {
 
   # invalid cases (error)
   expect_error(valid_prop_pleio(-42, FALSE, raise_error = TRUE))
-
 })
 
 
 test_that("valid_cor_pleio", {
-
   # OK cases
   expect_null(valid_cor_pleio(0.7))
   expect_null(valid_cor_pleio(-0.3))
@@ -260,5 +238,4 @@ test_that("valid_cor_pleio", {
 
   # invalid cases (error)
   expect_error(valid_cor_pleio(-42, FALSE, raise_error = TRUE))
-
 })

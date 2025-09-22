@@ -37,17 +37,21 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
 
   ## get parent's informations
-  requested_parents <- db_get_individual(ind_id = unique(c(pltmat_request_dta$parent1_id,
-                                                           pltmat_request_dta$parent2_id)))
+  requested_parents <- db_get_individual(ind_id = unique(c(
+    pltmat_request_dta$parent1_id,
+    pltmat_request_dta$parent2_id
+  )))
   pltmat_request_dta <- merge(pltmat_request_dta,
-                              requested_parents[, c("id", "name")],
-                              by.x = "parent1_id", by.y = "id")
-  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] = "parent1" # new name respecting `drawLocCrossovers` convention
+    requested_parents[, c("id", "name")],
+    by.x = "parent1_id", by.y = "id"
+  )
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] <- "parent1" # new name respecting `drawLocCrossovers` convention
   pltmat_request_dta <- merge(pltmat_request_dta,
-                              requested_parents[, c("id", "name")],
-                              by.x = "parent2_id", by.y = "id")
-  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] = "parent2" # new name respecting `drawLocCrossovers` convention
-  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "child_name"] = "child" # new name respecting `drawLocCrossovers` convention
+    requested_parents[, c("id", "name")],
+    by.x = "parent2_id", by.y = "id"
+  )
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] <- "parent2" # new name respecting `drawLocCrossovers` convention
+  colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "child_name"] <- "child" # new name respecting `drawLocCrossovers` convention
 
 
   # initialise parent haplotypes
@@ -59,9 +63,13 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
       data = NA,
       ncol = ncol(ind$haplos[[chr.id]]),
       nrow = nrow(requested_parents) * ploidy,
-      dimnames = list(paste0(rep(requested_parents$name, each = ploidy),
-                             rep(paste0("_h", 1:ploidy), length(requested_parents$name))),
-                      colnames(ind$haplos[[chr.id]]))
+      dimnames = list(
+        paste0(
+          rep(requested_parents$name, each = ploidy),
+          rep(paste0("_h", 1:ploidy), length(requested_parents$name))
+        ),
+        colnames(ind$haplos[[chr.id]])
+      )
     )
   }
 
@@ -101,12 +109,12 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
   new_inds_haplo <- list()
   loc.crossovers <- drawLocCrossovers(
-    crosses = pltmat_request_dta[,c("parent1", "parent2", "child")],
+    crosses = pltmat_request_dta[, c("parent1", "parent2", "child")],
     nb.snps = sapply(parents_haplotypes, ncol)
   )
   new_inds_haplo <- makeCrosses(
     haplos = parents_haplotypes,
-    crosses = pltmat_request_dta[,c("parent1", "parent2", "child")],
+    crosses = pltmat_request_dta[, c("parent1", "parent2", "child")],
     loc.crossovers = loc.crossovers, verbose = 0
   )
   rm(parents_haplotypes)
@@ -145,13 +153,17 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   colnames(genotypes) <- colnames(ind$genos)
 
   db_add_pltmat(req_id = request_id)
-  haplotype_file_data$id <- db_get_individuals_ids(breeder = breeder(),
-                                                   names = row.names(haplotype_file_data))
+  haplotype_file_data$id <- db_get_individuals_ids(
+    breeder = breeder(),
+    names = row.names(haplotype_file_data)
+  )
   db_update_pltmat(haplotype_file_data)
 
   GV <- calculate_genetic_values(genotypes)
-  GV$id <- db_get_individuals_ids(breeder = breeder(),
-                                  names = row.names(GV))
+  GV$id <- db_get_individuals_ids(
+    breeder = breeder(),
+    names = row.names(GV)
+  )
   db_update_pltmat(GV)
 
   db_update_request(id = request_id, processed = 1)

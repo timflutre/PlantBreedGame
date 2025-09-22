@@ -1,11 +1,10 @@
-
 library(testthat)
 source("../../src/fun/module_gameInit_params.R", local = TRUE, encoding = "UTF-8")
 source("../../src/fun/func_gameInit_validation.R", local = TRUE, encoding = "UTF-8")
 
 
 set.seed(NULL)
-seed = runif(1, 1000000, 9999999)
+seed <- runif(1, 1000000, 9999999)
 set.seed(seed)
 
 expected_random_1 <- rnorm(10)
@@ -15,28 +14,30 @@ expected_random_3 <- rnorm(10)
 set.seed(NULL)
 
 test_that("quick_afs_simul don't alter RNG seed", {
-
   set.seed(seed)
 
   afs_1 <- quick_afs_simul(
     n_marker_sim = 1000,
     shape1 = 0.5,
     shape2 = 0.5,
-    seed = 1)
+    seed = 1
+  )
   random_1 <- rnorm(10)
 
   afs_2 <- quick_afs_simul(
     n_marker_sim = 1000,
     shape1 = 0.5,
     shape2 = 0.5,
-    seed = 1)
+    seed = 1
+  )
   random_2 <- rnorm(10)
 
   quick_afs_simul(
     n_marker_sim = 1000,
     shape1 = 0.5,
     shape2 = 0.5,
-    seed = NULL)
+    seed = NULL
+  )
   random_3 <- rnorm(10)
 
   expect_equal(afs_1, afs_2)
@@ -45,11 +46,9 @@ test_that("quick_afs_simul don't alter RNG seed", {
   expect_equal(random_3, expected_random_3)
 
   set.seed(NULL)
-
 })
 
 test_that("quick_geno_simul don't alter RNG seed", {
-
   afs <- quick_afs_simul(
     n_marker_sim = 1000,
     shape1 = 0.5,
@@ -86,11 +85,9 @@ test_that("quick_geno_simul don't alter RNG seed", {
   expect_equal(random_3, expected_random_3)
 
   set.seed(NULL)
-
 })
 
 test_that("quick_g0_simul don't alter RNG seed", {
-
   afs <- quick_afs_simul(
     n_marker_sim = 1000,
     shape1 = 0.5,
@@ -144,7 +141,6 @@ test_that("quick_g0_simul don't alter RNG seed", {
   expect_equal(random_3, expected_random_3)
 
   set.seed(NULL)
-
 })
 
 
@@ -178,7 +174,7 @@ test_that("quick_pheno_simul don't alter RNG seed", {
     sig_p = 700,
     sig = 200,
     sig_y = 300,
-    g0 = g0[,1],
+    g0 = g0[, 1],
     seed = 4
   )
   random_1 <- rnorm(10)
@@ -188,7 +184,7 @@ test_that("quick_pheno_simul don't alter RNG seed", {
     sig_p = 700,
     sig = 200,
     sig_y = 300,
-    g0 = g0[,1],
+    g0 = g0[, 1],
     seed = 4
   )
   random_2 <- rnorm(10)
@@ -198,7 +194,7 @@ test_that("quick_pheno_simul don't alter RNG seed", {
     sig_p = 700,
     sig = 200,
     sig_y = 300,
-    g0 = g0[,2],
+    g0 = g0[, 2],
     seed = NULL
   )
   random_3 <- rnorm(10)
@@ -209,5 +205,4 @@ test_that("quick_pheno_simul don't alter RNG seed", {
   expect_equal(random_3, expected_random_3)
 
   set.seed(NULL)
-
 })

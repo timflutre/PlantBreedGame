@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 show_help <- function() {
-  cat('
+  cat("
 Usage: bump_version.R <minor|major|patch>
 
 Update VERSION file by increasing the version number by 1.
@@ -13,7 +13,7 @@ Arguments:
 
 Example:
   ./bump_version.R patch
-')
+")
 }
 
 args <- commandArgs(trailingOnly = TRUE)

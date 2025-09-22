@@ -47,7 +47,8 @@ if (gameInitialised()) {
             style = "width: 300px; border-collapse: collapse;", # start table 1
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              div(style = "padding-bottom: 5px;",
+              div(
+                style = "padding-bottom: 5px;",
                 dateInput("startDate", "Date",
                   width = "120px"
                 )
@@ -55,12 +56,11 @@ if (gameInitialised()) {
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              selectInput("startHour", "Hour (24h)", choices = as.list(seq(0,23)), selected = "9", width = "75px")
-
+              selectInput("startHour", "Hour (24h)", choices = as.list(seq(0, 23)), selected = "9", width = "75px")
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              selectInput("startMin", "Minute", choices = seq(0,59), width = "75px")
+              selectInput("startMin", "Minute", choices = seq(0, 59), width = "75px")
             )
           ) # end table 1
         ), # end div "start"
@@ -72,7 +72,8 @@ if (gameInitialised()) {
             style = "width: 300px; border-collapse: collapse;", # start table 2
             tags$td(
               style = "width: 34%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              div(style = "padding-bottom: 5px;",
+              div(
+                style = "padding-bottom: 5px;",
                 dateInput("endDate", "Date",
                   width = "120px"
                 )
@@ -80,11 +81,11 @@ if (gameInitialised()) {
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              selectInput("endHour", "Hour (24h)", choices = as.list(seq(0,23)), selected = "12", width = "75px")
+              selectInput("endHour", "Hour (24h)", choices = as.list(seq(0, 23)), selected = "12", width = "75px")
             ),
             tags$td(
               style = "width: 33%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
-              selectInput("endMin", "Minute", choices = seq(0,59), width = "75px")
+              selectInput("endMin", "Minute", choices = seq(0, 59), width = "75px")
             )
           ) # end table 2
         ), # end div "end"
@@ -246,7 +247,6 @@ if (gameInitialised()) {
           step = 100
         )
       ),
-
       div(
         id = "admin_div_button_const_initialBudget",
         style = "display: inline-block;
@@ -264,7 +264,8 @@ if (gameInitialised()) {
   )
 
   disk_usage_tab_content <- div(
-    div(style = "display: flex;",
+    div(
+      style = "display: flex;",
       div(
         id = "admin_diskU_data",
         style = "flex: 1; margin-right:10px;",
@@ -278,26 +279,27 @@ if (gameInitialised()) {
           multiple = FALSE,
           animation = FALSE,
           types =
-          "{
+            "{
           'directory' : { 'icon' : 'glyphicon glyphicon-folder-open' },
           'default' : { 'icon' : 'glyphicon glyphicon-file', 'valid_children' : [] }
           }"
         ) %>% withSpinner()
       ),
-
       div(
         id = "admin_diskU_input",
         style = "flex: 2;",
-        p(style = "margin-top:20px;",
+        p(
+          style = "margin-top:20px;",
           "To prevent over disk usage on your server,",
           "you can specifiy here the maximum size for all game data."
         ),
-        p("In case the size of all data exceeds this threshold,",
+        p(
+          "In case the size of all data exceeds this threshold,",
           "players will not be allowed to connect any more, and you will",
-          "have to delete haplotypes of some breeders."),
+          "have to delete haplotypes of some breeders."
+        ),
         p("Deletion of data must be made manually on the host machine."),
         p(textOutput("InfoCurrentMaxDiskUsage")),
-
         div(
           style = "width: 50%;
           display: inline-block;
@@ -305,7 +307,8 @@ if (gameInitialised()) {
           numericInput("admin_maxDiskUsage",
             label = "Maximum disk usage (in GB)",
             value = 10,
-            min = 2)
+            min = 2
+          )
         ),
         div(
           style = "width: 30%;
@@ -313,10 +316,9 @@ if (gameInitialised()) {
           display: inline-block;
           vertical-align: top;",
           actionButton("updateMaxDiskUsage",
-            label = "Update")
+            label = "Update"
+          )
         )
-
-
       )
     ),
   )
@@ -363,34 +365,30 @@ if (gameInitialised()) {
 
   game_setup_tab_content <- div(
     p("The current game session is:", CURRENT_SESSION_ID),
-
     h2("Actual marker effects"),
     p("The causal SNP for the resistance is:", code(shiny::textOutput("causal_resist_snp", inline = TRUE))),
-    p("With the button below you can donwload the actual marker effects used",
-    "for simulating the phenotypes of", code("trait 1"), "and", code("trait 2"), "in a csv format."),
+    p(
+      "With the button below you can donwload the actual marker effects used",
+      "for simulating the phenotypes of", code("trait 1"), "and", code("trait 2"), "in a csv format."
+    ),
     downloadButton("download_actual_marker_effects", "Download game's actual marker effects (csv)"),
-
-
     h2("Game initialisation report"),
-
-    p("The game is initialised. You can download the related report that contains",
-    "some informations about the game intialisation by clicking on the button bellow.",
-    "Below this button you can preview this report."),
-
+    p(
+      "The game is initialised. You can download the related report that contains",
+      "some informations about the game intialisation by clicking on the button bellow.",
+      "Below this button you can preview this report."
+    ),
     downloadButton("download_game_init_report", "Download game's initialisation report (html)"),
-
     h3("Preview:"),
-
-    tags$iframe(seamless = "seamless",
-                src = file.path("reports", basename(GAME_INIT_REPORT)),
-                height = 900,
-                width = "95%",
-                id = "game_init_report")
+    tags$iframe(
+      seamless = "seamless",
+      src = file.path("reports", basename(GAME_INIT_REPORT)),
+      height = 900,
+      width = "95%",
+      id = "game_init_report"
+    )
   )
-
-
 } else {
-
   default_tab <- "Game Initialisation"
 
   game_not_initialised_msg <- div(
@@ -407,7 +405,7 @@ if (gameInitialised()) {
 
 
 game_initialisation_tab_content <- div(
-  div (
+  div(
     h1("Game Initialisation"),
     p("By pressing the button below, you can initialise the game."),
     p("Once the initialisation is completed (which takes about 2 minutes), the page will automatically reload and you will be able to connect and play the game."),

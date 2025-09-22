@@ -109,15 +109,16 @@ observeEvent(input$deleteBreeder, {
 
 ## Sessions managment ----
 output$sessionTimeZoneUI <- renderUI({
-  default = "UTC"
-  if (input$client_time_zone %in% OlsonNames())  {
-    default = input$client_time_zone
+  default <- "UTC"
+  if (input$client_time_zone %in% OlsonNames()) {
+    default <- input$client_time_zone
   }
   selectInput(
     "sessionTimeZone",
     "Time zone",
     choices = as.list(OlsonNames()),
-    selected = default)
+    selected = default
+  )
 })
 
 output$deleteSessionUI <- renderUI({
@@ -140,34 +141,34 @@ output$sessionsTable <- renderTable({
 
   if (nrow(data) == 0) {
     return(
-      structure(list(
-        "id" = character(0),
-        "Session start time" = character(0),
-        "Session end time" = character(0),
-        "Session time zone" = character(0),
-        "Year duration (mins)" = character(0),
-        "Game time start" = character(0),
-        "Game time end" = character(0),
-        "Session duration" = character(0)
-      ),
-      class = "data.frame")
+      structure(
+        list(
+          "id" = character(0),
+          "Session start time" = character(0),
+          "Session end time" = character(0),
+          "Session time zone" = character(0),
+          "Year duration (mins)" = character(0),
+          "Game time start" = character(0),
+          "Game time end" = character(0),
+          "Session duration" = character(0)
+        ),
+        class = "data.frame"
+      )
     )
   }
 
-  data$Game_Time_start <- sapply(seq(1, nrow(data)), function(line){
+  data$Game_Time_start <- sapply(seq(1, nrow(data)), function(line) {
     start <- getGameTime(time_irl = strptime(data[line, "start"],
-                                    format = "%Y-%m-%d %H:%M",
-                                    tz = data[line, "time_zone"])
-                )
-
+      format = "%Y-%m-%d %H:%M",
+      tz = data[line, "time_zone"]
+    ))
   })
 
-  data$Game_Time_end <- sapply(seq(1, nrow(data)), function(line){
+  data$Game_Time_end <- sapply(seq(1, nrow(data)), function(line) {
     end <- getGameTime(time_irl = strptime(data[line, "end"],
-                                    format = "%Y-%m-%d %H:%M",
-                                    tz = data[line, "time_zone"])
-                )
-
+      format = "%Y-%m-%d %H:%M",
+      tz = data[line, "time_zone"]
+    ))
   })
 
   game_duration_days <- difftime(data$Game_Time_end, data$Game_Time_start, units = "days")
@@ -187,7 +188,7 @@ output$sessionsTable <- renderTable({
     "Game time end",
     "Session duration"
   )
-  data <- data[,c(
+  data <- data[, c(
     "id",
     "Session start time",
     "Session end time",
@@ -223,8 +224,8 @@ observeEvent(input$addSession, {
 
   if (nrow(gameSessions) > 0) {
     overlapse <- apply(gameSessions, 1, function(session) {
-      (sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
-      (sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
+      (sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"]))
+      (sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"]))
       if ((startDate < sessionStart & endDate <= sessionStart) |
         (startDate >= sessionEnd & endDate > sessionEnd)) {
         return(FALSE)
@@ -293,16 +294,14 @@ observeEvent(input$admin_button_seedYearEfect, {
     return(NULL)
   }
 
-    notifMessage <- paste("ERROR:", error)
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-
+  notifMessage <- paste("ERROR:", error)
+  showNotification(notifMessage,
+    duration = 2, closeButton = TRUE,
+    type = "error"
+  )
 })
 
 observeEvent(input$admin_button_const_initialBudget, {
-
   new_initial_budget <- input$admin_const_initialBudget * getBreedingGameConstants()$cost.pheno.field
 
   error <- valid_positive_number(new_initial_budget)
@@ -318,12 +317,11 @@ observeEvent(input$admin_button_const_initialBudget, {
     return(NULL)
   }
 
-    notifMessage <- paste("ERROR:", seed_error)
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-
+  notifMessage <- paste("ERROR:", seed_error)
+  showNotification(notifMessage,
+    duration = 2, closeButton = TRUE,
+    type = "error"
+  )
 })
 
 
@@ -339,13 +337,15 @@ output$currentDataUsage <- renderUI({
   current_size <- get_folder_size(DATA_ROOT)
   max_usage <- getBreedingGameConstants()$max.disk.usage
   current_usage <- round(current_size / (max_usage * 10^9) * 100, 0)
-  p(paste0("Current usage: ",
+  p(paste0(
+    "Current usage: ",
     prettyunits::pretty_bytes(current_size),
     " / ",
     max_usage,
     " GB (",
     current_usage,
-    "%)"))
+    "%)"
+  ))
 })
 
 observeEvent(input$updateMaxDiskUsage, {
@@ -558,13 +558,13 @@ output$admin_T1T2GameProgress <- renderPlotly({
 
 
 output$download_game_init_report <- downloadHandler(
-  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%m-%d"), ".html"), # lambda function
+  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(), format = "%Y-%m-%d"), ".html"), # lambda function
   content = function(file) file.copy(GAME_INIT_REPORT, file),
   contentType = "text/html"
 )
 
 output$download_actual_marker_effects <- downloadHandler(
-  filename = paste0("plantBreedGame_actual_marker_effects_", strftime(Sys.time(),format = "%Y-%m-%d"), ".csv"), # lambda function
+  filename = paste0("plantBreedGame_actual_marker_effects_", strftime(Sys.time(), format = "%Y-%m-%d"), ".csv"), # lambda function
   content = function(file) {
     f <- paste0(DATA_TRUTH, "/p0.RData")
     load(f)
@@ -624,10 +624,13 @@ gameInit_traits <- gameInit_traits_server("gameInit_geno_pheno_simul", gameInit_
 
 
 gameInit_input_validator$add_rule("initialisation_security_text", function(x) {
-  if (is.null(x)) return(NULL)
-  if (x != "plantbreedgame") return("")
+  if (is.null(x)) {
+    return(NULL)
   }
-)
+  if (x != "plantbreedgame") {
+    return("")
+  }
+})
 
 gameInit_input_validator$enable()
 
@@ -668,7 +671,6 @@ observeEvent(input$initialiseGame, {
   params <- list(
     progressBar = progress_bar,
     rng_seed = gameInit_seed$value(),
-
     cost.pheno.field = gameInit_costs$value()$cost.pheno.field,
     cost.pheno.patho = gameInit_costs$value()$cost.pheno.patho,
     cost.allof = gameInit_costs$value()$cost.allof,
@@ -679,20 +681,16 @@ observeEvent(input$initialiseGame, {
     cost.geno.single = gameInit_costs$value()$cost.geno.single,
     cost.register = gameInit_costs$value()$cost.register,
     initialBudget = gameInit_costs$value()$initialBudget,
-
     t1_mu = gameInit_traits$value()$t1_mu,
     t1_min = gameInit_traits$value()$t1_min,
     t1_cv_g = gameInit_traits$value()$t1_cv_g,
     t1_h2 = gameInit_traits$value()$t1_h2,
-
     t2_mu = gameInit_traits$value()$t2_mu,
     t2_min = gameInit_traits$value()$t2_min,
     t2_cv_g = gameInit_traits$value()$t2_cv_g,
     t2_h2 = gameInit_traits$value()$t2_h2,
-
     prop_pleio = gameInit_traits$value()$prop_pleio,
     cor_pleio = gameInit_traits$value()$cor_pleio,
-
     max.nb.haplodiplos = gameInit_constraints$value()$n_pheno_plot,
     max.nb.pltmatReq = gameInit_constraints$value()$n_max_cross,
     nb.plots = gameInit_constraints$value()$n_max_hd,
@@ -701,16 +699,18 @@ observeEvent(input$initialiseGame, {
 
   rmd_env <- new.env(parent = globalenv())
   report_build_dir <- tempdir()
-  out_report <- tryCatch({
-    rmarkdown::render("src/plantbreedgame_setup.Rmd",
-      output_file = tempfile(tmpdir = report_build_dir),
-      intermediates_dir = report_build_dir, # important for nix pkg
-      encoding = "UTF-8",
-      params = params,
-      knit_root_dir = getwd(),
-      envir = rmd_env
-    )
-  }, error = function(err) {
+  out_report <- tryCatch(
+    {
+      rmarkdown::render("src/plantbreedgame_setup.Rmd",
+        output_file = tempfile(tmpdir = report_build_dir),
+        intermediates_dir = report_build_dir, # important for nix pkg
+        encoding = "UTF-8",
+        params = params,
+        knit_root_dir = getwd(),
+        envir = rmd_env
+      )
+    },
+    error = function(err) {
       progress_bar$close()
       showNotification("Game Initialisation Error.", type = "error")
       showModal(modalDialog(
@@ -719,7 +719,8 @@ observeEvent(input$initialiseGame, {
         p("The game initialisation script failed with the following error message:"),
         p(code(err$message)),
         p("after step: ", code(rmd_env$progress_detail)),
-        p("This problem will likely be fixed by using a",
+        p(
+          "This problem will likely be fixed by using a",
           strong("different RNG seed"),
           ". If the problem is recurrent, please ",
           a("click here to report this issue on GitHub.",
@@ -744,7 +745,8 @@ observeEvent(input$initialiseGame, {
         )
       ))
       return("error")
-  })
+    }
+  )
 
   if (identical(out_report, "error")) {
     return(NULL)

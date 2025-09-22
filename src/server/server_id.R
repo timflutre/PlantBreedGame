@@ -118,10 +118,12 @@ accessGranted <- eventReactive(input$submitPSW,
     if (goodPswd && goodDiskUsage) {
       removeUI("#logInDiv")
 
-      submitted_inds <- db_get_individual(breeder = breeder$name,
-                                          selected_for_eval = 1,
-                                          public_columns = TRUE)
-      submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
+      submitted_inds <- db_get_individual(
+        breeder = breeder$name,
+        selected_for_eval = 1,
+        public_columns = TRUE
+      )
+      submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
 
       return(TRUE)
     } else {
@@ -303,15 +305,15 @@ output$UIdwnlRequest <- renderUI({
 pltmat_preview_filter <- individual_filtering_server("inds_download_ind_filter", breeder = breeder())
 
 plant_mat_preview_data <- reactive({
-
   # input dependencies
   input$leftMenu
   input$id_submitInds
   input$id_delSubmitInds
 
-  individuals <- db_get_individual(breeder = breeder(),
-     ind_id = pltmat_preview_filter$inds_ids(),
-     public_columns = TRUE
+  individuals <- db_get_individual(
+    breeder = breeder(),
+    ind_id = pltmat_preview_filter$inds_ids(),
+    public_columns = TRUE
   )
 
   # columns_to_keep_as <- c(
@@ -333,7 +335,7 @@ plant_mat_preview_data <- reactive({
 output$plant_mat_preview <- DT::renderDataTable({
   DT::datatable(
     plant_mat_preview_data(),
-    selection = 'single',
+    selection = "single",
     options = list(
       lengthMenu = c(10, 20, 50),
       pageLength = 10,
@@ -342,7 +344,7 @@ output$plant_mat_preview <- DT::renderDataTable({
   )
 })
 
-.download_inds <- function(){
+.download_inds <- function() {
   downloadHandler(
     filename = "plant-material.tsv",
     content = function(file) {
@@ -375,9 +377,11 @@ output$selected_ind_info <- renderUI({
   ind_info <- db_get_individual(breeder = breeder(), ind_id = ind_id)
   phenotypes <- db_get_phenotypes(breeder = breeder(), ind_id = ind_id, public_columns = TRUE)
   genotypes <- db_get_genotypes(breeder = breeder(), ind_id = ind_id)
-  offsprings <- rbind(db_get_individual(breeder = breeder(), parent1 = ind_info$name, public_columns = TRUE),
-                  db_get_individual(breeder = breeder(), parent2 = ind_info$name, public_columns = TRUE))
-  offsprings <- offsprings[!duplicated(offsprings),]
+  offsprings <- rbind(
+    db_get_individual(breeder = breeder(), parent1 = ind_info$name, public_columns = TRUE),
+    db_get_individual(breeder = breeder(), parent2 = ind_info$name, public_columns = TRUE)
+  )
+  offsprings <- offsprings[!duplicated(offsprings), ]
 
   div(
     h3(ind_info$name, ":"),
@@ -389,7 +393,8 @@ output$selected_ind_info <- renderUI({
       tags$li("Parent 2:", code(ind_info$parent2_name)),
       tags$li("Offsprings:", nrow(offsprings)),
       tags$li("Phenotypic records:", nrow(phenotypes)),
-      tags$li("Genotypic records:", nrow(genotypes),
+      tags$li(
+        "Genotypic records:", nrow(genotypes),
         tags$ul(
           lapply(seq_len(nrow(genotypes)), function(x) {
             geno_res_file <- genotypes$result_file[x]
@@ -404,7 +409,6 @@ output$selected_ind_info <- renderUI({
     ),
     h4("Phenotypic records:"),
     reactable::reactable(phenotypes),
-
     h4("Offsprings records:"),
     reactable::reactable(offsprings)
   )
@@ -416,7 +420,6 @@ pheno_inds_filters <- individual_filtering_server("pheno_download_ind_filter", b
 pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter", breeder = breeder())
 
 pheno_data_preview <- reactive({
-
   download_pheno_button_clicks() # dependency on download buttons
   input$refresh_pheno_preview # dependency on refresh buttons
 
@@ -450,22 +453,25 @@ pheno_data_preview <- reactive({
 })
 
 
-output$pheno_preview_DT <- DT::renderDataTable({
-  DT::datatable(
-    isolate(pheno_data_preview()), # use isolate, the data refresh is done with the observer below
-    # filter = "top", # this can conflict with manual filters,
-                      # add this only if this filtering is taken
-                      # into account for data-download (and it is explained in the UI)
-    # style = "bootstrap4",
-    rownames = FALSE,
-    options = list(
-      language = list(emptyTable = 'Empty'),
-      pageLength = 10,
-      lengthMenu = c(10, 25, 50, 100),
-      searchDelay = 500
+output$pheno_preview_DT <- DT::renderDataTable(
+  {
+    DT::datatable(
+      isolate(pheno_data_preview()), # use isolate, the data refresh is done with the observer below
+      # filter = "top", # this can conflict with manual filters,
+      # add this only if this filtering is taken
+      # into account for data-download (and it is explained in the UI)
+      # style = "bootstrap4",
+      rownames = FALSE,
+      options = list(
+        language = list(emptyTable = "Empty"),
+        pageLength = 10,
+        lengthMenu = c(10, 25, 50, 100),
+        searchDelay = 500
+      )
     )
-  )
-}, server = TRUE)
+  },
+  server = TRUE
+)
 
 observe({
   pheno_table_proxy <- DT::dataTableProxy("pheno_preview_DT", deferUntilFlush = FALSE)
@@ -477,11 +483,10 @@ observe({
 
 
 download_pheno_button_clicks <- reactiveVal(value = 0)
-.download_pheno <- function(){
+.download_pheno <- function() {
   downloadHandler(
     filename = "phenotypes.tsv",
     content = function(file) {
-
       download_pheno_button_clicks(download_pheno_button_clicks() + 1)
       write.table(
         pheno_data_preview(),
@@ -597,20 +602,23 @@ observeEvent(input$id_submitInds, priority = 10, {
   remaining_submission <- constants$maxEvalInds - nrow(submitted_inds)
 
   if (length(ind_ids) > remaining_submission) {
-
     alert(paste("Sorry, you have already submitted", nrow(submitted_inds), "individuals, on a total of", constants$maxEvalInds, ". You can only submit", remaining_submission, "more individuals."))
     return(NULL)
   }
 
-  db_add_evaluation_inds(breeder = breeder(),
-                         ind_ids = ind_ids,
-                         game_date = getGameTime())
+  db_add_evaluation_inds(
+    breeder = breeder(),
+    ind_ids = ind_ids,
+    game_date = getGameTime()
+  )
 
   # update submittedInds table
-  submitted_inds <- db_get_individual(breeder = breeder(),
-                                      selected_for_eval = 1,
-                                      public_columns = TRUE)
-  submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
+  submitted_inds <- db_get_individual(
+    breeder = breeder(),
+    selected_for_eval = 1,
+    public_columns = TRUE
+  )
+  submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
 
   # reset input
   reset("id_evalInds", asis = FALSE)
@@ -627,16 +635,20 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   }
   names_of_inds_to_delete <- submittedInds()[input$submittedIndsDT_rows_selected, "Name"]
   ind_ids <- db_get_individuals_ids(breeder = breeder(), names = names_of_inds_to_delete)
-  db_remove_evaluation_inds(breeder = breeder(),
-                            ind_ids = ind_ids,
-                            game_date = getGameTime())
+  db_remove_evaluation_inds(
+    breeder = breeder(),
+    ind_ids = ind_ids,
+    game_date = getGameTime()
+  )
 
 
   # update submittedInds table
-  submitted_inds <- db_get_individual(breeder = breeder(),
-                                      selected_for_eval = 1,
-                                      public_columns = TRUE)
-  submittedInds(submitted_inds[,c("Name", "Parent 1", "Parent 2")])
+  submitted_inds <- db_get_individual(
+    breeder = breeder(),
+    selected_for_eval = 1,
+    public_columns = TRUE
+  )
+  submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
   return(TRUE)
 })
 

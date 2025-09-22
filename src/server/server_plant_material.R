@@ -155,11 +155,13 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     )
 
     request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.plmat$name))
-    db_add_request(id = NA,
-                   breeder = breeder(),
-                   name = request_name,
-                   type = "pltmat",
-                   game_date = request_time)
+    db_add_request(
+      id = NA,
+      breeder = breeder(),
+      name = request_name,
+      type = "pltmat",
+      game_date = request_time
+    )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
     db_add_pltmat_req_data(new_request$id, readQryPlmat())
 

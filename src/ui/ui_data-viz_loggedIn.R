@@ -23,7 +23,8 @@ list(
     width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "From file",
     tabPanel(
       "From file",
-      div(style = "",
+      div(
+        style = "",
         h4("Import file"),
         fileInput(
           inputId = "file_data_viz",
@@ -42,7 +43,8 @@ list(
           accept = c(".txt", ".tsv", ".txt.gz", ".tsv.gz"),
           width = "100%"
         ),
-        div(style = "display: inline-block; vertical-align: top; margin-right: 10px;",
+        div(
+          style = "display: inline-block; vertical-align: top; margin-right: 10px;",
           selectInput("categ_variables",
             label = tooltip_label(
               "Categorical variables",
@@ -54,15 +56,18 @@ list(
             multiple = TRUE
           )
         ),
-        div(style = "display: inline-block; vertical-align: top;",
+        div(
+          style = "display: inline-block; vertical-align: top;",
           selectInput("quant_variables",
             label = tooltip_label(
               "Quantitative variables",
               div(
-                p("This input is disable, any variable that is not",
+                p(
+                  "This input is disable, any variable that is not",
                   "categorical is considered quantitative.",
                   "Please remove categorical variables to mark them as",
-                  "quantitative.")
+                  "quantitative."
+                )
               )
             ),
             choices = list(),
