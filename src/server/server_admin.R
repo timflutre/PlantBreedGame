@@ -374,10 +374,8 @@ output$InfoCurrentMaxDiskUsage <- renderText({
 
 
 ## Game progress ----
-
 admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 4)
-  calcGameProgress(progress_bar)
+  calcGameProgress()
 })
 
 
@@ -401,9 +399,9 @@ output$admin_plotAllIndGameProgress <- renderPlotly({
     opacity = 0.75,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -466,9 +464,9 @@ output$admin_plotMaxIndGameProgress <- renderPlotly({
     color = ~breeder,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -539,9 +537,9 @@ output$admin_T1T2GameProgress <- renderPlotly({
     opacity = 0.75,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)

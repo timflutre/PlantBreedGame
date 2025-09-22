@@ -186,9 +186,30 @@ db_add_data <- function(table, data) {
     stop(err)
   }, finally = {
     dbDisconnect(conn)
-    })
+  })
   return(out)
 }
+
+
+db_update_data <- function(table, new_data) {
+  if (!"id" %in% colnames(new_data)) {
+    stop("`new_data` should specify the id of the rows to update")
+  }
+  queries <- apply(new_data, 1, function(x){
+    id <- dbQuoteLiteral(DBI::ANSI(), x["id"])
+    new_values <- x[names(x) != "id"]
+    sql_values <- dbQuoteLiteral(DBI::ANSI(), new_values)
+    names(sql_values) <- names(new_values)
+    paste("UPDATE ", table, "SET",
+          paste(names(sql_values), "=", sql_values, collapse = ", "),
+          "WHERE id =", id)
+  })
+  query <- paste(queries, collapse = "; ")
+  db_execute(query)
+}
+
+
+
 
 # NOT USED
 # #' Retrive data from the db from a data.frame
@@ -606,22 +627,10 @@ db_add_pltmat <- function(req_id) {
   new_row_ids <- db_get(query)$id
 }
 
-#' Add individuals' haplotype_file path to the db
-#' @params haplotype_file_data data.frame associating the haplotypes files
-#' and their corresponding individuals id. 2 columns `id` and `haplotype_file`
-db_add_ind_haplotype <- function(haplotype_file_data) {
-
-  queries <- apply(haplotype_file_data, 1, function(x){
-    id <- dbQuoteLiteral(DBI::ANSI(), x["id"])
-    haplotype_file <- dbQuoteLiteral(DBI::ANSI(), x["haplotype_file"])
-    paste("UPDATE plant_material SET haplotype_file =",
-          haplotype_file,
-          "WHERE id =",
-          id)
-  })
-  query <- paste(queries, collapse = "; ")
-  db_execute(query)
+db_update_pltmat <- function(new_data) {
+  db_update_data(table = "plant_material", new_data)
 }
+
 
 #' From a breeder and a vector of individuals names
 #' return the vector of the individuals id in the same order (with repetition

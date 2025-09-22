@@ -128,6 +128,7 @@ source("src/fun/functions.R")
 source("src/fun/module_gameInit_params.R")
 source("src/fun/func_gameInit_validation.R")
 source("src/fun/func_dbRequests.R")
+source("src/fun/func_pheno.R")
 
 session_id <- uuid::UUIDgenerate()
 ```
@@ -1242,12 +1243,6 @@ if (file.exists(fout)) {
 
 Enhancement: add spatial coordinates and missing data
 
-Free some memory:
-```{r free_mem_phenos, eval=TRUE}
-rm(p0)
-gc()
-```
-
 
 # Set up database
 
@@ -1455,13 +1450,16 @@ system.time({
       id = db_get_individuals_ids(breeder = "@ALL", names = ind.id),
       haplotype_file = f
     ))
-    # db_add_ind_haplotype(db_get_individuals_ids(breeder = "@ALL", names = ind.id),
-    #                      f)
   }, mc.cores = nb.cores)
   haplo_id_association <- do.call(rbind, haplo_id_association)
-  db_add_ind_haplotype(haplo_id_association)
+  db_update_pltmat(haplo_id_association)
 })
 
+afs0 <- afs[thin.snps]
+GV <- calculate_genetic_values(coll$genos, p0 = p0, afs0 = afs0)
+GV$id <- db_get_individuals_ids(breeder = "@ALL",
+                                names = row.names(GV))
+db_update_pltmat(GV)
 ```
 
 
@@ -1521,7 +1519,6 @@ progressBar$set(
   detail = progress_detail
 )
 f <- paste0(truth.dir, "/afs0.RData")
-afs0 <- afs[thin.snps]
 save(afs0, file = f)
 ```
 

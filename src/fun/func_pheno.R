@@ -263,3 +263,38 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 
   return(remaining_plots >= requested_plots)
 }
+
+
+
+
+
+#' Calculate the genetic values for each trait from genotype matrix
+#'
+#' @param genotypes the genotype matrix
+#' @param p0 phenotype information
+#' @param afs0 allele frequency of the initial population
+#'
+#' @returns data.frame with 3 columns: "GV_trait1", "GV_trait2", "resist_trait3"
+#' rownames are the same as the `genotypes`' rownames
+calculate_genetic_values <- function(genotypes, p0 = NULL, afs0 = NULL) {
+
+  if (is.null(p0)) {
+    f <- paste0(DATA_TRUTH, "/p0.RData")
+    load(f)
+  }
+  if (is.null(afs0)) {
+    f <- paste0(DATA_TRUTH, "/afs0.RData")
+    load(f)
+  }
+
+  t3_resist <- genotypes[, p0$trait3$qtn.id] %in% p0$trait3$resist.genos
+
+  # center X as in Vitezica et al (2013)
+  tmp <- matrix(rep(1, nrow(genotypes))) %*% (2 * afs0)
+  genotypes_center <- genotypes - tmp
+  GV <- as.data.frame(genotypes_center %*% p0$Beta)
+
+  GV <- cbind(GV, t3_resist)
+  colnames(GV) <- c("GV_trait1", "GV_trait2", "resist_trait3")
+  return(GV)
+}
