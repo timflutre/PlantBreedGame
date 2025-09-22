@@ -167,96 +167,12 @@ budget <- reactive({
 
 ## download files ----
 # list of avaiable files (this must be reactive value to be refresh)
-phenoFiles <- reactive({
-  input$leftMenu
-  db_get_game_requests(breeder = breeder(), type = "pheno")$name
-  # getDataFileList(type = "pheno", breeder = breeder())
-})
-genoData <- reactive({
-  input$leftMenu
-  full_files <- db_get_genotypes_data_list(breeder = breeder())
-  tools::file_path_sans_ext(basename(full_files), compression = TRUE)
-})
-pltMatFiles <- reactive({
-  input$leftMenu
-  # choices <- getDataFileList(type = "pltMat", breeder = breeder())
-})
 requestFiles <- reactive({
   input$leftMenu
   # choices <- getDataFileList(type = "request", breeder = breeder())
 })
 
-
 # dwnl buttons ----
-output$dwnlPheno <- downloadHandler(
-  filename = function() input$phenoFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$phenoFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$phenoFile)
-    file.copy(filePath, file)
-  }
-)
-
-output$dwnlGeno <- downloadHandler(
-  filename = function() paste0(input$genoFile, ".txt.gz"), # lambda function
-  content = function(file) {
-    gFile <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (gFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, gFile)
-    file.copy(filePath, file)
-  }
-)
-
-output$dwnlGeno_vcf <- downloadHandler(
-  filename = function() paste0(input$genoFile, ".vcf.gz"), # lambda function
-  content = function(file) {
-    gFile_txt <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (gFile_txt %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    gFile_txt <- file.path(folder, gFile_txt)
-    progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
-    progressVcf$set(
-      value = 0,
-      message = "Create VCF File:",
-      detail = "Initialisation..."
-    )
-    txt2Vcf(gFile_txt, file, progressVcf)
-    progressVcf$set(
-      value = 5,
-      detail = "DONE!"
-    )
-  }
-)
-
-output$dwnlPltMat <- downloadHandler(
-  filename = function() input$pltMatFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$pltMatFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$pltMatFile)
-    file.copy(filePath, file)
-  }
-)
-
-
 output$dwnlRequest <- downloadHandler(
   filename = function() input$requestFile, # lambda function
   content = function(file) {
@@ -271,27 +187,6 @@ output$dwnlRequest <- downloadHandler(
   }
 )
 
-
-output$UIdwnlGeno <- renderUI({
-  if (input$genoFile != "") {
-    genoFile <- paste0(input$genoFile, ".txt.gz")
-    if (breederStatus() == "player" && !availToDwnld(genoFile, currentGTime())$isAvailable) {
-      p(paste0(
-        "Sorry, your data are not available yet. Delivery date: ",
-        availToDwnld(genoFile, currentGTime())$availDate
-      ))
-    } else {
-      div(
-        downloadButton("dwnlGeno", "Download as `txt.gz`"),
-        downloadButton("dwnlGeno_vcf", "Download as `vcf.gz`")
-      )
-    }
-  } else {
-    p("No file selected.")
-  }
-})
-
-
 output$UIdwnlRequest <- renderUI({
   if (input$requestFile != "") {
     downloadButton("dwnlRequest", "Download your file")
@@ -299,6 +194,207 @@ output$UIdwnlRequest <- renderUI({
     p("No file selected.")
   }
 })
+
+
+## Genotype data ----
+
+genoRequests_list <- reactive({
+  input$leftMenu
+  requests <- db_get_game_requests(
+    breeder = breeder(),
+    type = "geno"
+  )
+  return(requests$name)
+})
+
+selected_geno_request_id <- reactive({
+  req <- db_get_game_requests(
+    breeder = breeder(),
+    type = "geno",
+    name = input$geno_requests
+  )
+  return(req$id)
+})
+
+selected_geno_request_info <- reactive({
+  main_request <- db_get_game_requests(
+    breeder = breeder(),
+    name = input$geno_requests
+  )
+  out <- list()
+  out$main_request_name <- main_request$name
+  out$main_request_date <- main_request$game_date
+
+  genotypes <- db_get_genotypes(
+    breeder = breeder(),
+    request_name = input$geno_requests
+  )
+
+  out$hd <- list(
+    n_geno = sum(genotypes$type == "hd"),
+    avail_date = unique(genotypes$avail_from[genotypes$type == "hd"]),
+    inds = genotypes$ind[genotypes$type == "hd"],
+    file_path = unique(genotypes$result_file[genotypes$type == "hd"])
+  )
+  out$hd$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$hd$file_path)
+  ))
+
+  out$ld <- list(
+    n_geno = sum(genotypes$type == "ld"),
+    avail_date = unique(genotypes$avail_from[genotypes$type == "ld"]),
+    inds = genotypes$ind[genotypes$type == "ld"],
+    file_path = unique(genotypes$result_file[genotypes$type == "ld"])
+  )
+  out$ld$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$ld$file_path)
+  ))
+
+  is_snp <- (genotypes$type != "ld" & genotypes$type != "hd")
+  out$snp <- list(
+    n_geno = length(unique(genotypes$ind[is_snp])),
+    n_snp = length(unique(genotypes$type[is_snp])),
+    n_record = sum(is_snp),
+    avail_date = unique(genotypes$avail_from[is_snp]),
+    inds = unique(genotypes$ind[is_snp]),
+    file_path = unique(genotypes$result_file[is_snp])
+  )
+  out$snp$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$snp$file_path)
+  ))
+  return(out)
+})
+
+
+output$selected_geno_data_UI_info <- renderUI({
+  invalidateLater(10000) # to automatically update when the data becomes available
+  n_samples <- 5
+  beautiful_names <- list(
+    hd = "High Density",
+    ld = "Low Density",
+    snp = "Single SNP"
+  )
+  geno_info <- selected_geno_request_info()
+
+  genotype_info_ui <- lapply(c("hd", "ld", "snp"), function(geno_type) {
+    info <- geno_info[[geno_type]]
+    if (info$n_geno <= 0) {
+      return(div())
+    }
+    inds_samples <- c(head(info$inds), "...")
+    if (info$n_geno < n_samples) {
+      inds_samples <- info$inds
+    }
+    inds_samples_str <- paste0("(", paste(inds_samples, collapse = ", "), ")")
+
+    is_available <- difftime(getGameTime(), strptime(info$avail_date, format = "%Y-%m-%d")) >= 0
+    if (breederStatus() %in% c("game master", "tester")) {
+      is_available <- TRUE
+    }
+
+    if (is_available) {
+      downloadButtons <- div(
+        p("Data are available from ", info$avail_date, ":"),
+        downloadButton(paste0("dwnlGeno_", geno_type), "Download as `txt.gz`"),
+        downloadButton(paste0("dwnlGeno_vcf_", geno_type), "Download as `vcf.gz`")
+      )
+    } else {
+      downloadButtons <- div(p("Data will be available on ", info$avail_date, "."))
+    }
+
+    return(
+      div(
+        h4(beautiful_names[[geno_type]]),
+        p(paste0(
+          info$n_geno, " individuals have been genotyped with the \"", beautiful_names[[geno_type]],
+          "\" chip", ifelse(geno_type == "snp", paste(" on", info$n_snp, "snp"), ""), ": ", inds_samples_str
+        )),
+        downloadButtons
+      )
+    )
+  })
+
+  div(
+    h3(geno_info$main_request_name),
+    p(
+      tags$ul(
+        tags$li(paste("Request date:", geno_info$main_request_date))
+      )
+    ),
+    genotype_info_ui[[1]],
+    genotype_info_ui[[2]],
+    genotype_info_ui[[3]]
+  )
+})
+
+.dwnlGeno_txt <- function(type) {
+  downloadHandler(
+    filename = function() {
+      geno_info <- selected_geno_request_info()[[type]]
+      paste0(geno_info$dwnld_file_default_base_name, ".txt.gz")
+    },
+    content = function(file) {
+      geno_info <- selected_geno_request_info()[[type]]
+      is_available <- difftime(
+        getGameTime(),
+        strptime(geno_info$avail_date, format = "%Y-%m-%d")
+      ) >= 0
+      if (breederStatus() %in% c("game master", "tester")) {
+        is_available <- TRUE
+      }
+      if (!is_available) {
+        alert("Data are not yet available.")
+        return(NULL)
+      }
+      file.copy(geno_info$file_path, file)
+    }
+  )
+}
+
+.dwnlGeno_vcf <- function(type) {
+  downloadHandler(
+    filename = function() {
+      geno_info <- selected_geno_request_info()
+      paste0(geno_info[[type]]$dwnld_file_default_base_name, ".vcf.gz")
+    },
+    content = function(file) {
+      geno_info <- selected_geno_request_info()[[type]]
+      is_available <- difftime(
+        getGameTime(),
+        strptime(geno_info$avail_date, format = "%Y-%m-%d")
+      ) >= 0
+      if (breederStatus() %in% c("game master", "tester")) {
+        is_available <- TRUE
+      }
+      if (!is_available) {
+        alert("Data are not yet available.")
+        return(NULL)
+      }
+      progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
+      progressVcf$set(
+        value = 0,
+        message = "Create VCF File:",
+        detail = "Initialisation..."
+      )
+      txt2Vcf(geno_info$file_path, file, progressVcf)
+      progressVcf$set(
+        value = 5,
+        detail = "DONE!"
+      )
+    }
+  )
+}
+
+output$dwnlGeno_hd <- .dwnlGeno_txt("hd")
+output$dwnlGeno_ld <- .dwnlGeno_txt("ld")
+output$dwnlGeno_snp <- .dwnlGeno_txt("snp")
+
+output$dwnlGeno_vcf_hd <- .dwnlGeno_vcf("hd")
+output$dwnlGeno_vcf_ld <- .dwnlGeno_vcf("ld")
+output$dwnlGeno_vcf_snp <- .dwnlGeno_vcf("snp")
+
+
+
 
 
 ## My plant-material ----
@@ -414,7 +510,7 @@ output$selected_ind_info <- renderUI({
   )
 })
 
-
+# phenotype data ----
 
 pheno_inds_filters <- individual_filtering_server("pheno_download_ind_filter", breeder = breeder())
 pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter", breeder = breeder())

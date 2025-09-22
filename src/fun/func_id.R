@@ -166,6 +166,7 @@ txt2Vcf <- function(txt_file, vcf_file, prog = NULL) {
   gt[geno == "0"] <- "0/0"
   gt[geno == "1"] <- "1/0"
   gt[geno == "2"] <- "1/1"
+  gt[is.na(geno)] <- "./."
   colnames(gt) <- colnames(geno)
   row.names(gt) <- row.names(geno)
   gt <- t(gt)

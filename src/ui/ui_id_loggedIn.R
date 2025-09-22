@@ -26,16 +26,10 @@ div(
   uiOutput("UIbreederInfoID"),
   shinydashboard::tabBox(
     width = 12, title = paste0("My account"),
+
+    # My files ----
     tabPanel(
       "My files",
-      div(
-        style = "display: inline-block; vertical-align:top; width: 50%;",
-        div(
-          h3("Genotyping data:"),
-          selectInput("genoFile", "", choices = genoData(), width = "75%"),
-          uiOutput("UIdwnlGeno")
-        )
-      ),
       div(
         style = "display: inline-block; vertical-align:top; width: 49%;",
         div(
@@ -54,6 +48,23 @@ div(
         )
       )
     ),
+
+    # Genotype data ----
+    tabPanel(
+      "Genotype data",
+      h2("Genotype data"),
+      div(
+        selectInput("geno_requests", "Genotype requests",
+          choices = genoRequests_list(), width = "75%"
+        ),
+      ),
+      div(
+        id = "geno_data_info",
+        uiOutput("selected_geno_data_UI_info")
+      ),
+    ),
+
+    # Phenotype data ----
     tabPanel(
       "Phenotype data",
       h2("Phenotype data"),
@@ -100,6 +111,8 @@ div(
       ),
       downloadButton("dwnlPheno_2", "Download"),
     ),
+
+    # My plant material ----
     tabPanel(
       "My plant material",
       h2("Plant material"),
@@ -121,6 +134,8 @@ div(
         uiOutput("selected_ind_info")
       ),
     ),
+
+    # Change my password ----
     tabPanel(
       "Change my password",
       div(
@@ -147,6 +162,8 @@ div(
         uiOutput("UIpswChanged")
       )
     ),
+
+    # Register final individuals ----
     tabPanel(
       "Register final individuals",
       div(

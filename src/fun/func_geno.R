@@ -62,7 +62,7 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
     paste0(
       DATA_SHARED, "/", breeder, "/",
       "Result_genos-", file_types, "_",
-      request$name,
+      request$name, # TODO !! sanitize this name to avoid eg. `request$name = my/request/^^`, should be ok because this names come from: `tools::file_path_sans_ext(input$file.geno$name)` but better to check
       ".txt.gz"
     ) # file name is unique as request$name is unique per breeder
   )
