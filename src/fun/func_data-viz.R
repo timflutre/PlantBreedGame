@@ -5,14 +5,15 @@ none_value <- "-- None --"
 data_viz_ui <- function(id) {
   ns <- NS(id)
   div(
-    div(style = "display: flex;",
-      div(style = "flex: 0;",
+    div(
+      style = "display: flex;",
+      div(
+        style = "flex: 0;",
         selectInput(ns("x_var"),
           "X variable",
           choices = list(none_value),
           multiple = FALSE
         ),
-
         selectInput(ns("y_var"),
           "Y variable",
           choices = list(none_value),
@@ -25,12 +26,14 @@ data_viz_ui <- function(id) {
         ),
         uiOutput(ns("plotWarning"))
       ),
-      div(style = "flex: 1;",
+      div(
+        style = "flex: 1;",
         withSpinner(plotlyOutput(ns("plot")))
       )
     ),
     hr(),
-    div(style = "margin-top: 30px;",
+    div(
+      style = "margin-top: 30px;",
       id = ns("data-table"),
       withSpinner(dataTableOutput(ns("dataTable")))
     )
@@ -39,7 +42,6 @@ data_viz_ui <- function(id) {
 
 data_viz_server <- function(id, plot_data) {
   moduleServer(id, function(input, output, session) {
-
     observe({
       data <- plot_data()
       if (is.null(data)) {
@@ -84,7 +86,8 @@ data_viz_server <- function(id, plot_data) {
         return(span())
       }
 
-      div(class = "warning",
+      div(
+        class = "warning",
         p(bsicons::bs_icon("exclamation-diamond-fill"), "Warning:"),
         tags$ul(
           lapply(warning_messages, tags$li)
@@ -130,7 +133,7 @@ data_viz_server <- function(id, plot_data) {
         # filter = filter, # No filter because it can conflict with the manually implemented filters can be worked on later
         style = "bootstrap4",
         options = list(
-          language = list(emptyTable = 'Empty'),
+          language = list(emptyTable = "Empty"),
           pageLength = 10,
           lengthMenu = c(10, 25, 50, 100)
         )
@@ -142,15 +145,15 @@ data_viz_server <- function(id, plot_data) {
 empty_plot <- function(info = "") {
   return(plot_ly(type = "scatter", mode = "markers") %>%
     add_annotations(
-      x=0.5, y=0.5, xref = "paper", yref = "paper",
+      x = 0.5, y = 0.5, xref = "paper", yref = "paper",
       text = info,
-      xanchor = 'center',
+      xanchor = "center",
       showarrow = FALSE
     ))
 }
 
 plot_1D <- function(data, x_var, y_var, col_var) {
-  var_of_interest <- c(x_var, y_var)[ which(!is_null_var(c(x_var, y_var))) ]
+  var_of_interest <- c(x_var, y_var)[which(!is_null_var(c(x_var, y_var)))]
 
   if (is.numeric(data[, var_of_interest])) {
     return(histogram(data, x_var, y_var, col_var))
@@ -173,21 +176,23 @@ scatter_plot <- function(data, x_var, y_var, col_var) {
   if (!is_null_var(col_var)) {
     color <- data[, col_var]
   }
-  p <- plot_ly(type = "scatter",
-               mode = "markers",
-               data = data,
-               x = data[, x_var],
-               y = data[, y_var],
-               color = color,
-               hoverinfo = "text",
-               text = apply(data, 1, function(l) {
-                 paste(names(l), ":", l, collapse = "\n")
-               }))
+  p <- plot_ly(
+    type = "scatter",
+    mode = "markers",
+    data = data,
+    x = data[, x_var],
+    y = data[, y_var],
+    color = color,
+    hoverinfo = "text",
+    text = apply(data, 1, function(l) {
+      paste(names(l), ":", l, collapse = "\n")
+    })
+  )
   p <- layout(p,
-              yaxis = list(title = y_var),
-              xaxis = list(title = x_var),
-              legend = list(title = list(text = col_var))
-              )
+    yaxis = list(title = y_var),
+    xaxis = list(title = x_var),
+    legend = list(title = list(text = col_var))
+  )
   p
 }
 
@@ -226,11 +231,11 @@ box_plot <- function(data, x_var, y_var, col_var) {
     })
   )
   p <- layout(p,
-              boxmode = "group",
-              yaxis = list(title = y_var),
-              xaxis = list(title = x_var),
-              legend = list(title = list(text = col_var))
-              )
+    boxmode = "group",
+    yaxis = list(title = y_var),
+    xaxis = list(title = x_var),
+    legend = list(title = list(text = col_var))
+  )
   p
 }
 
@@ -284,7 +289,7 @@ histogram <- function(data, x_var, y_var, col_var) {
       x = x_values,
       name = names(data_list)[data_index],
       marker = list(
-        line = list(color = 'rgb(235, 237, 235)', width = 1)
+        line = list(color = "rgb(235, 237, 235)", width = 1)
       )
     )
   }
@@ -341,24 +346,24 @@ barplot <- function(data, x_var, y_var, col_var) {
   }
 
   p <- plot_ly(plt_data,
-               x = x_values,
-               y = y_values,
-               color = col_values,
-               type = 'bar')
+    x = x_values,
+    y = y_values,
+    color = col_values,
+    type = "bar"
+  )
 
   p <- layout(
     p,
     showlegend = !is_null_var(col_var),
     yaxis = list(title = y_axis_title),
     xaxis = list(title = x_axis_title),
-    barmode = 'stack',
+    barmode = "stack",
     legend = list(title = list(text = col_var))
   )
   p
 }
 
 plot_warning <- function(data, x_var, y_var, col_var) {
-
   warnings_messages <- c()
   if (is.null(data)) {
     return(warnings_messages)
@@ -370,7 +375,8 @@ plot_warning <- function(data, x_var, y_var, col_var) {
       if (is.character(data[, var])) {
         n_factor <- length(unique(data[, var]))
         if (n_factor > n_factor_max) {
-          warnings_messages <- c(warnings_messages,
+          warnings_messages <- c(
+            warnings_messages,
             "Categorical variable with a large amount of levels is detected, plot may not render correctly."
           )
           break()
@@ -384,7 +390,8 @@ plot_warning <- function(data, x_var, y_var, col_var) {
     # 1D plot
     if (!is_null_var(col_var)) {
       if (is.numeric(data[, col_var])) {
-        warnings_messages <- c(warnings_messages,
+        warnings_messages <- c(
+          warnings_messages,
           "Quantitative variables cannot be used for colors with histograms and barplots"
         )
       }
@@ -398,8 +405,9 @@ plot_warning <- function(data, x_var, y_var, col_var) {
       # box plot
       if (!is_null_var(col_var)) {
         if (is.numeric(data[, col_var])) {
-          warnings_messages <- c(warnings_messages,
-                                 "Quantitative variables cannot be used for colors with boxplot"
+          warnings_messages <- c(
+            warnings_messages,
+            "Quantitative variables cannot be used for colors with boxplot"
           )
         }
       }
@@ -409,6 +417,7 @@ plot_warning <- function(data, x_var, y_var, col_var) {
 }
 
 is_null_var <- function(vars) {
-  sapply(vars, function(var) { identical(var, none_value) })
+  sapply(vars, function(var) {
+    identical(var, none_value)
+  })
 }
-

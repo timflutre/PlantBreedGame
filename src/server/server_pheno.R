@@ -70,8 +70,9 @@ readQryPheno <- reactive({
     # list individuals
     indList <- unique(as.character(df$ind))
     pheno_start_date <- as.Date(paste(get_phenotyping_year(getGameTime()),
-                                      getBreedingGameConstants()$max.upload.pheno.field,
-                                      sep = "-"))
+      getBreedingGameConstants()$max.upload.pheno.field,
+      sep = "-"
+    ))
 
     indAvail <- indAvailable(indList, pheno_start_date, breeder())
 
@@ -156,11 +157,13 @@ pheno_data <- eventReactive(input$requestPheno, {
 
     request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.pheno$name))
 
-    db_add_request(id = NA,
-                   breeder = breeder(),
-                   name = request_name,
-                   type = "pheno",
-                   game_date = request_time)
+    db_add_request(
+      id = NA,
+      breeder = breeder(),
+      name = request_name,
+      type = "pheno",
+      game_date = request_time
+    )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     add_pheno_req_data(req_id = new_request$id, request_data = readQryPheno())
 

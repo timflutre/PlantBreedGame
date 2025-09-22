@@ -65,7 +65,6 @@ div(
         tags$li("Individuals should not be duplicated within each task."),
         tags$li("Lines starting with ", code("#"), " will be ignored.")
       )),
-
       h4("Results"),
       p("The phenotyping results will present 7 variables:"),
       tags$ul(
@@ -83,7 +82,8 @@ div(
             tags$li(code("0"), "indicates the individual did not show symptoms.")
           ),
           "Note: If", code("pathogen"), "is", code("FALSE"),
-          ", the pathogen was not observed and therefore not any individuals will show  symptoms.")
+          ", the pathogen was not observed and therefore not any individuals will show  symptoms."
+        )
       )
     )
   ),

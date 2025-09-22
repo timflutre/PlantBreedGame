@@ -16,7 +16,6 @@
 
 
 valid_positive_integer <- function(n, strict = FALSE, accept_null = TRUE, raise_error = FALSE) {
-
   error <- return
   if (raise_error) {
     error <- stop
@@ -54,7 +53,6 @@ valid_positive_integer <- function(n, strict = FALSE, accept_null = TRUE, raise_
 }
 
 valid_positive_number <- function(x, strict = FALSE, accept_null = TRUE, raise_error = FALSE) {
-
   error <- return
   if (raise_error) {
     error <- stop
@@ -92,7 +90,6 @@ valid_positive_number <- function(x, strict = FALSE, accept_null = TRUE, raise_e
 }
 
 valid_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
-
   error <- return
   if (raise_error) {
     error <- stop
@@ -117,7 +114,6 @@ valid_number <- function(x, accept_null = TRUE, raise_error = FALSE) {
 }
 
 valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_null = TRUE, raise_error = FALSE) {
-
   error <- return
   error <- return
   if (raise_error) {
@@ -184,7 +180,6 @@ valid_range <- function(x, min, max, incl_min = TRUE, incl_max = TRUE, accept_nu
   }
 
   return(NULL)
-
 }
 
 valid_mu <- function(x, accept_null = TRUE, raise_error = FALSE) {
@@ -256,10 +251,18 @@ valid_h2 <- function(x, accept_null = TRUE, raise_error = FALSE) {
 }
 
 
-calc_sigma_p2 <- function(mu, min) {((mu - min)/3)^2}
-calc_sigma_a2 <- function(cv_g, mu) {(cv_g * mu)^2}
-calc_sigma2 <- function(h2, sigma_a2) {((1 - h2) / h2) * sigma_a2}
-calc_sigma_y2 <- function(sigma_p2, sigma_a2, sigma2) {sigma_p2 - sigma_a2 - sigma2}
+calc_sigma_p2 <- function(mu, min) {
+  ((mu - min) / 3)^2
+}
+calc_sigma_a2 <- function(cv_g, mu) {
+  (cv_g * mu)^2
+}
+calc_sigma2 <- function(h2, sigma_a2) {
+  ((1 - h2) / h2) * sigma_a2
+}
+calc_sigma_y2 <- function(sigma_p2, sigma_a2, sigma2) {
+  sigma_p2 - sigma_a2 - sigma2
+}
 
 valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE, raise_error = FALSE) {
   error <- return
@@ -281,9 +284,9 @@ valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE
     error("Must not be NULL")
   }
 
-  var_name = ""
+  var_name <- ""
   if (!is.null(name)) {
-    var_name = paste(" for", name)
+    var_name <- paste(" for", name)
   }
 
   if (is.na(x)) {
@@ -309,7 +312,6 @@ valid_variance <- function(x, name = NULL, accept_na = FALSE, accept_null = TRUE
 valid_prop_pleio <- function(x, accept_null = TRUE, raise_error = FALSE) {
   valid_range(x, 0, 1, incl_min = TRUE, incl_max = TRUE, accept_null = accept_null, raise_error = raise_error)
 }
-valid_cor_pleio <-  function(x, accept_null = TRUE, raise_error = FALSE) {
+valid_cor_pleio <- function(x, accept_null = TRUE, raise_error = FALSE) {
   valid_range(x, -1, 1, incl_min = TRUE, incl_max = TRUE, accept_null = accept_null, raise_error = raise_error)
 }
-

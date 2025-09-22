@@ -69,18 +69,18 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   phenotyped_inds_ids <- unique(pheno_request_dta$ind_id)
   phenotyped_inds <- db_get_individual(ind_id = phenotyped_inds_ids)
   pheno_request_dta <- merge(pheno_request_dta,
-                             phenotyped_inds[, c("id", "name")],
-                             by.x = "ind_id", by.y = "id")
+    phenotyped_inds[, c("id", "name")],
+    by.x = "ind_id", by.y = "id"
+  )
   colnames(pheno_request_dta)[colnames(pheno_request_dta) == "name"] <- "ind_name"
 
   X <- load_genotypes(inds_ids = phenotyped_inds_ids, UIprogress = progressPheno)
 
 
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
-  pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field",]
+  pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field", ]
   phenosField.df <- NULL
   if (nrow(pheno_field_request_dta) > 0) {
-
     if (!is.null(progressPheno)) {
       progressPheno$set(
         value = 2,
@@ -125,10 +125,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   }
 
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
-  pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho",]
+  pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho", ]
   phenosPatho.df <- NULL
   if (nrow(pheno_patho_request_dta) > 0) {
-
     if (!is.null(progressPheno)) {
       progressPheno$set(
         value = 3,
@@ -226,20 +225,22 @@ get_phenotyping_year <- function(request_dates) {
   }
   request_year <- data.table::year(request_dates)
   limitDate <- as.Date(paste(request_year,
-                             getBreedingGameConstants()$max.upload.pheno.field,
-                             sep = "-"))
+    getBreedingGameConstants()$max.upload.pheno.field,
+    sep = "-"
+  ))
 
   pheno_year <- ifelse(request_dates > limitDate, request_year + 1, request_year)
   return(pheno_year)
 }
 
 get_remaining_pheno_plot <- function(breeder, request_date) {
-
-  historyPheno <- db_get_game_requests_history(breeder = breeder,
-                                               type = "pheno",
-                                               detail = "pheno-field")
+  historyPheno <- db_get_game_requests_history(
+    breeder = breeder,
+    type = "pheno",
+    detail = "pheno-field"
+  )
   historyPheno$pheno_year <- get_phenotyping_year(historyPheno$game_date)
-  historyPheno <- historyPheno[historyPheno$pheno_year == get_phenotyping_year(request_date),]
+  historyPheno <- historyPheno[historyPheno$pheno_year == get_phenotyping_year(request_date), ]
 
   used_plots <- sum(historyPheno$quantity)
   remaining_plots <- max(0, getBreedingGameConstants()$nb.plots - used_plots)
@@ -277,7 +278,6 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
 #' @returns data.frame with 3 columns: "GV_trait1", "GV_trait2", "resist_trait3"
 #' rownames are the same as the `genotypes`' rownames
 calculate_genetic_values <- function(genotypes, p0 = NULL, afs0 = NULL) {
-
   if (is.null(p0)) {
     f <- paste0(DATA_TRUTH, "/p0.RData")
     load(f)

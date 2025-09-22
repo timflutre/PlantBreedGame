@@ -58,8 +58,7 @@ data_viz_file_validator$add_rule("categ_variables", function(x) {
     return(paste0(
       "`", paste0(missing_var, collapse = "`, `"),
       "`, must be categorical"
-      )
-    )
+    ))
   }
   return(NULL)
 })
@@ -125,7 +124,6 @@ observeEvent(input$categ_variables, {
 
 
 data_from_file <- reactive({
-
   data <- raw_data_from_file()
   categ_vars <- input$categ_variables
   quant_vars <- colnames(data)[!colnames(data) %in% categ_vars]
@@ -140,4 +138,3 @@ data_from_file <- reactive({
 })
 
 data_viz_server("data-viz_file", data_from_file)
-

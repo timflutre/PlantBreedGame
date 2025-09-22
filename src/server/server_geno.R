@@ -147,11 +147,13 @@ geno_data <- eventReactive(input$requestGeno, {
 
 
     request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.geno$name))
-    db_add_request(id = NA,
-                   breeder = breeder(),
-                   name = request_name,
-                   type = "geno",
-                   game_date = request_time)
+    db_add_request(
+      id = NA,
+      breeder = breeder(),
+      name = request_name,
+      type = "geno",
+      game_date = request_time
+    )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
     res <- try(process_geno_request(new_request$id, progressGeno = progressGeno))

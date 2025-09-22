@@ -54,24 +54,25 @@ div(
         )
       )
     ),
-
     tabPanel(
       "Phenotype data",
       h2("Phenotype data"),
-      div(id = "pheno_info",
+      div(
+        id = "pheno_info",
         p("Three phenotypic traits are investigated:"),
         tags$ul(
           tags$li(code("trait1"), ": flower production in kg/ha"),
           tags$li(code("trait2"), ": sepmetin content in g/kg"),
-          tags$li(code("trait3"), ": presence of symptoms caused by P. psychedelica",
+          tags$li(
+            code("trait3"), ": presence of symptoms caused by P. psychedelica",
             tags$ul(
               tags$li(code("1"), "indicates the individual showed symptoms"),
               tags$li(code("0"), "indicates the individual did not show symptoms.")
             ),
             "Note: If", code("pathogen"), "is", code("FALSE"),
-            ", the pathogen was not observed and therefore not any individuals will show  symptoms.")
+            ", the pathogen was not observed and therefore not any individuals will show  symptoms."
+          )
         ),
-
         p("Additionally, the phenotypic data provides the following variables:"),
         tags$ul(
           tags$li(code("ind"), ": the individual name"),
@@ -83,43 +84,43 @@ div(
       ),
 
       # h3("Summary"),
-      div(id = "pheno_filters",
+      div(
+        id = "pheno_filters",
         h3("Filters"),
         p("Records matching", strong("all conditions"), "are shown."),
         individual_filtering_ui("pheno_download_ind_filter", breeder = breeder()),
         phenotype_filtering_ui("pheno_download_pheno_filter", breeder = breeder()),
         downloadButton("dwnlPheno_1", "Download")
       ),
-
-      div(id = "pheno_preview_div",
+      div(
+        id = "pheno_preview_div",
         h3("Preview"),
         actionButton("refresh_pheno_preview", label = "Refresh", icon = icon("rotate")),
         dataTableOutput("pheno_preview_DT")
       ),
       downloadButton("dwnlPheno_2", "Download"),
     ),
-
     tabPanel(
       "My plant material",
       h2("Plant material"),
-      div(id = "inds_filters",
+      div(
+        id = "inds_filters",
         h3("Filters"),
         p("Records matching", strong("all conditions"), "are shown."),
         individual_filtering_ui("inds_download_ind_filter", breeder = breeder()),
         downloadButton("dwnlInds_1", "Download")
       ),
-
-      div(id = "inds_preview",
+      div(
+        id = "inds_preview",
         h3("Preview"),
         dataTableOutput("plant_mat_preview")
       ),
       downloadButton("dwnlInds_2", "Download"),
-
-      div(id = "inds_ind_info",
+      div(
+        id = "inds_ind_info",
         uiOutput("selected_ind_info")
       ),
     ),
-
     tabPanel(
       "Change my password",
       div(

@@ -1,4 +1,3 @@
-
 # this file list all the game initialisation parameters (implemented in the
 # application)
 # It takes the forms of "shiny modules" to:
@@ -26,7 +25,8 @@ individual_filtering_ui <- function(id, breeder) {
         db_get_game_requests(breeder = breeder, type = "pltmat")$name,
         "Controls"
       ),
-      width = "75%"),
+      width = "75%"
+    ),
   )
 }
 
@@ -46,7 +46,7 @@ individual_filtering_server <- function(id, breeder) {
               breeder = breeder,
               control = TRUE
             )$id
-          } else  if (ind_filter != "All") {
+          } else if (ind_filter != "All") {
             inds_ids <- db_get_individual(
               breeder = breeder,
               request_name = ind_filter
@@ -56,7 +56,6 @@ individual_filtering_server <- function(id, breeder) {
         })
       )
     )
-
   })
 }
 
@@ -76,7 +75,6 @@ phenotype_filtering_ui <- function(id, breeder) {
         placeholder = "All"
       )
     ),
-
     selectizeInput(
       ns("pheno_year"),
       "Phenotype year",
@@ -87,7 +85,6 @@ phenotype_filtering_ui <- function(id, breeder) {
         placeholder = "All"
       )
     ),
-
     selectInput(
       ns("pheno_pahtogen"),
       "Pathogen",
@@ -121,7 +118,3 @@ phenotype_filtering_server <- function(id, breeder) {
     )
   })
 }
-
-
-
-

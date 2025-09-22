@@ -25,7 +25,6 @@
 getGameTime <- function(time_irl = Sys.time(),
                         gameSessions = db_get_game_sessions(),
                         first_year = getBreedingGameConstants()["first.year"]) {
-
   first_game_day <- strptime(paste0(first_year, "-01-01"), format = "%Y-%m-%d")
 
 
@@ -34,10 +33,10 @@ getGameTime <- function(time_irl = Sys.time(),
   }
 
   # get current time
-  gameSessions$start <- apply(gameSessions, 1, function(line){
+  gameSessions$start <- apply(gameSessions, 1, function(line) {
     lubridate::parse_date_time(line["start"], orders = "%Y-%m-%d %H:%M:%S", tz = line["time_zone"])
   }, simplify = TRUE)
-  gameSessions$end <- apply(gameSessions, 1, function(line){
+  gameSessions$end <- apply(gameSessions, 1, function(line) {
     lubridate::parse_date_time(line["end"], orders = "%Y-%m-%d %H:%M:%S", tz = line["time_zone"])
   }, simplify = TRUE)
   gameSessions$order <- order(gameSessions$start)
@@ -50,7 +49,7 @@ getGameTime <- function(time_irl = Sys.time(),
   currentSesion <- gameSessions[which(time_irl >= gameSessions$start & time_irl < gameSessions$end), ]
   if (nrow(currentSesion) == 0) {
     # we are between 2 sessions
-    previousSessions <- gameSessions[which(time_irl >= gameSessions$start),]
+    previousSessions <- gameSessions[which(time_irl >= gameSessions$start), ]
 
     if (nrow(previousSessions) == 0) {
       # no previous session means the game didn't start yet
@@ -59,7 +58,7 @@ getGameTime <- function(time_irl = Sys.time(),
 
     # Then we set the "current time" at the end of the previous session so that
     # the game time do not pass.
-    previousSession <- previousSessions[max(previousSessions$order),]
+    previousSession <- previousSessions[max(previousSessions$order), ]
     time_irl <- previousSession$end
     currentSesion <- previousSession
   }
@@ -79,4 +78,3 @@ getGameTime <- function(time_irl = Sys.time(),
   gameTime <- first_game_day + elapsTime
   return(gameTime)
 }
-

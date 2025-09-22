@@ -407,7 +407,7 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 }
 
 
-create_issue_link <- function(title = "", body = ""){
+create_issue_link <- function(title = "", body = "") {
   repo_base_url <- "https://github.com/timflutre/PlantBreedGame"
   body <- gsub(pattern = "\n", replacement = "%0A", x = body)
   issue_link <- paste0(
@@ -533,11 +533,10 @@ get_unique_request_name <- function(breeder, request_base_name) {
   request_name <- request_base_name
   existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
   suffix <- 1
-  while (nrow(existing_requests) != 0 ) {
+  while (nrow(existing_requests) != 0) {
     suffix <- suffix + 1
     request_name <- paste(request_base_name, "-", suffix)
     existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
   }
   return(request_name)
 }
-

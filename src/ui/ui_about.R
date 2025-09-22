@@ -49,7 +49,8 @@ tabItem(
           "Source code: ", a("GitHub repository", href = url.repo, target = "_blank")
         ),
         h3("Version"),
-        p("Current version: ",
+        p(
+          "Current version: ",
           a(code.version$display, href = code.version$link, target = "_blank")
         ),
         br(),
