@@ -109,6 +109,7 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     crosses = pltmat_request_dta[,c("parent1", "parent2", "child")],
     loc.crossovers = loc.crossovers, verbose = 0
   )
+  rm(parents_haplotypes)
 
 
   ## save the haplotypes of the new individuals
@@ -116,6 +117,14 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     haplotype_file = rep(NA, nrow(pltmat_request_dta)),
     row.names = pltmat_request_dta$child
   )
+
+
+  genotypes <- matrix(
+    nrow = nrow(pltmat_request_dta),
+    ncol = getBreedingGameConstants()$nb.snps
+  )
+  rownames(genotypes) <- pltmat_request_dta$child
+
   for (new.ind.id in getIndNamesFromHaplos(new_inds_haplo)) {
     if (!is.null(progressPltMat)) {
       progressPltMat$set(
@@ -128,11 +137,23 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     f <- paste0(DATA_TRUTH, "/", breeder, "/", new.ind.id, "_haplos.RData")
     save(ind, file = f)
     haplotype_file_data[new.ind.id, "haplotype_file"] <- f
+
+    # genotype
+    ind$genos <- segSites2allDoses(seg.sites = ind$haplos, ind.ids = new.ind.id)
+    genotypes[new.ind.id, ] <- ind$genos
   }
+  colnames(genotypes) <- colnames(ind$genos)
+
   db_add_pltmat(req_id = request_id)
   haplotype_file_data$id <- db_get_individuals_ids(breeder = breeder(),
                                                    names = row.names(haplotype_file_data))
-  db_add_ind_haplotype(haplotype_file_data)
+  db_update_pltmat(haplotype_file_data)
+
+  GV <- calculate_genetic_values(genotypes)
+  GV$id <- db_get_individuals_ids(breeder = breeder(),
+                                  names = row.names(GV))
+  db_update_pltmat(GV)
+
   db_update_request(id = request_id, processed = 1)
 }
 

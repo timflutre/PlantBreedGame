@@ -1,4 +1,3 @@
-
 library(testthat)
 library(RSQLite)
 
@@ -18,10 +17,14 @@ db_delete_from <- function(tbl, condition) {
 
 charSeq <- function(to, prefix = "", from = 1, suffix = "") {
   .seq <- seq(from, to)
-  sprintf(paste0(prefix,
-                 "%0", floor(log10(to)) + 1, "i",
-                 suffix),
-          .seq)
+  sprintf(
+    paste0(
+      prefix,
+      "%0", floor(log10(to)) + 1, "i",
+      suffix
+    ),
+    .seq
+  )
 }
 
 
@@ -46,13 +49,13 @@ mock_pheno_field <- function(request_data, year) {
       ind = as.character(x["ind"]),
       trait1 = rnorm(x["details"]),
       trait2 = rnorm(x["details"]),
-      trait3 = sample(c(0,1), size = x["details"], replace = TRUE)
+      trait3 = sample(c(0, 1), size = x["details"], replace = TRUE)
     )
   }))
   pheno$plot <- seq(1:nrow(pheno))
   pheno$year <- year
-  pheno$pathogen <- sample(c(T,F), size = 1)
-  pheno <- pheno[, c("ind", "year", "plot", "pathogen", "trait1", "trait2","trait3")]
+  pheno$pathogen <- sample(c(T, F), size = 1)
+  pheno <- pheno[, c("ind", "year", "plot", "pathogen", "trait1", "trait2", "trait3")]
 
   return(pheno)
 }
@@ -78,34 +81,34 @@ test_that("db initialisation", {
   dbDisconnect(db)
 
   expect_true(
-    setequal(tables,
-             c(
-               "breeders",
-               "constants",
-               "genotypes",
-               "geno_requests",
-               "pheno_requests",
-               "phenotypes",
-               "plant_material",
-               "pltmat_requests",
-               "evaluation_requests",
-               "requests",
-               "sessions",
-               "sqlite_sequence",
-               "v_plant_material",
-               "v_phenotypes",
-               "v_genotypes",
-               "v_request_history",
-               "v_evaluation_requests_summary",
-               "v_remaining_budget"
-             )
+    setequal(
+      tables,
+      c(
+        "breeders",
+        "constants",
+        "genotypes",
+        "geno_requests",
+        "pheno_requests",
+        "phenotypes",
+        "plant_material",
+        "pltmat_requests",
+        "evaluation_requests",
+        "requests",
+        "sessions",
+        "sqlite_sequence",
+        "v_plant_material",
+        "v_phenotypes",
+        "v_genotypes",
+        "v_request_history",
+        "v_evaluation_requests_summary",
+        "v_remaining_budget"
+      )
     )
   )
 })
 
 
 test_that("read/write constants", {
-
   expect_identical(
     getBreedingGameConstants(),
     structure(list(), names = character(0))
@@ -115,7 +118,6 @@ test_that("read/write constants", {
     toto = 1,
     tata = "a",
     titi = "2000/01/01",
-
     first.year = 1900,
     max.upload.pheno.field = "05-31",
     duration.pheno.field = 4,
@@ -126,7 +128,6 @@ test_that("read/write constants", {
     duration.geno.hd = 3,
     duration.geno.ld = 2,
     duration.geno.single = 1,
-
     cost.pheno.field = 100,
     cost.pheno.patho = 0.1,
     cost.allof = 0.1,
@@ -157,26 +158,34 @@ test_that("read/write constants", {
     getBreedingGameConstants(),
     updated_constants_list
   )
-
 })
 
 test_that("db utility functions", {
+  expect_equal(
+    condition("AND", "id", "IN", c(1, 2, 3)),
+    "AND id IN ( 1, 2, 3 )"
+  )
 
-  expect_equal(condition("AND", "id", "IN", c(1,2,3)),
-               "AND id IN ( 1, 2, 3 )")
+  expect_equal(
+    condition("AND", "name", "IN", c("A", "B")),
+    "AND name IN ( 'A', 'B' )"
+  )
 
-  expect_equal(condition("AND", "name", "IN", c("A", "B")),
-               "AND name IN ( 'A', 'B' )")
+  expect_equal(
+    condition("OR", "t", "BETWEEN", c(1, 100)),
+    "OR t BETWEEN 1 AND 100"
+  )
 
-  expect_equal(condition("OR", "t", "BETWEEN", c(1, 100)),
-               "OR t BETWEEN 1 AND 100")
+  expect_equal(
+    condition("OR", "t", "=", "' OR '1'='1"),
+    "OR t = ''' OR ''1''=''1'"
+  )
 
-  expect_equal(condition("OR", "t", "=", "' OR '1'='1"),
-               "OR t = ''' OR ''1''=''1'")
-
-  value = NULL
-  expect_equal(condition("OR", "t", "=", value),
-               "")
+  value <- NULL
+  expect_equal(
+    condition("OR", "t", "=", value),
+    ""
+  )
 
   expect_error(condition("OR", "t", "TOTO", 1))
 
@@ -189,8 +198,10 @@ test_that("db utility functions", {
     condition("AND", "key", "=", key),
     condition("AND", "value", "=", value)
   )
-  expect_equal(db_get(query),
-               data.frame(key = key, value = value))
+  expect_equal(
+    db_get(query),
+    data.frame(key = key, value = value)
+  )
 
   # SQL injection
   key <- "tata' OR 1=1 --"
@@ -205,32 +216,39 @@ test_that("db utility functions", {
     paste("AND", "key", "= '", key, "'"),
     paste("AND", "value", "= '", value, "'")
   )
-  expect_equal(db_get(malicious_query),
-               db_get_all("constants"))
-  expect_equal(db_get(safe_query),
-               data.frame(key = character(), value = character()))
+  expect_equal(
+    db_get(malicious_query),
+    db_get_all("constants")
+  )
+  expect_equal(
+    db_get(safe_query),
+    data.frame(key = character(), value = character())
+  )
 })
 
 
 test_that("read/write game sessions", {
-
   expect_equal(
     db_get_game_sessions(),
-    data.frame(id = numeric(),
-               start = character(),
-               end = character(),
-               year_time = numeric(),
-               time_zone = character())
+    data.frame(
+      id = numeric(),
+      start = character(),
+      end = character(),
+      year_time = numeric(),
+      time_zone = character()
+    )
   )
 
   db_add_game_session(1, "2018-02-15 09:00:00", "2018-02-15 12:00:00", 60, "UTC")
   expect_equal(
     db_get_game_sessions(),
-    data.frame(id = 1,
-               start = "2018-02-15 09:00:00",
-               end = "2018-02-15 12:00:00",
-               year_time = 60,
-               time_zone = "UTC")
+    data.frame(
+      id = 1,
+      start = "2018-02-15 09:00:00",
+      end = "2018-02-15 12:00:00",
+      year_time = 60,
+      time_zone = "UTC"
+    )
   )
 
 
@@ -252,22 +270,26 @@ test_that("read/write game sessions", {
   db_delete_game_session(2)
   expect_equal(
     db_get_game_sessions(),
-    data.frame(id = numeric(),
-               start = character(),
-               end = character(),
-               year_time = numeric(),
-               time_zone = character())
+    data.frame(
+      id = numeric(),
+      start = character(),
+      end = character(),
+      year_time = numeric(),
+      time_zone = character()
+    )
   )
 
 
   db_add_game_session(NA, "2018-02-15 14:00:00", "2018-02-15 17:00:00", 60, "UTC")
   expect_equal(
     db_get_game_sessions(),
-    data.frame(id = 4,
-               start = "2018-02-15 14:00:00",
-               end = "2018-02-15 17:00:00",
-               year_time = 60,
-               time_zone = "UTC")
+    data.frame(
+      id = 4,
+      start = "2018-02-15 14:00:00",
+      end = "2018-02-15 17:00:00",
+      year_time = 60,
+      time_zone = "UTC"
+    )
   )
 })
 
@@ -276,9 +298,11 @@ test_that("read/write game sessions", {
 test_that("read/write breeders", {
   expect_equal(
     db_get_all("breeders"),
-    data.frame(name = character(),
-               status = character(),
-               h_psw = character())
+    data.frame(
+      name = character(),
+      status = character(),
+      h_psw = character()
+    )
   )
 
   db_add_breeder("test-db 1", "admin", "1234")
@@ -286,9 +310,11 @@ test_that("read/write breeders", {
 
   expect_equal(
     db_get_all("breeders"),
-    data.frame(name = c("test-db 1", "test-db 2"),
-               status = c("admin", "player"),
-               h_psw = c("1234", "abcd"))
+    data.frame(
+      name = c("test-db 1", "test-db 2"),
+      status = c("admin", "player"),
+      h_psw = c("1234", "abcd")
+    )
   )
 
   expect_equal(
@@ -298,37 +324,49 @@ test_that("read/write breeders", {
 
   expect_equal(
     db_get_breeder("test-db 1"),
-    list(name = "test-db 1",
-         status = "admin",
-         h_psw = "1234")
+    list(
+      name = "test-db 1",
+      status = "admin",
+      h_psw = "1234"
+    )
   )
 
   db_delete_breeder("test-db 1")
   expect_equal(
     db_get_all("breeders"),
-    data.frame(name = "test-db 2",
-               status = "player",
-               h_psw = "abcd")
+    data.frame(
+      name = "test-db 2",
+      status = "player",
+      h_psw = "abcd"
+    )
   )
   expect_no_error({
-    db_update_breeder(breeder = "test-db 2",
-                      new_h_psw = "1234")
+    db_update_breeder(
+      breeder = "test-db 2",
+      new_h_psw = "1234"
+    )
   })
   expect_equal(
     db_get_all("breeders"),
-    data.frame(name = "test-db 2",
-               status = "player",
-               h_psw = "1234")
+    data.frame(
+      name = "test-db 2",
+      status = "player",
+      h_psw = "1234"
+    )
   )
   expect_no_error({
-    db_update_breeder(breeder = "test-db 2",
-                      new_status = "tester")
+    db_update_breeder(
+      breeder = "test-db 2",
+      new_status = "tester"
+    )
   })
   expect_equal(
     db_get_all("breeders"),
-    data.frame(name = "test-db 2",
-               status = "tester",
-               h_psw = "1234")
+    data.frame(
+      name = "test-db 2",
+      status = "tester",
+      h_psw = "1234"
+    )
   )
   db_delete_breeder("test-db 2")
 
@@ -339,7 +377,6 @@ test_that("read/write breeders", {
 
 
 test_that("read/write requests", {
-
   expect_equal(
     db_get_all("requests"),
     data.frame(
@@ -353,11 +390,13 @@ test_that("read/write requests", {
     )
   )
 
-  db_add_request(id = NA,
-                 breeder = "A",
-                 name = "test_A_1",
-                 type = "pltmat",
-                 game_date = "2000-01-01")
+  db_add_request(
+    id = NA,
+    breeder = "A",
+    name = "test_A_1",
+    type = "pltmat",
+    game_date = "2000-01-01"
+  )
   requests_dta <- db_get_game_requests()
   requests_dta <- subset(requests_dta, select = -time)
   expect_equal(
@@ -374,11 +413,13 @@ test_that("read/write requests", {
 
   expect_error({
     # requests names should be unique for each breeders
-    db_add_request(id = NA,
-                        breeder = "A",
-                        name = "test_A_1",
-                        type = "pltmat",
-                        game_date = "2000-01-02")
+    db_add_request(
+      id = NA,
+      breeder = "A",
+      name = "test_A_1",
+      type = "pltmat",
+      game_date = "2000-01-02"
+    )
   })
 
   db_delete_from("requests", "id=1")
@@ -402,11 +443,13 @@ test_that("read/write requests", {
   for (breeder in c("A", "B")) {
     for (i in seq(3)) {
       for (type in c("pltmat", "pheno", "geno")) {
-        db_add_request(id = NA,
-                            breeder = breeder,
-                            name = paste0("test_", type, "_", i),
-                            type = type,
-                            game_date = paste0("2000-0", i, "-01"))
+        db_add_request(
+          id = NA,
+          breeder = breeder,
+          name = paste0("test_", type, "_", i),
+          type = type,
+          game_date = paste0("2000-0", i, "-01")
+        )
       }
     }
   }
@@ -417,50 +460,64 @@ test_that("read/write requests", {
   expect_equal(nrow(db_get_game_requests(id = 2)), 1)
 
   expect_equal(nrow(db_get_game_requests(id = c(2, 3))), 2)
-  expect_equal(nrow(db_get_game_requests(breeder = "A",
-                                      name = c("test_pltmat_1", "test_pltmat_2"))),
-               2)
+  expect_equal(
+    nrow(db_get_game_requests(
+      breeder = "A",
+      name = c("test_pltmat_1", "test_pltmat_2")
+    )),
+    2
+  )
 
   # cascade delete
   db_add_breeder("test_req", "player", "1234")
-  db_add_request(id = NA,
-                      breeder = "test_req",
-                      name = "test_to_delete",
-                      type = "pltmat",
-                      game_date = "2000-01-01")
+  db_add_request(
+    id = NA,
+    breeder = "test_req",
+    name = "test_to_delete",
+    type = "pltmat",
+    game_date = "2000-01-01"
+  )
   expect_equal(nrow(db_get_game_requests(breeder = "test_req")), 1)
   db_delete_breeder("test_req")
   expect_equal(nrow(db_get_game_requests(breeder = "test_req")), 0)
 
   # initial requests
   expect_no_error({
-    db_add_request(id = NA,
-                   breeder = "@ALL",
-                   name = "-- Initial Plant Material --",
-                   type = "pltmat",
-                   game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+    db_add_request(
+      id = NA,
+      breeder = "@ALL",
+      name = "-- Initial Plant Material --",
+      type = "pltmat",
+      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01")
+    )
   })
   expect_error({
-    db_add_request(id = NA,
-                   breeder = "@ALL",
-                   name = "-- Initial Plant Material --",
-                   type = "pltmat",
-                   game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+    db_add_request(
+      id = NA,
+      breeder = "@ALL",
+      name = "-- Initial Plant Material --",
+      type = "pltmat",
+      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01")
+    )
   })
 
   expect_no_error({
-    db_add_request(id = NA,
+    db_add_request(
+      id = NA,
       breeder = "@ALL",
       name = "-- Initial Genotypes --",
       type = "geno",
-      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01")
+    )
   })
   expect_error({
-    db_add_request(id = NA,
+    db_add_request(
+      id = NA,
       breeder = "@ALL",
       name = "-- Initial Genotypes --",
       type = "geno",
-      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01"))
+      game_date = paste0(getBreedingGameConstants()$first.year - 1, "-01-01")
+    )
   })
 
   # cf. phenotype data section for initial phenotype requests
@@ -480,7 +537,6 @@ test_that("read/write requests", {
 
 
 test_that("plant material data", {
-
   expect_equal(
     db_get_all("pltmat_requests"),
     data.frame(
@@ -506,7 +562,10 @@ test_that("plant material data", {
       parent2_id = numeric(),
       pltmat_request_id = numeric(),
       haplotype_file = character(),
-      control = numeric()
+      control = numeric(),
+      GV_trait1 = numeric(),
+      GV_trait2 = numeric(),
+      resist_trait3 = numeric()
     )
   )
 
@@ -546,15 +605,22 @@ test_that("plant material data", {
   expect_equal(
     initial_plantMaterial_raw,
     data.frame(
-      id = c(1:(2*n_init_inds)),
-      name = c(initial_collection_parents_names,
-               initial_collection_names),
+      id = c(1:(2 * n_init_inds)),
+      name = c(
+        initial_collection_parents_names,
+        initial_collection_names
+      ),
       parent1_id = c(rep(NA, n_init_inds), c(1:n_init_inds)),
       parent2_id = NA_integer_,
-      pltmat_request_id = c(rep(NA, n_init_inds),
-                            c(1:n_init_inds)),
+      pltmat_request_id = c(
+        rep(NA, n_init_inds),
+        c(1:n_init_inds)
+      ),
       haplotype_file = NA_character_,
-      control = 0
+      control = 0,
+      GV_trait1 = NA_integer_,
+      GV_trait2 = NA_integer_,
+      resist_trait3 = NA_integer_
     )
   )
   initial_plantMaterial <- db_get_individual()
@@ -567,10 +633,14 @@ test_that("plant material data", {
 
   # test we can not add plant materials before their request
   initial_plantMaterial <- db_get_individual()
-  breeder_pltmat_req_id <- db_get_game_requests(breeder = "A",
-                                             name = "test_pltmat_1")[1, 1]
-  expect_equal(length(db_add_pltmat(req_id = breeder_pltmat_req_id)),
-               0)
+  breeder_pltmat_req_id <- db_get_game_requests(
+    breeder = "A",
+    name = "test_pltmat_1"
+  )[1, 1]
+  expect_equal(
+    length(db_add_pltmat(req_id = breeder_pltmat_req_id)),
+    0
+  )
   expect_equal(
     db_get_individual(),
     initial_plantMaterial
@@ -584,7 +654,9 @@ test_that("plant material data", {
     child = c("A", "B"),
     explanations = rep("allofecundation", 2)
   )
-  expect_error({db_add_pltmat_req_data(breeder_pltmat_req_id, mock_request)})
+  expect_error({
+    db_add_pltmat_req_data(breeder_pltmat_req_id, mock_request)
+  })
 
   mock_request <- data.frame(
     parent1 = c(initial_collection_names[1], initial_collection_names[1]),
@@ -592,34 +664,47 @@ test_that("plant material data", {
     child = c("A", "B"),
     explanations = rep("allofecundation", 2)
   )
-  expect_error({db_add_pltmat_req_data(breeder_pltmat_req_id, mock_request)})
+  expect_error({
+    db_add_pltmat_req_data(breeder_pltmat_req_id, mock_request)
+  })
 
 
   i <- 0
   current_plantMaterial <- initial_plantMaterial
   new_inds <- initial_collection_names
   for (generation in c(1, 2)) {
-    parent1 <- c(new_inds,
-                  rep(new_inds[1], 2))
-    parent2 = c(rev(new_inds),
-                NA, new_inds[1])
+    parent1 <- c(
+      new_inds,
+      rep(new_inds[1], 2)
+    )
+    parent2 <- c(
+      rev(new_inds),
+      NA, new_inds[1]
+    )
     new_inds <- charSeq(n_init_inds, paste0("G", generation, "_"))
 
     mock_request <- data.frame(
       parent1 = parent1,
       parent2 = parent2,
-      child = c(new_inds,
-                paste0("G", generation, "_", c("haplo", "autof"))),
-      explanations = c(rep("allofecundation", length(parent1) - 2),
-                       "haplodiploidization",
-                       "autofecundation")
+      child = c(
+        new_inds,
+        paste0("G", generation, "_", c("haplo", "autof"))
+      ),
+      explanations = c(
+        rep("allofecundation", length(parent1) - 2),
+        "haplodiploidization",
+        "autofecundation"
+      )
     )
 
     for (breeder in c("A", "B")) {
-      breeder_pltmat_req_id <- db_get_game_requests(breeder = breeder,
-                                                 name = paste0("test_pltmat_",
-                                                               generation)
-                                                 )[1, 1]
+      breeder_pltmat_req_id <- db_get_game_requests(
+        breeder = breeder,
+        name = paste0(
+          "test_pltmat_",
+          generation
+        )
+      )[1, 1]
 
       # add plant_material request
       expect_no_error({
@@ -633,7 +718,7 @@ test_that("plant material data", {
           req_id = breeder_pltmat_req_id,
           parent1_id = db_get_individuals_ids(breeder, mock_request$parent1),
           parent2_id = db_get_individuals_ids(breeder, mock_request$parent2),
-          parent1_request_name =  mock_request$parent1,
+          parent1_request_name = mock_request$parent1,
           parent2_request_name = mock_request$parent2,
           child_name = mock_request$child,
           cross_type = mock_request$explanations
@@ -641,21 +726,29 @@ test_that("plant material data", {
       )
 
       # add plant_material
-      expect_equal(length(db_add_pltmat(req_id = breeder_pltmat_req_id)),
-                   nrow(mock_request)
+      expect_equal(
+        length(db_add_pltmat(req_id = breeder_pltmat_req_id)),
+        nrow(mock_request)
       )
 
-      expect_equal(nrow(db_get_individual()),
-                   nrow(current_plantMaterial) + nrow(mock_request)
+      expect_equal(
+        nrow(db_get_individual()),
+        nrow(current_plantMaterial) + nrow(mock_request)
       )
 
-      pltmat_req_data <- db_get_game_requests_data(id = breeder_pltmat_req_id,
-                                                type = "pltmat")
-      individuals_data <- db_get_individual(breeder = breeder,
-                                            request_name = paste0("test_pltmat_",
-                                                                  generation))
-      pltmat_req_data <- pltmat_req_data[order(pltmat_req_data$id),]
-      individuals_data <- individuals_data[order(individuals_data$pltmat_request_id),]
+      pltmat_req_data <- db_get_game_requests_data(
+        id = breeder_pltmat_req_id,
+        type = "pltmat"
+      )
+      individuals_data <- db_get_individual(
+        breeder = breeder,
+        request_name = paste0(
+          "test_pltmat_",
+          generation
+        )
+      )
+      pltmat_req_data <- pltmat_req_data[order(pltmat_req_data$id), ]
+      individuals_data <- individuals_data[order(individuals_data$pltmat_request_id), ]
 
       expect_equal(individuals_data$name, pltmat_req_data$child_name)
       expect_equal(individuals_data$parent1_name, pltmat_req_data$parent1_request_name)
@@ -679,7 +772,7 @@ test_that("plant material data", {
     n_init_inds + 2
   )
 
-  expect_equal(nrow(db_get_game_requests_data(breeder = "A", type = "pltmat")), n_init_inds + 2 * (n_init_inds + 2) )
+  expect_equal(nrow(db_get_game_requests_data(breeder = "A", type = "pltmat")), n_init_inds + 2 * (n_init_inds + 2))
   expect_equal(nrow(db_get_game_requests_data(type = "pltmat")), n_init_inds + 2 * 2 * (n_init_inds + 2))
   expect_equal(
     colnames(db_get_game_requests_data(type = "pltmat")),
@@ -709,7 +802,7 @@ test_that("plant material data", {
     new_data <- db_add_pltmat_req_data(NA, mock_request)
   })
 
-  controls_names <- initial_collection_names[c(1,length(initial_collection_names))]
+  controls_names <- initial_collection_names[c(1, length(initial_collection_names))]
   expect_no_error({
     db_mark_as_control(controls_names)
   })
@@ -728,7 +821,6 @@ test_that("plant material data", {
 
 
 test_that("phenotype data", {
-
   expect_equal(
     db_get_all("pheno_requests"),
     data.frame(
@@ -760,9 +852,9 @@ test_that("phenotype data", {
   n_rep <- 4
   for (i in seq(n_init_inds - 1)) {
     pheno_req <- data.frame(
-        ind = initial_collection_names[i:(i + 1)],
-        task = "pheno-field",
-        details = n_rep
+      ind = initial_collection_names[i:(i + 1)],
+      task = "pheno-field",
+      details = n_rep
     )
     initial_pheno_list[[i]] <- mock_pheno_field(pheno_req, 1950 + i)
   }
@@ -793,19 +885,26 @@ test_that("phenotype data", {
       if (generation == 0) {
         inds <- initial_collection_names[c(1, n_init_inds)]
       } else {
-        inds <- db_get_individual(breeder = breeder,
-                                  request_name = paste0("test_pltmat_", generation))$name
+        inds <- db_get_individual(
+          breeder = breeder,
+          request_name = paste0("test_pltmat_", generation)
+        )$name
       }
       mock_request <- data.frame(
         ind = rep(inds, 2),
         task = rep(c("pheno-field", "pheno-patho"), each = length(inds)),
-        details = c(rep("2", length(inds)),
-                    rep("1", length(inds)))
+        details = c(
+          rep("2", length(inds)),
+          rep("1", length(inds))
+        )
       )
 
-      pheno_req_id <- db_get_game_requests(breeder = breeder,
-                                        name = paste0("test_pheno_",
-                                                      generation + 1)
+      pheno_req_id <- db_get_game_requests(
+        breeder = breeder,
+        name = paste0(
+          "test_pheno_",
+          generation + 1
+        )
       )[1, 1]
 
       # add pheno request
@@ -814,8 +913,8 @@ test_that("phenotype data", {
       })
 
       # mock phenotype
-      pheno_field <- mock_pheno_field(mock_request[mock_request$task == "pheno-field",], 2000)
-      pheno_patho <- mock_pheno_patho(mock_request[mock_request$task == "pheno-patho",], 2000)
+      pheno_field <- mock_pheno_field(mock_request[mock_request$task == "pheno-field", ], 2000)
+      pheno_patho <- mock_pheno_patho(mock_request[mock_request$task == "pheno-patho", ], 2000)
       pheno_data <- rbind(pheno_field, pheno_patho)
 
       # add phenotype data
@@ -829,11 +928,13 @@ test_that("phenotype data", {
   # test with pheno data that are only field data
   breeder <- "A"
   req_name <- "test_field_only"
-  db_add_request(id = NA,
-                      breeder = breeder,
-                      name = req_name,
-                      type = "pheno",
-                      game_date = "2000-01-01")
+  db_add_request(
+    id = NA,
+    breeder = breeder,
+    name = req_name,
+    type = "pheno",
+    game_date = "2000-01-01"
+  )
   pheno_req_id <- db_get_game_requests(breeder = breeder, name = req_name)[1, 1]
 
   # add pheno request
@@ -855,11 +956,13 @@ test_that("phenotype data", {
   # test with pheno data that are only patho data
   breeder <- "A"
   req_name <- "test_patho_only"
-  db_add_request(id = NA,
-                 breeder = breeder,
-                 name = req_name,
-                 type = "pheno",
-                 game_date = "2000-01-01")
+  db_add_request(
+    id = NA,
+    breeder = breeder,
+    name = req_name,
+    type = "pheno",
+    game_date = "2000-01-01"
+  )
   pheno_req_id <- db_get_game_requests(breeder = breeder, name = req_name)[1, 1]
 
   # add pheno request
@@ -885,8 +988,10 @@ test_that("phenotype data", {
     db_get_phenotypes()
   })
   expect_no_error({
-    db_get_phenotypes(breeder = "A",
-                      ind_name = initial_collection_names[1])
+    db_get_phenotypes(
+      breeder = "A",
+      ind_name = initial_collection_names[1]
+    )
   })
   expect_true(
     (nrow(db_get_phenotypes(breeder = "A", ind_name = initial_collection_names[1])) !=
@@ -906,7 +1011,7 @@ test_that("phenotype data", {
     db_get_phenotypes(request_name = "test_patho_only")
   })
   expect_no_error({
-    db_get_phenotypes(plot = c(1,99))
+    db_get_phenotypes(plot = c(1, 99))
   })
   expect_no_error({
     positive_t1 <- db_get_phenotypes(min_t1 = 0)
@@ -939,8 +1044,10 @@ test_that("phenotype data", {
     db_get_phenotypes(t3 = 0)
   })
   expect_no_error({
-    db_get_phenotypes(pathogen = 1,
-                      t3 = 0)
+    db_get_phenotypes(
+      pathogen = 1,
+      t3 = 0
+    )
   })
   expect_no_error({
     db_get_phenotypes(pathogen = 0)
@@ -952,7 +1059,7 @@ test_that("phenotype data", {
 
   # available date calculation
   pheno <- db_get_phenotypes()
-  pheno_field <- pheno[pheno$type == "pheno-field",]
+  pheno_field <- pheno[pheno$type == "pheno-field", ]
 
   constants <- getBreedingGameConstants()
   expected_available_dates <- as.character(
@@ -964,7 +1071,7 @@ test_that("phenotype data", {
   )
   expect_equal(pheno_field$avail_from, expected_available_dates)
 
-  pheno_patho <- pheno[pheno$type == "pheno-patho",]
+  pheno_patho <- pheno[pheno$type == "pheno-patho", ]
   expected_available_dates <- as.character(
     lubridate::add_with_rollback(
       as.Date(pheno_patho$request_game_date),
@@ -977,7 +1084,6 @@ test_that("phenotype data", {
 
 
 test_that("genotype data", {
-
   expect_equal(
     db_get_all("geno_requests"),
     data.frame(
@@ -1041,20 +1147,24 @@ test_that("genotype data", {
       if (generation == 0) {
         inds <- initial_collection_names[c(1, n_init_inds)]
       } else {
-        inds <- db_get_individual(breeder = breeder,
-                                  request_name = paste0("test_pltmat_", generation))$name
+        inds <- db_get_individual(
+          breeder = breeder,
+          request_name = paste0("test_pltmat_", generation)
+        )$name
       }
       mock_request <- data.frame(
         ind = c(inds, inds[1], inds[1], inds[2]),
         task = "geno",
         details = "ld"
       )
-      mock_request$details[1:floor((nrow(mock_request) - 2)/2)] <- "hd"
-      mock_request$details[(nrow(mock_request) - 1):nrow(mock_request)] <- paste0("snp00", c(1,2) + generation)
+      mock_request$details[1:floor((nrow(mock_request) - 2) / 2)] <- "hd"
+      mock_request$details[(nrow(mock_request) - 1):nrow(mock_request)] <- paste0("snp00", c(1, 2) + generation)
 
       request_name <- paste0("test_geno_", generation + 1)
-      geno_req_id <- db_get_game_requests(breeder = breeder,
-                                       name = request_name)[1, 1]
+      geno_req_id <- db_get_game_requests(
+        breeder = breeder,
+        name = request_name
+      )[1, 1]
 
       # add geno request
       expect_no_error({
@@ -1081,10 +1191,12 @@ test_that("genotype data", {
     db_get_genotypes()
   })
   expect_no_error({
-    db_get_genotypes(breeder = "A",
-                     ind_name = initial_collection_names[1])
+    db_get_genotypes(
+      breeder = "A",
+      ind_name = initial_collection_names[1]
+    )
   })
-    expect_no_error({
+  expect_no_error({
     db_get_genotypes(id = 1)
   })
   expect_no_error({
@@ -1114,11 +1226,13 @@ test_that("genotype data", {
 test_that("evaluation requests", {
   A_inds <- db_get_individual(breeder = "A", request_name = "test_pltmat_1")
 
-  selected_inds_A <- A_inds[1:3,]
+  selected_inds_A <- A_inds[1:3, ]
   expect_no_error({
-    db_add_evaluation_inds(breeder = "A",
-                           ind_ids = selected_inds_A$id,
-                           game_date = "2000-02-01")
+    db_add_evaluation_inds(
+      breeder = "A",
+      ind_ids = selected_inds_A$id,
+      game_date = "2000-02-01"
+    )
   })
   expect_no_error({
     eval_req <- db_get_evaluation_requests()
@@ -1139,7 +1253,7 @@ test_that("evaluation requests", {
   })
   eval_req <- db_get_evaluation_requests()
   expect_equal(nrow(eval_req), nrow(selected_inds_A) + length(removed_inds))
-  expect_equal(nrow(eval_req[eval_req$action == "remove",]), length(removed_inds))
+  expect_equal(nrow(eval_req[eval_req$action == "remove", ]), length(removed_inds))
   expect_true(setequal(eval_req$ind_id[eval_req$action == "remove"], ind_to_remove))
   inds <- db_get_individual()
   expect_true(all(inds$selected_for_evaluation[inds$id %in% setdiff(selected_inds_A$id, removed_inds)] == 1))
@@ -1153,7 +1267,7 @@ test_that("evaluation requests", {
   })
   eval_req <- db_get_evaluation_requests()
   expect_equal(nrow(eval_req), nrow(selected_inds_A) + length(removed_inds))
-  expect_equal(nrow(eval_req[eval_req$action == "remove",]), length(removed_inds))
+  expect_equal(nrow(eval_req[eval_req$action == "remove", ]), length(removed_inds))
   expect_true(setequal(eval_req$ind_id[eval_req$action == "remove"], removed_inds))
   inds <- db_get_individual()
   expect_true(all(inds$selected_for_evaluation[inds$id %in% setdiff(selected_inds_A$id, removed_inds)] == 1))
@@ -1161,9 +1275,11 @@ test_that("evaluation requests", {
 
   # add back a removed ind
   added_back_ind <- selected_inds_A$id[1]
-  db_add_evaluation_inds(breeder = "A",
-                         ind_ids = added_back_ind,
-                         game_date = "2000-02-01")
+  db_add_evaluation_inds(
+    breeder = "A",
+    ind_ids = added_back_ind,
+    game_date = "2000-02-01"
+  )
   inds <- db_get_individual(ind_id = added_back_ind)
   expect_equal(inds$selected_for_evaluation, 1)
 })
@@ -1185,6 +1301,3 @@ test_that("request history", {
 
 
 unlink(tmpdir, recursive = TRUE)
-
-
-

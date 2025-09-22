@@ -56,6 +56,9 @@ CREATE TABLE IF NOT EXISTS "plant_material" (
 	"pltmat_request_id"	INTEGER REFERENCES pltmat_requests(id),
 	"haplotype_file"	TEXT,
 	"control"	INTEGER DEFAULT 0,
+	"GV_trait1"	FLOAT,
+	"GV_trait2"	FLOAT,
+	"resist_trait3"	INTEGER,
 	 UNIQUE("pltmat_request_id", "name")
 );
 
@@ -103,6 +106,9 @@ SELECT
 		WHEN ers.ind_id IS NOT NULL AND ers.selected == 1 THEN 1
 		ELSE 0
 	END as selected_for_evaluation,
+	pm.GV_trait1,
+	pm.GV_trait2,
+	pm.resist_trait3,
 	pr.id as pltmat_request_id,
 	r.id as request_id,
 	r.name as request_name,
