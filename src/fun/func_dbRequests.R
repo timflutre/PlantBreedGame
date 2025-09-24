@@ -991,16 +991,12 @@ db_add_geno_data <- function(geno_req_id, genotype_data_files) {
   if (nrow(geno_request) == 0) {
     stop("No genotype's request data found")
   }
-  geno_data_hd <- geno_request[geno_request$type == "hd", ]
-  geno_data_hd$result_file <- genotype_data_files$hd
 
-  geno_data_ld <- geno_request[geno_request$type == "ld", ]
-  geno_data_ld$result_file <- genotype_data_files$ld
-
-  geno_data_snp <- geno_request[!geno_request$type %in% c("hd", "ld"), ]
-  geno_data_snp$result_file <- genotype_data_files$singleSnp
-
-  geno_data <- rbind(geno_data_hd, geno_data_ld, geno_data_snp)
+  geno_data <- geno_request[, c("id", "type")]
+  geno_data$result_file <- NA
+  geno_data$result_file[geno_data$type == "hd"] <- genotype_data_files$hd
+  geno_data$result_file[geno_data$type == "ld"] <- genotype_data_files$ld
+  geno_data$result_file[!geno_data$type %in% c("hd", "ld")] <- genotype_data_files$singleSnp
 
   geno_data <- geno_data[, c("id", "type", "result_file")]
   colnames(geno_data) <- c("geno_req_id", "type", "result_file")
