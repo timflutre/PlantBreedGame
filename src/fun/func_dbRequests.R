@@ -819,9 +819,9 @@ db_add_initial_pheno_data <- function(init_pheno_data) {
       game_date = paste0(year, "-01-01")
     )
     pheno_req_id <- db_get_game_requests(breeder = "@ALL", name = request_name)[1, 1]
-
     add_pheno_req_data(pheno_req_id, request_data)
     db_add_pheno_data(pheno_data, pheno_req_id)
+    db_update_request(id = pheno_req_id, processed = 1)
   })
 }
 
