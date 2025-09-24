@@ -332,9 +332,10 @@ SELECT
 	(SELECT value FROM constants WHERE key = 'initialBudget') - total_spent as remaining_budget
 FROM (
 	SELECT
-		rh.breeder,
-		sum(rh.cost) as total_spent
-	FROM v_request_history rh
-	GROUP BY rh.breeder
+		b.name as breeder,
+		coalesce(sum(rh.cost), 0) as total_spent
+	FROM breeders b
+	FULL JOIN v_request_history rh ON (b.name = rh.breeder)
+	GROUP BY b.name
 )
 
