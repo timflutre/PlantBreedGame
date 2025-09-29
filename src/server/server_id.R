@@ -196,6 +196,239 @@ output$UIdwnlRequest <- renderUI({
 })
 
 
+
+## Requests history ----
+
+requests_ongoing <- reactive({
+  invalidateLater(5000)
+  dta <- db_get_game_requests_history(breeder = breeder())
+  if (nrow(dta) == 0) {
+    dta$status <- character(0)
+    return(dta)
+  }
+  dta$status <- "Error"
+  dta$status[dta$processed == 0] <- "Pending"
+  dta$status[dta$processed > 0] <- "Processing"
+
+  if (breederStatus() %in% c("game master", "tester")) {
+    dta$status[dta$processed == 1] <- "Completed"
+  } else {
+    dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
+    dta$status[dta$processed == 1 & !dta$available] <- "In progress"
+    dta$status[dta$processed == 1 & dta$available] <- "Completed"
+  }
+  dta <- dta[dta$status != "Completed" & dta$status != "Error", ]
+  dta
+})
+
+requests_history <- reactivePoll(5000, session, checkFunc = requests_ongoing, function() {
+  dta <- db_get_game_requests_history(breeder = breeder())
+  if (nrow(dta) == 0) {
+    dta$status <- character(0)
+    dta <- dta[, c(
+      "status",
+      "name",
+      "request_type",
+      "detail",
+      "quantity",
+      "cost",
+      "game_date",
+      "avail_from"
+    )]
+    return(dta)
+  }
+  dta$status <- NA
+  dta$status[dta$processed < 0] <- "Error"
+  dta$status[dta$processed == 0] <- "Pending"
+  dta$status[dta$processed > 0] <- "Processing"
+
+  if (breederStatus() %in% c("game master", "tester")) {
+    dta$status[dta$processed == 1] <- "Completed"
+  } else {
+    dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
+    dta$status[dta$processed == 1 & !dta$available] <- "In progress"
+    dta$status[dta$processed == 1 & dta$available] <- "Completed"
+  }
+
+  dta <- dta[, c(
+    "status",
+    "name",
+    "request_type",
+    "detail",
+    "quantity",
+    "cost",
+    "game_date",
+    "avail_from"
+  )]
+  dta <- dta[order(dta$game_date, decreasing = TRUE), ]
+  dta
+})
+
+requests_progress_bars <- reactive({
+  requests <- requests_ongoing()
+  if (nrow(requests) == 0) {
+    return(NULL)
+  }
+  requests <- requests[order(requests$avail_from), ]
+  if (breederStatus() %in% c("game master", "tester")) {
+    requests$progress <- requests$processed
+    requests$total_time <- 100
+    requests$elapse_time <- as.numeric(requests$processed) * requests$total_time
+  } else {
+    requests$game_date <- strptime(requests$game_date, format = "%Y-%m-%d")
+    requests$avail_from <- strptime(requests$avail_from, format = "%Y-%m-%d")
+    requests$total_time <- as.numeric(difftime(requests$avail_from, requests$game_date, units = "days"))
+    requests$elapse_time <- ifelse(
+      requests$status == "In progress",
+      as.numeric(difftime(getGameTime(), requests$game_date, units = "days")),
+      0
+    )
+    requests$progress <- requests$elapse_time / requests$total_time
+  }
+
+  prog_bars <- apply(requests, MARGIN = 1, function(r) {
+    title <- paste0(
+      r["request_type"], " - ",
+      r["detail"], " - ",
+      r["name"], " - ",
+      r["status"]
+    )
+    shinyWidgets::progressBar(
+      id = paste0("progress-", r["name"]),
+      title = title,
+      # value = as.numeric(r["progress"]),
+      value = round(as.numeric(r["elapse_time"])),
+      status = ifelse(r["status"] == "In progress", "success", "warning"),
+      total = round(as.numeric(r["total_time"])),
+      display_pct = TRUE,
+      striped = TRUE
+    )
+  })
+
+  return(prog_bars)
+})
+
+output$request_progress_bars_UI <- renderUI({
+  prog_bars <- requests_progress_bars()
+  if (length(prog_bars) == 0) {
+    return(NULL)
+  }
+  return(
+    htmltools::tagList(
+      h4("Ongoing requests:"),
+      do.call(htmltools::tagList, prog_bars)
+    )
+  )
+})
+
+output$requests_history_DT <- DT::renderDataTable(
+  {
+    dta <- requests_history()
+    colnames(dta) <- c(
+      "Status",
+      "Name",
+      "Request Type",
+      "Detail",
+      "Quantity",
+      "Cost",
+      "Request Date",
+      "Availability Date"
+    )
+    DT::datatable(
+      dta,
+      selection = "single",
+      rownames = FALSE,
+      options = list(
+        lengthMenu = c(10, 20, 50),
+        pageLength = 10,
+        searchDelay = 500
+      )
+    )
+  },
+  # server = TRUE
+  server = FALSE
+)
+
+output$dwnl_request_ui <- renderUI({
+  selected_line <- input$requests_history_DT_rows_selected
+  if (is.null(selected_line)) {
+    return(div())
+  }
+  selected_request <- requests_history()[selected_line, ]
+  downloadButton("dwnl_request", paste0(
+    "Download request: ",
+    selected_request$name
+  ))
+})
+
+
+output$dwnl_request <- downloadHandler(
+  filename = function() {
+    selected_line <- input$requests_history_DT_rows_selected
+    selected_request <- requests_history()[selected_line, ]
+    paste0(selected_request$name, ".txt")
+  },
+  content = function(file) {
+    selected_line <- input$requests_history_DT_rows_selected
+    selected_request <- requests_history()[selected_line, ]
+    request_dta <- db_get_game_requests_data(
+      breeder = breeder(),
+      name = selected_request$name
+    )
+
+    if (selected_request$request_type == "pltmat") {
+      request_dta <- request_dta[, c(
+        "parent1_request_name",
+        "parent2_request_name",
+        "child_name",
+        "cross_type"
+      )]
+      colnames(request_dta) <- c(
+        "parent1",
+        "parent2",
+        "child",
+        "explanations"
+      )
+    }
+
+    if (selected_request$request_type == "pheno") {
+      request_dta <- request_dta[, c(
+        "ind_request_name",
+        "type",
+        "n_pheno"
+      )]
+      colnames(request_dta) <- c(
+        "ind",
+        "task",
+        "details"
+      )
+    }
+
+    if (selected_request$request_type == "geno") {
+      request_dta <- request_dta[, c(
+        "ind_request_name",
+        "request_type",
+        "type"
+      )]
+      colnames(request_dta) <- c(
+        "ind",
+        "task",
+        "details"
+      )
+    }
+
+    write.table(request_dta,
+      file = file,
+      sep = "\t",
+      row.names = FALSE
+    )
+  }
+)
+
+
+
+
+
 ## Genotype data ----
 
 genoRequests_list <- reactive({
@@ -294,7 +527,7 @@ output$selected_geno_data_UI_info <- renderUI({
 
     if (is_available) {
       downloadButtons <- div(
-        p("Data are available from ", info$avail_date, ":"),
+        p(paste0("Data are available from ", info$avail_date, ".")),
         downloadButton(paste0("dwnlGeno_", geno_type), "Download as `txt.gz`"),
         downloadButton(paste0("dwnlGeno_vcf_", geno_type), "Download as `vcf.gz`")
       )
@@ -432,6 +665,7 @@ output$plant_mat_preview <- DT::renderDataTable({
   DT::datatable(
     plant_mat_preview_data(),
     selection = "single",
+    rownames = FALSE,
     options = list(
       lengthMenu = c(10, 20, 50),
       pageLength = 10,
@@ -622,61 +856,6 @@ output$UIpswChanged <- renderUI({
 
 
 
-## Breeder information ----
-output$breederBoxID <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxID <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-
-
-output$budgetBoxID <- renderValueBox({
-  x <- input$id_submitInds
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-outputOptions(output, "budgetBoxID", priority = 9)
-
-output$serverIndicID <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoID <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxID", width = 3),
-      infoBoxOutput("dateBoxID", width = 3),
-      infoBoxOutput("budgetBoxID", width = 3),
-      infoBoxOutput("serverIndicID", width = 3)
-    )
-  }
-})
-
-
-
 ## Final Individuals submission ----
 
 # add new inds for submission
@@ -765,6 +944,14 @@ output$submittedIndsDT <- renderDataTable({
 })
 
 
+
+## Breeder information ----
+breeder_info_server("breederInfoID",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 
 # DEBUG ----

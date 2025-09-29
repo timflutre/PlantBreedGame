@@ -20,7 +20,7 @@
 
 # UI of "geno" part
 div(
-  uiOutput("UIbreederInfoGeno"),
+  breeder_info_UI("breederInfo_geno"),
   shinydashboard::box(
     width = 12, title = "Request genotyping",
     div(

@@ -198,57 +198,13 @@ output$phenoRequestResultUI <- renderUI({
 
 
 
-
-## Breeder information :
-output$breederBoxPheno <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxPheno <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-
-
-output$budgetBoxPheno <- renderValueBox({
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-
-output$serverIndicPheno <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoPheno <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxPheno", width = 3),
-      infoBoxOutput("dateBoxPheno", width = 3),
-      infoBoxOutput("budgetBoxPheno", width = 3),
-      infoBoxOutput("serverIndicPheno", width = 3)
-    )
-  }
-})
+## Breeder information ----
+breeder_info_server("breederInfo_pheno",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 ## DEBUG
 #

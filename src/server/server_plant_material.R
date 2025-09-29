@@ -202,58 +202,13 @@ output$plmatRequestResultUI <- renderUI({
 
 
 
-## Breeder information :
-output$breederBoxPltMat <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxPltMat <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-
-
-output$budgetBoxPltMat <- renderValueBox({
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-
-output$serverIndicPltMat <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoPltMat <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxPltMat", width = 3),
-      infoBoxOutput("dateBoxPltMat", width = 3),
-      infoBoxOutput("budgetBoxPltMat", width = 3),
-      infoBoxOutput("serverIndicPltMat", width = 3)
-    )
-  }
-})
-
-
+## Breeder information ----
+breeder_info_server("breederInfo_pltmat",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 
 

@@ -21,7 +21,7 @@
 
 # UI of "pheno" part
 div(
-  uiOutput("UIbreederInfoPheno"),
+  breeder_info_UI("breederInfo_pheno"),
   shinydashboard::box(
     width = 12, title = "Request phenotyping",
     div(
