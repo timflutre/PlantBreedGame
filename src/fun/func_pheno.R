@@ -80,10 +80,10 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
   pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field", ]
   phenosField.df <- NULL
+
   if (nrow(pheno_field_request_dta) > 0) {
     if (!is.null(progressPheno)) {
       progressPheno$set(
-        value = 2,
         detail = "pheno simulation (field)..."
       )
     }
@@ -123,19 +123,22 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     inds_with_t3 <- (phenosField.df$pathogen & as.logical(phenosField.df$trait3))
     phenosField.df$trait1[inds_with_t3] <- (1 - p0$prop.yield.loss) * phenosField.df$trait1[inds_with_t3]
   }
+  if (!is.null(progressPheno)) {
+    progressPheno$inc(
+      amount = 1,
+    )
+  }
 
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
   pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho", ]
   phenosPatho.df <- NULL
+
   if (nrow(pheno_patho_request_dta) > 0) {
     if (!is.null(progressPheno)) {
       progressPheno$set(
-        value = 3,
         detail = "pheno simulation (patho)..."
       )
     }
-
-
 
     phenosPatho.df <- makeDfPhenos(
       ind.ids = pheno_patho_request_dta$ind_name,
@@ -158,6 +161,13 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     phenosPatho.df$trait2 <- NA
     phenosPatho.df$trait3 <- phenosPatho$trait3$y
     phenosPatho.df$trait1 <- NA
+  }
+
+  if (!is.null(progressPheno)) {
+    progressPheno$inc(
+      amount = 1,
+      detail = paste0("Finalisation...")
+    )
   }
 
   if (!is.null(phenosPatho.df)) {

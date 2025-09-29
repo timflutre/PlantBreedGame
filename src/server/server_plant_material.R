@@ -147,7 +147,7 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
   request_time <- getGameTime()
   if (is.data.frame(readQryPlmat())) {
     # Create a Progress object
-    progressPltMat <- shiny::Progress$new(session, min = 0, max = 5)
+    progressPltMat <- shiny::Progress$new(session, min = 0, max = 6)
     progressPltMat$set(
       value = 0,
       message = "Create Plant Material:",
@@ -173,7 +173,7 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     }
 
     progressPltMat$set(
-      value = 5,
+      value = progressPltMat$getMax(),
       detail = "Done !"
     )
 

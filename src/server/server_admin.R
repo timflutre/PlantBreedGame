@@ -645,25 +645,24 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 18)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 29)
 
-  progress_bar$set(
-    value = 1,
+  progress_bar$inc(
+    amount = 1,
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
 
   if (!gameInit_input_validator$is_valid()) {
     progress_bar$set(
-      value = 1,
       message = "Game Initialisation:",
       detail = "ERROR, invalid parameters"
     )
     return(NULL)
   }
 
-  progress_bar$set(
-    value = 2,
+  progress_bar$inc(
+    amount = 1,
     message = "Game Initialisation:",
     detail = "game setup..."
   )
@@ -777,10 +776,8 @@ observeEvent(input$initialiseGame, {
     addResourcePath("reports", DATA_REPORTS)
   }
 
-
-
   progress_bar$set(
-    value = progress_bar$max,
+    value = progress_bar$getMax(),
     message = "Game Initialisation:",
     detail = "Done"
   )

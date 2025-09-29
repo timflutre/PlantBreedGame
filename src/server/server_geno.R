@@ -138,7 +138,7 @@ geno_data <- eventReactive(input$requestGeno, {
   request_time <- getGameTime()
   if (is.data.frame(readQryGeno())) {
     # Create a Progress object
-    progressGeno <- shiny::Progress$new(session, min = 0, max = 4)
+    progressGeno <- shiny::Progress$new(session, min = 0, max = 5)
     progressGeno$set(
       value = 0,
       message = "Process Geno request:",
@@ -158,11 +158,10 @@ geno_data <- eventReactive(input$requestGeno, {
     db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
     res <- try(process_geno_request(new_request$id, progressGeno = progressGeno))
 
-
     if (res == "done") {
       writeRequest(readQryGeno(), breeder(), input$file.geno$name)
       progressGeno$set(
-        value = 4,
+        value = progressGeno$getMax(),
         detail = "Done"
       )
 
