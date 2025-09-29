@@ -73,11 +73,16 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     )
   }
 
+  if (!is.null(progressPltMat)) {
+    progressPltMat$inc(
+      amount = 1,
+    )
+  }
   for (i in 1:nrow(requested_parents)) {
     parent_name <- requested_parents$name[i]
     if (!is.null(progressPltMat)) {
-      progressPltMat$set(
-        value = 1,
+      progressPltMat$inc(
+        amount = 1 / nrow(requested_parents),
         detail = paste0(
           "Load haplotypes: ",
           i, "/", nrow(requested_parents), ": ",
@@ -100,12 +105,11 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
   ## perform the requested crosses
   if (!is.null(progressPltMat)) {
-    progressPltMat$set(
-      value = 2,
+    progressPltMat$inc(
+      amount = 1,
       detail = "perform crosses..."
     )
   }
-
 
   new_inds_haplo <- list()
   loc.crossovers <- drawLocCrossovers(
@@ -126,17 +130,21 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     row.names = pltmat_request_dta$child
   )
 
-
   genotypes <- matrix(
     nrow = nrow(pltmat_request_dta),
     ncol = getBreedingGameConstants()$nb.snps
   )
   rownames(genotypes) <- pltmat_request_dta$child
 
+  if (!is.null(progressPltMat)) {
+    progressPltMat$inc(
+      amount = 1,
+    )
+  }
   for (new.ind.id in getIndNamesFromHaplos(new_inds_haplo)) {
     if (!is.null(progressPltMat)) {
-      progressPltMat$set(
-        value = 3,
+      progressPltMat$inc(
+        amount = 1 / nrow(pltmat_request_dta),
         detail = paste0("Save haplotypes: ", new.ind.id)
       )
     }
@@ -151,6 +159,13 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     genotypes[new.ind.id, ] <- ind$genos
   }
   colnames(genotypes) <- colnames(ind$genos)
+
+  if (!is.null(progressPltMat)) {
+    progressPltMat$inc(
+      amount = 1,
+      detail = "Finalisation..."
+    )
+  }
 
   db_add_pltmat(req_id = request_id)
   haplotype_file_data$id <- db_get_individuals_ids(

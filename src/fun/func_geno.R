@@ -71,17 +71,16 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
 
   ## 5. handle the 'geno' tasks for the requested individuals
   for (genotyping_density in c("ld", "hd")) {
-    if (!is.null(progressGeno)) {
-      progressGeno$set(
-        value = 2,
-        detail = paste0("Process ", genotyping_density)
-      )
-    }
-
     geno_request_dta_filtered <- geno_request_dta[geno_request_dta$type == genotyping_density, ]
 
     if (nrow(geno_request_dta_filtered) == 0) {
       next
+    }
+    if (!is.null(progressGeno)) {
+      progressGeno$inc(
+        amount = 1,
+        detail = paste0("Process ", genotyping_density, "...")
+      )
     }
 
     filtered_genotype <- genotypes[geno_request_dta_filtered$ind_name,
@@ -99,6 +98,12 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
   ## 6. handle the 'snp' tasks for the requested individuals
   geno_request_dta_single_snp <- geno_request_dta[!geno_request_dta$type %in% c("ld", "hd"), ]
   if (nrow(geno_request_dta_single_snp) > 0) {
+    if (!is.null(progressGeno)) {
+      progressGeno$inc(
+        amount = 1,
+        detail = paste0("Process single SNPs...")
+      )
+    }
     single_snp_genotypes <- data.frame(
       ind = geno_request_dta_single_snp$ind_name,
       snp = geno_request_dta_single_snp$type,
@@ -118,7 +123,10 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
       sep = "\t", row.names = FALSE, col.names = TRUE
     )
   }
-
+  progressGeno$inc(
+    amount = 1,
+    detail = paste0("Finalisation...")
+  )
   db_add_geno_data(
     geno_req_id = request_id,
     genotype_data_files = geno_file_names
@@ -199,8 +207,8 @@ load_genotypes <- function(inds_ids, UIprogress = NULL, add_breeder_to_inds_name
     }
 
     if (!is.null(UIprogress)) {
-      UIprogress$set(
-        value = 1, # TODO: to be calculated using the current "value" +1
+      UIprogress$inc(
+        amount = 1 / n_inds,
         detail = paste0("Load haplotypes: ", paste0(i, "/", n_inds, " ", ind_name))
       )
     }

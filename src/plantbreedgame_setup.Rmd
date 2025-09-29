@@ -54,6 +54,9 @@ if (is.null(progressBar)) {
     },
     getValue = function(...) {
       return(invisible(NULL))
+    },
+    inc = function(...) {
+      return(invisible(NULL))
     }
   )
 }
@@ -95,8 +98,8 @@ It sets up a [serious game](https://sourcesup.renater.fr/plantbreedgame/) to tea
 
 ```{r load_pkgs, warning = FALSE}
 progress_detail <- "Load R packages..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -145,8 +148,8 @@ Validation and overview of the parameters used to initialised this game session.
 
 ```{r}
 progress_detail <- "Parameter validation..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -208,8 +211,8 @@ print(params[names(params) != "progressBar"])
 
 ```{r setup_dir}
 progress_detail <- "Setup directories..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 data_root <- normalizePath(Sys.getenv("PLANTBREEDGAME_DATA_ROOT"))
@@ -322,8 +325,8 @@ Enhancement: simulate two sub-populations, quite differenciated (by crossing ind
 Simulate genotypes via the coalescent:
 ```{r simul_geno_coalescent}
 progress_detail <- "Genotype simulation..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -355,8 +358,8 @@ g0$genos[1:2, 1:6]
 Look at the AFs and MAFs:
 ```{r look_mafs}
 progress_detail <- "AF calculation..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 afs <- estimSnpAf(X = g0$genos, allow.updating = TRUE)
@@ -390,8 +393,8 @@ plotHaplosMatrix(g0$haplos$chr1[
 Estimate and plot pairwise LD per chromosome:
 ```{r estim_plot_ld}
 progress_detail <- "Generate LD plot..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -433,8 +436,8 @@ abline(v = 500, lty = 2)
 Look at distances between consecutive SNPs:
 ```{r dist_btw_snps}
 progress_detail <- "SNP distances calculation..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -518,8 +521,8 @@ write.table(
 Make collection of lines via haplodiploidization:
 ```{r coll_lines}
 progress_detail <- "Generate initial collection's genotype..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -569,8 +572,8 @@ gc()
 Make data frame encoding the design for the initial phenotypes given to the players:
 ```{r init_pheno}
 progress_detail <- "Simulate initial phenotypes..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1076,8 +1079,8 @@ Enhancement: add missing data
 Save data:
 ```{r save_phenos}
 progress_detail <- "Save initial phenotypes..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1247,8 +1250,8 @@ Enhancement: add spatial coordinates and missing data
 Create the database:
 ```{r setup_db}
 progress_detail <- "Initialise data-base..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1258,9 +1261,9 @@ options(DATA_DB = dbname)
 db <- dbConnect(SQLite(), dbname = dbname)
 dbDisconnect(db)
 
-progress_detail <- paste("Initialise data-base...", dbname)
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progress_detail <- paste("Data-Base initialisation DONE...")
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1279,8 +1282,8 @@ Fill the table with the game's constants.
 
 ```{r table_constants}
 progress_detail <- "Data-base: constants..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1374,8 +1377,8 @@ Fill with initial game sessions:
 
 ```{r table_sessions_fill}
 progress_detail <- "Data-base: game-sessions..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 db_add_game_session(NA, "2018-02-15 09:00:00", "2018-02-15 12:00:00", 60, "UTC")
@@ -1388,8 +1391,8 @@ db_add_game_session(NA, "2018-02-16 09:00:00", "2018-02-16 11:40:00", 40, "UTC")
 Insert the breeder(s):
 ```{r create_table_breeders}
 progress_detail <- "Data-base: breeders..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 db_add_breeder("@ALL", NA, NA) # mandatory to add shared initial materials
@@ -1401,8 +1404,8 @@ Save also the collection in the plant material table of each breeder:
 
 ```{r fill_table}
 progress_detail <- "Data-base: initial plant materials..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1435,8 +1438,8 @@ tail(init_individuals)
 For each individual initially given to the players, save its haplotypes into a file (slow):
 ```{r save_haplos_in_files}
 progress_detail <- "Save initial haplotypes..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1450,6 +1453,12 @@ system.time({
       id = db_get_individuals_ids(breeder = "@ALL", names = ind.id),
       haplotype_file = f
     ))
+    current_progress <- progressBar$getValue()
+    current_progress_percent <- round((current_progress %% 1) * 100)
+    progressBar$inc(
+      amount = 1 / length(ind.ids),
+      detail = paste("Save initial haplotypes:", current_progress_percent, "% ...")
+    )
   }, mc.cores = nb.cores)
   haplo_id_association <- do.call(rbind, haplo_id_association)
   db_update_pltmat(haplo_id_association)
@@ -1469,8 +1478,8 @@ Save initial phenotypes data.
 
 ```{r save_phenotypes_in_db}
 progress_detail <- "Data-base: initial phenotypes..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 additional_column <- which(colnames(p0.df) == "trait1.raw")
@@ -1482,8 +1491,8 @@ Save initial genotype data in db.
 
 ```{r save_genotypes_in_db}
 progress_detail <- "Data-base: initial genotypes..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 db_add_request(
@@ -1517,8 +1526,8 @@ db_update_request(id = init_geno_req_id, processed = 1)
 Save also the initial allele frequencies:
 ```{r save_afs_in_file}
 progress_detail <- "Save allele frequencies..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 f <- paste0(truth.dir, "/afs0.RData")
@@ -1530,8 +1539,8 @@ save(afs0, file = f)
 Make an example of a "plant material" file:
 ```{r ex_cross}
 progress_detail <- "Create example files..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 (plant.examples <- makeExamplePlantFile(init.dir))
@@ -1548,8 +1557,8 @@ Make an example of an "data" file:
 
 ```{r add_breeders}
 progress_detail <- "Create initial breeders..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 addNewBreeder("admin",
@@ -1573,8 +1582,8 @@ addNewBreeder("test",
 Make a zip archive of the whole directory:
 ```{r make_zip}
 progress_detail <- "Create zip archive..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 
@@ -1593,8 +1602,8 @@ system.time(
 
 ```{r, new_session_specification}
 progress_detail <- "Save session to use..."
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 data_in_use_file <- file.path(data_root, "data_folder_in_use.txt")
@@ -1610,8 +1619,8 @@ t1 - t0
 print(sessionInfo(), locale = FALSE)
 
 progress_detail <- "Game setup script DONE"
-progressBar$set(
-  value = progressBar$getValue() + 1,
+progressBar$inc(
+  amount = 1,
   detail = progress_detail
 )
 ```
