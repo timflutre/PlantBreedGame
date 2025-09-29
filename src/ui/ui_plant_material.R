@@ -20,7 +20,7 @@
 
 # UI of "cross" part
 div(
-  uiOutput("UIbreederInfoPltMat"),
+  breeder_info_UI("breederInfo_pltmat"),
   shinydashboard::box(
     width = 12, title = "Request plant material",
     div(

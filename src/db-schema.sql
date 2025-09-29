@@ -271,16 +271,33 @@ WITH prices AS (
 		CASE
 			WHEN key = "cost.pheno.field" THEN CAST(value AS FLOAT)
 			ELSE CAST(value AS FLOAT) * (
-			SELECT
-				CAST(value AS FLOAT)
-			FROM
-				constants
-			WHERE
-				key = "cost.pheno.field"
+				SELECT
+					CAST(value AS FLOAT)
+				FROM
+					constants
+				WHERE
+					key = "cost.pheno.field"
 			)
 		END as unit_price
 	FROM
 		constants
+	WHERE
+		detail is not NULL
+), durations AS (
+	SELECT
+		CASE
+			WHEN key = "duration.pheno.field" THEN "pheno-field"
+			WHEN key = "duration.pheno.patho" THEN "pheno-patho"
+			WHEN key = "duration.allof" THEN "allofecundation"
+			WHEN key = "duration.autof" THEN "autofecundation"
+			WHEN key = "duration.haplodiplo" THEN "haplodiploidization"
+			WHEN key = "duration.geno.hd" THEN "hd"
+			WHEN key = "duration.geno.ld" THEN "ld"
+			WHEN key = "duration.geno.single" THEN "geno-snp"
+			ELSE NULL
+		END AS detail,
+		value as duration
+	FROM constants
 	WHERE
 		detail is not NULL
 ), request_details AS (
@@ -297,18 +314,19 @@ WITH prices AS (
 			WHEN r.type = 'geno' THEN
 				CASE
 					WHEN gr."type" LIKE "snp%" THEN "geno-snp"
-					else gr.type
+					ELSE gr.type
 				END
 			WHEN r.type LIKE 'evaluation%' THEN r.type
 			ELSE NULL
-	  END AS detail,
-	  CASE
-			WHEN r.type = 'pltmat' THEN COUNT(*)
-			WHEN r.type = 'pheno' THEN SUM(pr.n_pheno)
-			WHEN r.type = 'geno' THEN COUNT(*)
-			WHEN r.type LIKE 'evaluation%' THEN COUNT(*)
-			ELSE NULL
-	  END AS quantity
+		END AS detail,
+		CASE
+				WHEN r.type = 'pltmat' THEN COUNT(*)
+				WHEN r.type = 'pheno' THEN SUM(pr.n_pheno)
+				WHEN r.type = 'geno' THEN COUNT(*)
+				WHEN r.type LIKE 'evaluation%' THEN COUNT(*)
+				ELSE NULL
+		END AS quantity,
+		r.processed
 	FROM requests r
 	  FULL JOIN pheno_requests pr ON (pr.req_id = r.id)
 	  FULL JOIN pltmat_requests pltr ON (pltr.req_id = r.id)
@@ -318,9 +336,23 @@ WITH prices AS (
 ) SELECT
 	d.*,
 	p.unit_price,
-	d.quantity * p.unit_price as cost
+	d.quantity * p.unit_price as cost,
+	CASE
+		WHEN d.detail == "pheno-field" THEN CASE
+			WHEN d.game_date < DATE(STRFTIME('%Y', d.game_date) || '-' || c.value)
+			THEN DATE(STRFTIME('%Y', d.game_date) || '-' || c.value, "+" || t.duration || " months")
+			ELSE DATE((CAST(STRFTIME('%Y', d.game_date) AS INTEGER) + 1) || '-' || c.value, "+" || t.duration || " months")
+		END
+		ELSE DATE(d.game_date, '+' || t.duration || ' months')
+	END as avail_from
 FROM request_details d
 LEFT JOIN prices p ON d.detail = p.detail
+LEFT JOIN durations t ON d.detail = t.detail
+CROSS JOIN (
+	SELECT value
+	FROM constants
+	WHERE key = 'max.upload.pheno.field'
+) c
 ORDER BY d.time;
 
 

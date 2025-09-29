@@ -23,7 +23,8 @@
 ## this file is sourced in "server_id.R" in a renderUI() function
 ############################
 div(
-  uiOutput("UIbreederInfoID"),
+  # uiOutput("UIbreederInfoID"),
+  breeder_info_UI("breederInfoID"),
   shinydashboard::tabBox(
     width = 12, title = paste0("My account"),
 
@@ -46,6 +47,22 @@ div(
           selectInput("requestFile", "", choices = requestFiles(), width = "75%"),
           uiOutput("UIdwnlRequest")
         )
+      )
+    ),
+
+    # Request history ----
+    tabPanel(
+      "Requests Progress/History",
+      h2("Requests history"),
+      div(
+        id = "request_progress_bars_div",
+        uiOutput(outputId = "request_progress_bars_UI")
+      ),
+      div(
+        id = "requests_history_div",
+        # actionButton("request_update", label = "update"),
+        dataTableOutput("requests_history_DT"),
+        uiOutput("dwnl_request_ui"),
       )
     ),
 
