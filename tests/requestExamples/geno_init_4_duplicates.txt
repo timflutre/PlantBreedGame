@@ -1,0 +1,12 @@
+ind	task	details
+Coll0001	geno	hd
+Coll0001	geno	hd
+Coll0002	geno	hd
+Coll0002	geno	hd
+Coll0003	geno	ld
+Coll0004	geno	ld
+Coll0005	geno	snp00007
+Coll0005	geno	snp00007
+Coll0005	geno	snp00020
+Coll0006	geno	snp00020
+Coll0006	geno	snp00085
