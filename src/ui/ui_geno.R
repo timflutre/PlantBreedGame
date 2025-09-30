@@ -24,19 +24,21 @@ div(
   shinydashboard::box(
     width = 12, title = "Request genotyping",
     div(
-      id = "geno_info1",
-      p("In this module you, can request genotyping data."),
-      p("A laboratory can be used", strong("all year long"), " to perform genotyping. Two SNP chips are available:"),
-      tags$ul(
-        tags$li(strong("High-density"), ": ", constants_ui("geno_nb.snps.hd"), " SNP, ", constants_ui("geno_duration.geno.hd"), "-month delay and costs", constants_ui("geno_cost.geno.hd"), " plot (", constants_ui("geno_cost.geno.hd.mendels"), " Mendels )."),
-        tags$li(strong("Low-density"), ": ", constants_ui("geno_nb.snps.ld"), " SNP, ", constants_ui("geno_duration.geno.ld"), "-month delay and costs", constants_ui("geno_cost.geno.ld"), " plot (", constants_ui("geno_cost.geno.ld.mendels"), " Mendels ).")
+      id = "geno_info",
+      div(
+        id = "geno_info1",
+        p("In this module you, can request genotyping data."),
+        p("A laboratory can be used", strong("all year long"), " to perform genotyping. Two SNP chips are available:"),
+        tags$ul(
+          tags$li(strong("High-density"), ": ", constants_ui("geno_nb.snps.hd"), " SNP, ", constants_ui("geno_duration.geno.hd"), "-month delay and costs", constants_ui("geno_cost.geno.hd"), " plot (", constants_ui("geno_cost.geno.hd.mendels"), " Mendels )."),
+          tags$li(strong("Low-density"), ": ", constants_ui("geno_nb.snps.ld"), " SNP, ", constants_ui("geno_duration.geno.ld"), "-month delay and costs", constants_ui("geno_cost.geno.ld"), " plot (", constants_ui("geno_cost.geno.ld.mendels"), " Mendels ).")
+        ),
+        p(strong("Single-SNP"), "genotyping can also be performed: ", constants_ui("geno_duration.geno.single"), "-month delay and costs", constants_ui("geno_cost.geno.single"), " plot (", constants_ui("geno_cost.geno.single.mendels"), " Mendels ).")
       ),
-      p(strong("Single-SNP"), "genotyping can also be performed: ", constants_ui("geno_duration.geno.single"), "-month delay and costs", constants_ui("geno_cost.geno.single"), " plot (", constants_ui("geno_cost.geno.single.mendels"), " Mendels ).")
-    ),
-    div(
-      id = "geno_info2",
-      p("The request file for this module should be similar to the following example:"),
-      tags$pre(HTML("<table>
+      div(
+        id = "geno_info2",
+        p("The request file for this module should be similar to the following example:"),
+        tags$pre(HTML("<table>
                         <tr>
                         <td>ind\t</td>
                         <td>task\t</td>
@@ -58,15 +60,20 @@ div(
                         <td>snp01877\t</td>
                         </tr>
                         </table>")),
-      p(tags$ul(
-        tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
-        tags$li("All columns (", code("ind"), ", ", code("task"), " and ", code("details"), ") are compulsory."),
-        tags$li("The ", code("task"), " column should contain 'geno'"),
-        tags$li("The ", code("details"), " column should contain 'hd' (for a high-density chip), 'ld' (for a low-density chip) or the SNP identifier (for single SNP genotyping)."),
-        tags$li("Individuals should be available."),
-        tags$li("Individuals should not be duplicated within each task."),
-        tags$li("Lines starting with ", code("#"), " will be ignored.")
-      ))
+        p(tags$ul(
+          tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
+          tags$li("All columns (", code("ind"), ", ", code("task"), " and ", code("details"), ") are compulsory."),
+          tags$li("The ", code("task"), " column should contain 'geno'"),
+          tags$li("The ", code("details"), " column should contain 'hd' (for a high-density chip), 'ld' (for a low-density chip) or the SNP identifier (for single SNP genotyping)."),
+          tags$li("Individuals should be available."),
+          tags$li("Individuals should not be duplicated within each task."),
+          tags$li("Lines starting with ", code("#"), " will be ignored.")
+        )),
+        downloadButton(
+          "dwnld_geno_request_example",
+          "Download a genotyping request example"
+        )
+      )
     )
   ),
   shinydashboard::box(

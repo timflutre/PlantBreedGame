@@ -25,6 +25,16 @@ source("src/fun/func_plant_material.R", local = TRUE, encoding = "UTF-8")$value
 
 ## server for "plant material"
 
+output$dwnld_pltmat_request_example <- downloadHandler(
+  filename = "example_request_plant_material.txt",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "example_request_plant_material.txt")
+    file.copy(filePath, file)
+  }
+)
+
+
+
 output$pltmat_main_UI <- renderUI({
   if (!gameInitialised()) {
     return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)

@@ -160,43 +160,6 @@ budget <- reactive({
 })
 
 
-
-
-
-
-
-## download files ----
-# list of avaiable files (this must be reactive value to be refresh)
-requestFiles <- reactive({
-  input$leftMenu
-  # choices <- getDataFileList(type = "request", breeder = breeder())
-})
-
-# dwnl buttons ----
-output$dwnlRequest <- downloadHandler(
-  filename = function() input$requestFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$requestFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$requestFile)
-    file.copy(filePath, file)
-  }
-)
-
-output$UIdwnlRequest <- renderUI({
-  if (input$requestFile != "") {
-    downloadButton("dwnlRequest", "Download your file")
-  } else {
-    p("No file selected.")
-  }
-})
-
-
-
 ## Requests history ----
 
 requests_ongoing <- reactive({
@@ -430,6 +393,24 @@ output$dwnl_request <- downloadHandler(
 
 
 ## Genotype data ----
+
+output$dwnld_snp_coord_hd <- downloadHandler(
+  filename = "snp_coords_hd.txt.gz",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "snp_coords_hd.txt.gz")
+    file.copy(filePath, file)
+  }
+)
+
+output$dwnld_snp_coord_ld <- downloadHandler(
+  filename = "snp_coords_ld.txt.gz",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "snp_coords_ld.txt.gz")
+    file.copy(filePath, file)
+  }
+)
+
+
 
 genoRequests_list <- reactive({
   input$leftMenu

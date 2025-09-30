@@ -24,20 +24,22 @@ div(
   shinydashboard::box(
     width = 12, title = "Request plant material",
     div(
-      id = "cross_info1",
-      p("In this module, you can request new plant materials."),
-      p("A greenhouse can be used", strong("all year long"), " to perform crosses:"),
-      tags$ul(
-        tags$li(strong("Allofecundation"), ": ", constants_ui("pltmat_duration.allof"), "-month delay and costs", constants_ui("pltmat_cost.allof"), " plot (", constants_ui("pltmat_cost.allof.mendels"), " Mendels )."),
-        tags$li(strong("Autofecundation"), ": ", constants_ui("pltmat_duration.autof"), "-month delay and costs", constants_ui("pltmat_cost.autof"), " plot (", constants_ui("pltmat_cost.autof.mendels"), " Mendels ).")
+      id = "cross_info",
+      div(
+        id = "cross_info1",
+        p("In this module, you can request new plant materials."),
+        p("A greenhouse can be used", strong("all year long"), " to perform crosses:"),
+        tags$ul(
+          tags$li(strong("Allofecundation"), ": ", constants_ui("pltmat_duration.allof"), "-month delay and costs", constants_ui("pltmat_cost.allof"), " plot (", constants_ui("pltmat_cost.allof.mendels"), " Mendels )."),
+          tags$li(strong("Autofecundation"), ": ", constants_ui("pltmat_duration.autof"), "-month delay and costs", constants_ui("pltmat_cost.autof"), " plot (", constants_ui("pltmat_cost.autof.mendels"), " Mendels ).")
+        ),
+        p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants_ui("pltmat_duration.haplodiplo"), "-month delay, costs ", constants_ui("pltmat_cost.haplodiplo"), " plot (", constants_ui("pltmat_cost.haplodiplo.mendels"), " Mendels ), and a maximum of ", constants_ui("pltmat_max.nb.haplodiplos"), " can be requested at once."),
+        p("The maximum number of new individuals that can be generated with 1 request is ", constants_ui("pltmat_max_crosses"), ".")
       ),
-      p("A laboratory can also be used to perform ", strong("haplodiploidisation"), ". It has a ", constants_ui("pltmat_duration.haplodiplo"), "-month delay, costs ", constants_ui("pltmat_cost.haplodiplo"), " plot (", constants_ui("pltmat_cost.haplodiplo.mendels"), " Mendels ), and a maximum of ", constants_ui("pltmat_max.nb.haplodiplos"), " can be requested at once."),
-      p("The maximum number of new individuals that can be generated with 1 request is ", constants_ui("pltmat_max_crosses"), ".")
-    ),
-    div(
-      id = "cross_info2",
-      p("The request file for this module should be similar to the following example:"),
-      tags$pre(HTML("<table>
+      div(
+        id = "cross_info2",
+        p("The request file for this module should be similar to the following example:"),
+        tags$pre(HTML("<table>
                         <tr>
                         <td>parent1\t</td>
                         <td>parent2\t</td>
@@ -63,15 +65,20 @@ div(
                         <td>haplodiploidization</td>
                         </tr>
                         </table>")),
-      p(tags$ul(
-        tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
-        tags$li("Each row corresponds to a child."),
-        tags$li("Only columns", code("parent1"), ", ", code("parent2"), ", and ", code("child"), " are compulsory."),
-        tags$li("Only the ", code("parent2"), " column can be empty (which means haplodiploidization request)."),
-        tags$li("Individual names should only use ", code("[a-z], [A-Z], [0-9], [._-]"), " (no space, comma, etc)."),
-        tags$li("Individual names should be unique."),
-        tags$li("Lines starting with ", code("#"), " will be ignored.")
-      ))
+        p(tags$ul(
+          tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
+          tags$li("Each row corresponds to a child."),
+          tags$li("Only columns", code("parent1"), ", ", code("parent2"), ", and ", code("child"), " are compulsory."),
+          tags$li("Only the ", code("parent2"), " column can be empty (which means haplodiploidization request)."),
+          tags$li("Individual names should only use ", code("[a-z], [A-Z], [0-9], [._-]"), " (no space, comma, etc)."),
+          tags$li("Individual names should be unique."),
+          tags$li("Lines starting with ", code("#"), " will be ignored.")
+        )),
+        downloadButton(
+          "dwnld_pltmat_request_example",
+          "Download a plant material request example"
+        )
+      )
     )
   ),
   shinydashboard::box(
