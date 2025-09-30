@@ -44,32 +44,11 @@ output$adminUI <- renderUI({
 ## Breeders management ----
 # add new breeder:
 observeEvent(input$addNewBreeder, {
-  progressNewBreeder <- shiny::Progress$new(session, min = 0, max = 7)
-  progressNewBreeder$set(
-    value = 0,
-    message = "Adding breeder",
-    detail = "Initialisation..."
-  )
-
-  t <- try(addNewBreeder(
+  addNewBreeder(
     input$newBreederName,
     input$newBreederStatus,
     input$newBreederPsw,
-    progressNewBreeder
-  ))
-
-  if (class(t) != "try-error") {
-    progressNewBreeder$set(
-      value = 7,
-      detail = "Done!"
-    )
-  } else {
-    progressNewBreeder$set(
-      value = 1,
-      detail = t
-    )
-  }
-
+  )
   values$lastDBupdate <- Sys.time()
 })
 
@@ -77,31 +56,19 @@ observeEvent(input$addNewBreeder, {
 breeder_list_server("admin_breeder_list_for_deletion", "delBreederName", breederList)
 
 observeEvent(input$deleteBreeder, {
-  if (input$delBreederName != "") {
-    progressDelBreeder <- shiny::Progress$new(session, min = 0, max = 1)
-    progressDelBreeder$set(
-      value = 0,
-      message = "Deleting breeder"
-    )
+  if (input$delBreederName == breeder()) {
+    alert("You cannot delete your own account.")
+    return(NULL)
   }
 
-  if (input$delBreederName != "admin" & input$delBreederName != "test" & input$delBreederName != "") {
-    deleteBreeder(input$delBreederName)
-    progressDelBreeder$set(
-      value = 1,
-      message = "Deleting breeder",
-      detail = "Done!"
-    )
-  } else if (input$delBreederName == "admin" | input$delBreederName == "test") {
-    progressDelBreeder$set(
-      value = 0,
-      message = "Deleting breeder",
-      detail = paste(
-        "Sorry,",
-        input$delBreederName, "can't be deleted."
-      )
-    )
-  }
+  unlink(file.path(DATA_TRUTH, input$delBreederName), recursive = TRUE)
+  unlink(file.path(DATA_SHARED, input$delBreederName), recursive = TRUE)
+
+  db_delete_breeder(name = input$delBreederName)
+  showNotification(
+    paste("Breeder", input$delBreederName, " deleted."),
+    type = "message"
+  )
   values$lastDBupdate <- Sys.time()
 })
 

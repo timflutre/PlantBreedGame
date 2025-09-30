@@ -364,7 +364,7 @@ if (gameInitialised()) {
 
 
   game_setup_tab_content <- div(
-    p("The current game session is:", CURRENT_SESSION_ID),
+    p("The current game setup is:", CURRENT_SESSION_ID),
     h2("Actual marker effects"),
     p("The causal SNP for the resistance is:", code(shiny::textOutput("causal_resist_snp", inline = TRUE))),
     p(

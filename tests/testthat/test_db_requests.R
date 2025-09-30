@@ -1300,4 +1300,36 @@ test_that("request history", {
 })
 
 
+test_that("delete breeder cascade", {
+  common_inds_before_deletion <- db_get_individual(breeder = "@ALL")
+  common_pheno_before_deletion <- db_get_phenotypes(breeder = "@ALL")
+  common_geno_before_deletion <- db_get_genotypes(breeder = "@ALL")
+  common_req_before_deletion <- db_get_game_requests(breeder = "@ALL")
+
+  deleted_breeder <- "A"
+  db_delete_breeder(name = deleted_breeder)
+
+  all_inds <- db_get_individual()
+  expect_true(!deleted_breeder %in% all_inds$breeder)
+  expect_true(all(common_inds_before_deletion$id %in% all_inds$id))
+
+  all_pheno <- db_get_phenotypes()
+  expect_true(!deleted_breeder %in% all_pheno$breeder)
+  expect_true(all(common_pheno_before_deletion$id %in% all_pheno$id))
+
+  all_geno <- db_get_genotypes()
+  expect_true(!deleted_breeder %in% all_geno$breeder)
+  expect_true(all(common_geno_before_deletion$id %in% all_geno$id))
+
+  all_req <- db_get_game_requests()
+  expect_true(!deleted_breeder %in% all_req$breeder)
+  expect_true(all(common_req_before_deletion$id %in% all_req$id))
+
+  all_budget <- db_get_budget()
+  expect_true(!deleted_breeder %in% all_budget$breeder)
+})
+
+
+
+
 unlink(tmpdir, recursive = TRUE)

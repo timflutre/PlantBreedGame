@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "requests" (
 DROP TABLE IF EXISTS "pltmat_requests";
 CREATE TABLE IF NOT EXISTS "pltmat_requests" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"req_id" INTEGER NOT NULL REFERENCES requests(id),
+	"req_id" INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
 	"parent1_id" INTEGER NOT NULL REFERENCES plant_material(id),
 	"parent2_id" INTEGER REFERENCES plant_material(id),
 	"parent1_request_name" TEXT NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "plant_material" (
 	"name"	TEXT,
 	"parent1_id"	INTEGER REFERENCES plant_material(id),
 	"parent2_id"	INTEGER REFERENCES plant_material(id),
-	"pltmat_request_id"	INTEGER REFERENCES pltmat_requests(id),
+	"pltmat_request_id"	INTEGER REFERENCES pltmat_requests(id) ON DELETE CASCADE,
 	"haplotype_file"	TEXT,
 	"control"	INTEGER DEFAULT 0,
 	"GV_trait1"	FLOAT,
@@ -131,7 +131,7 @@ GROUP BY pm.id;
 DROP TABLE IF EXISTS "pheno_requests";
 CREATE TABLE IF NOT EXISTS "pheno_requests" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"req_id" INTEGER REFERENCES requests(id),
+	"req_id" INTEGER REFERENCES requests(id)  ON DELETE CASCADE,
 	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id),
 	"ind_request_name" TEXT,
 	"type" TEXT,
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS "pheno_requests" (
 DROP TABLE IF EXISTS "phenotypes";
 CREATE TABLE IF NOT EXISTS "phenotypes" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"pheno_req_id" INTEGER INTEGER NOT NULL REFERENCES pheno_requests(id),
+	"pheno_req_id" INTEGER INTEGER NOT NULL REFERENCES pheno_requests(id) ON DELETE CASCADE,
 	"year" INTEGER NOT NULL,
 	"plot" TEXT NOT NULL,
 	"pathogen" INTEGER NOT NULL,
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS "phenotypes" (
 DROP TABLE IF EXISTS "evaluation_requests";
 CREATE TABLE IF NOT EXISTS "evaluation_requests" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"req_id" INTEGER NOT NULL REFERENCES requests(id),
+	"req_id" INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
 	"action" TEXT NOT NULL,
 	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id)
 );
@@ -209,7 +209,7 @@ FROM phenotypes p
 DROP TABLE IF EXISTS "geno_requests";
 CREATE TABLE IF NOT EXISTS "geno_requests" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"req_id" INTEGER REFERENCES requests(id),
+	"req_id" INTEGER REFERENCES requests(id) ON DELETE CASCADE,
 	"ind_id" INTEGER NOT NULL REFERENCES plant_material(id),
 	"ind_request_name" TEXT,
 	"type" TEXT,
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS "geno_requests" (
 DROP TABLE IF EXISTS "genotypes";
 CREATE TABLE IF NOT EXISTS "genotypes" (
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
-	"geno_req_id" INTEGER NOT NULL REFERENCES geno_requests(id),
+	"geno_req_id" INTEGER NOT NULL REFERENCES geno_requests(id) ON DELETE CASCADE,
 	"type" TEXT TEXT NOT NULL,
 	"result_file" TEXT NOT NULL,
 	UNIQUE("geno_req_id", "type")
