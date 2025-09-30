@@ -23,6 +23,18 @@ source("src/fun/func_pheno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ## server for "phenotyping"
+output$dwnld_pheno_request_example <- downloadHandler(
+  filename = "example_request_data.txt",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "example_request_data.txt")
+    file.copy(filePath, file)
+  }
+)
+
+
+
+
+
 output$pheno_main_UI <- renderUI({
   if (!gameInitialised()) {
     return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)

@@ -25,20 +25,22 @@ div(
   shinydashboard::box(
     width = 12, title = "Request phenotyping",
     div(
-      id = "pheno_info1",
-      p("In this module, you can request phenotyping data."),
-      p(
-        "One experimental site, Agrom-sur-Lez (AZ), is available with ", strong(constants_ui("pheno_nb.plots"), " plots."),
-        " Planting a plot should be requested ", strong("before ", constants_ui("pheno_max.upload.pheno.field")), ".",
-        " The data are then available ", constants_ui("pheno_duration.pheno.field"), " months after, on ", strong(constants_ui("pheno_pheno.data.availability.date")), ".",
-        " The cost of a single plot (seeding, phenotyping of the three traits and harvesting) is ", strong(constants_ui("pheno_cost.pheno.field"), " Mendels.")
+      id = "pheno_info",
+      div(
+        id = "pheno_info1",
+        p("In this module, you can request phenotyping data."),
+        p(
+          "One experimental site, Agrom-sur-Lez (AZ), is available with ", strong(constants_ui("pheno_nb.plots"), " plots."),
+          " Planting a plot should be requested ", strong("before ", constants_ui("pheno_max.upload.pheno.field")), ".",
+          " The data are then available ", constants_ui("pheno_duration.pheno.field"), " months after, on ", strong(constants_ui("pheno_pheno.data.availability.date")), ".",
+          " The cost of a single plot (seeding, phenotyping of the three traits and harvesting) is ", strong(constants_ui("pheno_cost.pheno.field"), " Mendels.")
+        ),
+        p("A", strong("greenhouse"), " can also be used all year long to assess the resistance to", HTML("<em>P.psychedelica.</em>"), "This request takes ", strong(constants_ui("pheno_duration.pheno.patho"), "months"), " and costs ", strong(constants_ui("pheno_cost.pheno.patho.mendels"), " Mendels"), " (which represents", constants_ui("pheno_cost.pheno.patho"), " plot).")
       ),
-      p("A", strong("greenhouse"), " can also be used all year long to assess the resistance to", HTML("<em>P.psychedelica.</em>"), "This request takes ", strong(constants_ui("pheno_duration.pheno.patho"), "months"), " and costs ", strong(constants_ui("pheno_cost.pheno.patho.mendels"), " Mendels"), " (which represents", constants_ui("pheno_cost.pheno.patho"), " plot).")
-    ),
-    div(
-      id = "pheno_info2",
-      p("The request file for this module should be similar to the following example:"),
-      tags$pre(HTML("<table>
+      div(
+        id = "pheno_info2",
+        p("The request file for this module should be similar to the following example:"),
+        tags$pre(HTML("<table>
                         <tr>
                         <td>ind\t</td>
                         <td>task\t</td>
@@ -55,16 +57,23 @@ div(
                         <td>1\t</td>
                         </tr>
                         </table>")),
-      p(tags$ul(
-        tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
-        tags$li("All columns (", code("ind"), ", ", code("task"), ", and ", code("details"), ") are compulsory."),
-        tags$li("The ", code("task"), " column should contain 'pheno-field' (for experimental site phenotyping) or 'pheno-patho' (for greenhouse phenotyping)"),
-        tags$li("If 'task=pheno-field', the ", code("details"), " column should contain the number of plots (the total number of requested plots should not exceed the total available:", strong(constants_ui("pheno_nb.plots_2"), " plots."), ")"),
-        tags$li("If 'task=pheno-patho', the ", code("details"), " column should contain the number of replicates"),
-        tags$li("Individuals should be available."),
-        tags$li("Individuals should not be duplicated within each task."),
-        tags$li("Lines starting with ", code("#"), " will be ignored.")
-      )),
+        p(tags$ul(
+          tags$li("The file should be in", code(".txt"), "format with", strong("tabulations"), "separator and ", strong(code("UTF-8"), "encoding.")),
+          tags$li("All columns (", code("ind"), ", ", code("task"), ", and ", code("details"), ") are compulsory."),
+          tags$li("The ", code("task"), " column should contain 'pheno-field' (for experimental site phenotyping) or 'pheno-patho' (for greenhouse phenotyping)"),
+          tags$li("If 'task=pheno-field', the ", code("details"), " column should contain the number of plots (the total number of requested plots should not exceed the total available:", strong(constants_ui("pheno_nb.plots_2"), " plots."), ")"),
+          tags$li("If 'task=pheno-patho', the ", code("details"), " column should contain the number of replicates"),
+          tags$li("Individuals should be available."),
+          tags$li("Individuals should not be duplicated within each task."),
+          tags$li("Lines starting with ", code("#"), " will be ignored.")
+        )),
+        downloadButton(
+          "dwnld_pheno_request_example",
+          "Download a phenotyping request example"
+        )
+      )
+    ),
+    div(
       h4("Results"),
       p("The phenotyping results will present 7 variables:"),
       tags$ul(

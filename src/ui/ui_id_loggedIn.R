@@ -28,28 +28,6 @@ div(
   shinydashboard::tabBox(
     width = 12, title = paste0("My account"),
 
-    # My files ----
-    tabPanel(
-      "My files",
-      div(
-        style = "display: inline-block; vertical-align:top; width: 49%;",
-        div(
-          h3("Other:"),
-          p(
-            "You can download here:",
-            tags$ul(
-              tags$li("SNP coordinates of the HD and LD chips"),
-              tags$li("List of controls"),
-              tags$li("Examples of requests files"),
-              tags$li("List of your requests")
-            )
-          ),
-          selectInput("requestFile", "", choices = requestFiles(), width = "75%"),
-          uiOutput("UIdwnlRequest")
-        )
-      )
-    ),
-
     # Request history ----
     tabPanel(
       "Requests Progress/History",
@@ -69,6 +47,17 @@ div(
     # Genotype data ----
     tabPanel(
       "Genotype data",
+      h2("SNP coordinates"),
+      div(
+        p(
+          "With the buttons below, you can download the SNP coordinates of the",
+          "HD and LD genotyping chips. Those SNP coordinates contains the",
+          "chromosomes and physical position of each markers as a", code("tsv"),
+          "compressed file."
+        ),
+        downloadButton("dwnld_snp_coord_hd", label = "Download HD SNP coordinates"),
+        downloadButton("dwnld_snp_coord_ld", label = "Download LD SNP coordinates")
+      ),
       h2("Genotype data"),
       div(
         selectInput("geno_requests", "Genotype requests",
