@@ -25,8 +25,31 @@
 output$dwnlIniData <- downloadHandler(
   filename = function() input$iniDataFile, # lambda function
   content = function(file) {
-    filePath <- file.path(DATA_INITIAL_DATA, input$iniDataFile)
-    file.copy(filePath, file)
+    if (input$iniDataFile != "initial_phenotypes.tsv") {
+      filePath <- file.path(DATA_INITIAL_DATA, input$iniDataFile)
+      file.copy(filePath, file)
+      return(NULL)
+    }
+    pheno_data <- db_get_phenotypes(
+      breeder = "@ALL",
+      public_columns = FALSE
+    )
+    pheno_data <- pheno_data[, c(
+      "ind",
+      "control_ind",
+      "year",
+      "plot",
+      "pathogen",
+      "trait1",
+      "trait2",
+      "trait3"
+    )]
+    write.table(
+      pheno_data,
+      file = file,
+      sep = "\t",
+      row.names = FALSE
+    )
   }
 )
 
