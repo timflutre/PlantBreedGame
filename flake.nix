@@ -1,7 +1,7 @@
 {
   description = "Flake for a R environment";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
+    nixpkgs.url = "nixpkgs/nixos-25.05";
     flake-utils.url = "github:numtide/flake-utils";
 
     nix2container.url = "github:nlewo/nix2container";
@@ -44,6 +44,7 @@
           shinyTree
           prettyunits
           reactable
+          shinyWidgets
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";
@@ -60,6 +61,10 @@
               Rcpp
             ];
           })
+
+          # dev
+          profvis
+          microbenchmark
         ];
         R-test-packages = with Rpkgs.rPackages; [ testthat ];
         R-dev-packages = with Rpkgs.rPackages; [
@@ -76,7 +81,7 @@
           R_LIBS_USER = "''"; # to not use users' installed R packages
           R_ZIPCMD = "${pkgs.zip}/bin/zip";
           TEST_PORT = 3000;
-          PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
+          PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright.browsers;
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = true;
           PLANTBREEDGAME_DATA_ROOT = "./data";
           nativeBuildInputs = [ pkgs.bashInteractive ];
@@ -89,8 +94,8 @@
             (Rpkgs.rstudioWrapper.override { packages = R-packages ++ R-test-packages ++ R-dev-packages; })
             pkgs.pandoc
             pkgs.zip
-            pkgs.nodejs_20
-            (pkgs.playwright-driver.override { nodejs = pkgs.nodejs_20; })
+            pkgs.nodejs
+            pkgs.playwright
             pkgs.skopeo
             pkgs.chromium
           ];
