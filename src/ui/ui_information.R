@@ -145,8 +145,19 @@ tabItem(
 
     shinydashboard::box(
       height = 400, width = 12, title = "Initial data",
-      p("Select and download each file:"),
-      selectInput("iniDataFile", "", choices = list.files(DATA_INITIAL_DATA)),
+      p(
+        "To get started or have a better view of this game, you can download",
+        "here the initial data accessible to new players. They includes the",
+        "genotypes and phenotypes data of a subset of the initial collections,",
+        "example of requests and SNP coodinates of the genotyped markers. These",
+        "data serve as the starting point for analysis and decision-making",
+        "throughout the game. Simply click the link below to download the",
+        "dataset and begin planning your breeding strategy!"
+      ),
+      selectInput("iniDataFile", "", choices = c(
+        list.files(DATA_INITIAL_DATA),
+        "initial_phenotypes.tsv"
+      )),
       downloadButton("dwnlIniData", "Download your file")
     ),
     if (debugDisplay) {
