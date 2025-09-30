@@ -23,7 +23,7 @@ source("src/fun/func_data-viz.R", local = TRUE, encoding = "UTF-8")
 
 
 
-###### server for "genotyping" ######
+###### server for "Data visualization" ######
 
 ## Main UI ----
 output$data_viz_UI <- renderUI({
@@ -45,7 +45,61 @@ output$data_viz_UI <- renderUI({
   )
 })
 
+## Phenotypes visualization ----
+dta_viz_pheno_inds_filters <- individual_filtering_server("pheno_data_viz_ind_filter",
+  breeder = breeder()
+)
+dta_viz_pheno_pheno_filters <- phenotype_filtering_server("pheno_data_viz_pheno_filter",
+  breeder = breeder()
+)
 
+filtered_pheno_data <- reactive({
+  input$refresh_pheno_dta_viz
+  breeder <- breeder()
+  pheno_data <- db_get_phenotypes(
+    breeder = breeder,
+    ind_id = dta_viz_pheno_inds_filters$inds_ids(),
+    request_name = dta_viz_pheno_pheno_filters$pheno_request(),
+    pathogen = dta_viz_pheno_pheno_filters$pathogen(),
+    year = dta_viz_pheno_pheno_filters$years(),
+    public_columns = FALSE
+  )
+
+  # mask phenotype data that are not yet available for players
+  if (breederStatus() == "player") {
+    not_available <- pheno_data$avail_from > getGameTime()
+    pheno_data[not_available, c("pathogen", "trait1", "trait2", "trait3")] <- NA
+  }
+  pheno_data <- pheno_data[, c(
+    "ind",
+    "control_ind",
+    "year",
+    "plot",
+    "pathogen",
+    "trait1",
+    "trait2",
+    "trait3"
+  )]
+
+  categ_vars <- c(
+    "control_ind",
+    "year",
+    "plot",
+    "trait3"
+  )
+  for (var in categ_vars) {
+    pheno_data[, var] <- as.character(pheno_data[, var])
+  }
+
+  return(pheno_data)
+})
+
+
+data_viz_server("data-viz_pheno", filtered_pheno_data)
+
+
+
+## File visualization ----
 data_viz_file_validator <- InputValidator$new()
 data_viz_file_validator$add_rule("categ_variables", function(x) {
   data <- raw_data_from_file()
@@ -138,3 +192,14 @@ data_from_file <- reactive({
 })
 
 data_viz_server("data-viz_file", data_from_file)
+
+
+
+
+## Breeder information ----
+breeder_info_server("breederInfoDtaViz",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)

@@ -19,8 +19,28 @@
 library(shiny)
 
 list(
+  breeder_info_UI("breederInfoDtaViz"),
   shinydashboard::tabBox(
-    width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "From file",
+    width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "Phenotypes data",
+
+    # Phenotypes data ----
+    tabPanel(
+      "Phenotypes data",
+      div(
+        id = "data_viz_pheno_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("pheno_data_viz_ind_filter", breeder = breeder()),
+        phenotype_filtering_ui("pheno_data_viz_pheno_filter", breeder = breeder()),
+        actionButton("refresh_pheno_dta_viz", label = "Refresh", icon = icon("rotate")),
+        hr()
+      ),
+      div(
+        data_viz_ui("data-viz_pheno")
+      )
+    ),
+
+    # From file ----
     tabPanel(
       "From file",
       div(

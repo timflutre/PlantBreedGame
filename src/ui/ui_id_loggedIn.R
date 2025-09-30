@@ -23,7 +23,6 @@
 ## this file is sourced in "server_id.R" in a renderUI() function
 ############################
 div(
-  # uiOutput("UIbreederInfoID"),
   breeder_info_UI("breederInfoID"),
   shinydashboard::tabBox(
     width = 12, title = paste0("My account"),
