@@ -172,7 +172,9 @@ txt2Vcf <- function(txt_file, vcf_file, prog = NULL) {
   data$`#CHROM` <- snpCoord$chr
   data$POS <- snpCoord$pos
   data$ID <- row.names(snpCoord)
-  data[, c("REF", "ALT", "QUAL", "INFO")] <- "."
+  data$REF <- "A"
+  data$ALT <- "T"
+  data[, c("QUAL", "INFO")] <- "."
   data$FILTER <- "PASS"
   data$FORMAT <- "GT"
 
