@@ -6,7 +6,6 @@ packages <- c(
   "RSQLite",
   "bsicons",
   "data.table",
-  "devtools",
   "digest",
   "dplyr",
   "htmltools",
