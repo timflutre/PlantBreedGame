@@ -102,61 +102,54 @@
         };
 
         apps = {
-          default =
-            let
-              PlantBreedGame = pkgs.writeShellApplication {
+          default = {
+            type = "app";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
                 name = "PlantBreedGame";
                 text = ''
                   Rscript --vanilla -e "shiny::runApp(port = as.numeric(Sys.getenv('TEST_PORT')))"
                 '';
-              };
-            in
-            {
-              type = "app";
-              program = "${PlantBreedGame}/bin/PlantBreedGame";
-            };
+              }
+            );
+          };
 
-          test_ui =
-            let
-              test_ui = pkgs.writeShellApplication {
-                name = "test_ui";
+          ui_tests = {
+            type = "app";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-test_ui";
                 text = ''
-                  npx playwright test "$@"
+                  # npx playwright test "$@"
+                  make ui_tests
                 '';
-              };
-            in
-            {
-              type = "app";
-              program = "${test_ui}/bin/test_ui";
-            };
+              }
+            );
+          };
 
-          unit_tests =
-            let
-              unit_tests = pkgs.writeShellApplication {
-                name = "unit_tests";
+          unit_tests = {
+            type = "app";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-unit_tests";
                 text = ''
-                  Rscript --vanilla ${./tests/testthat.R}
+                  make unit_tests
                 '';
-              };
-            in
-            {
-              type = "app";
-              program = "${unit_tests}/bin/unit_tests";
-            };
+              }
+            );
+          };
 
-          initialise-data =
-            let
-              initialise-data = pkgs.writeShellApplication {
-                name = "initialise-data";
+          initialise-data = {
+            type = "app";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-unit_tests";
                 text = ''
                   make data
                 '';
-              };
-            in
-            {
-              type = "app";
-              program = "${initialise-data}/bin/initialise-data";
-            };
+              }
+            );
+          };
         };
 
         packages.plantBreedGame = pkgs.callPackage ./nix_package/default.nix {
