@@ -15,11 +15,11 @@ shinydashboard::box(
     breeder_list_ui("login_breeder_list")
   ),
   div(
-    style = "display: inline-block; vertical-align:top;   min-width: 5%; min-height:: 100%;", id = "id_2",
+    style = "display: inline-block; vertical-align:top;   min-width: 5%; min-height: 100%;", id = "id_2",
     br()
   ),
   div(
-    style = "display: inline-block; vertical-align:top;  width: 30%; min-height:: 100%;", id = "id_3",
+    style = "display: inline-block; vertical-align:top;  width: 30%; min-height: 100%;", id = "id_3",
     passwordInput("psw", "Password")
   ),
   div(
