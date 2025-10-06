@@ -1,7 +1,13 @@
 .PHONY: data
 version=`cat VERSION`
 data:
-	Rscript ./initialise_data.R
+	Rscript --vanilla ./initialise_data.R
+
+unit_tests:
+	Rscript --vanilla ./tests/testthat.R
+
+ui_tests:
+	npx playwright test "$@"
 
 docker-image:
 	nix run .\#images.x86_64-linux.latest.copyToDockerDaemon
