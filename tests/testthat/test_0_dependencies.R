@@ -1,55 +1,41 @@
-test_that("dependencies", {
-  expect_no_error({
-    library(DT)
-  })
-  expect_no_error({
-    library(GenomicRanges)
-  })
-  expect_no_error({
-    library(MASS)
-  })
-  expect_no_error({
-    library(RSQLite)
-  })
-  expect_no_error({
-    library(digest)
-  })
-  expect_no_error({
-    library(igraph)
-  })
-  expect_no_error({
-    library(lubridate)
-  })
-  expect_no_error({
-    library(plotly)
-  })
-  expect_no_error({
-    suppressWarnings({
-      library(rutilstimflutre)
+packages <- c(
+  "DBI",
+  "DT",
+  "GenomicRanges",
+  "MASS",
+  "RSQLite",
+  "bsicons",
+  "data.table",
+  "devtools",
+  "digest",
+  "dplyr",
+  "htmltools",
+  "igraph",
+  "jsonlite",
+  "lubridate",
+  "plotly",
+  "prettyunits",
+  "reactable",
+  "rmarkdown",
+  "rutilstimflutre",
+  "scrm",
+  "shiny",
+  "shinyTree",
+  "shinyWidgets",
+  "shinycssloaders",
+  "shinydashboard",
+  "shinyjs",
+  "shinyvalidate",
+  "tidyr",
+  "vistime"
+)
+
+for (pkg in packages) {
+  test_that(paste("Package", pkg, "is installed"), {
+    expect_no_error({
+      suppressWarnings({
+        library(package = pkg, character.only = TRUE)
+      })
     })
   })
-  expect_no_error({
-    library(scrm)
-  })
-  expect_no_error({
-    library(shiny)
-  })
-  expect_no_error({
-    library(shinycssloaders)
-  })
-  expect_no_error({
-    library(shinydashboard)
-  })
-  expect_no_error({
-    library(shinyjs)
-  })
-  expect_no_error({
-    library(shinyvalidate)
-  })
-  expect_no_error({
-    library(vistime)
-  })
-  expect_no_error({
-    library(bsicons)
-  })
-})
+}
