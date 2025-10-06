@@ -164,6 +164,9 @@ budget <- reactive({
 
 requests_ongoing <- reactive({
   invalidateLater(5000)
+  if (breeder() == "No Identification") {
+    return(NULL)
+  }
   dta <- db_get_game_requests_history(breeder = breeder())
   if (nrow(dta) == 0) {
     dta$status <- character(0)

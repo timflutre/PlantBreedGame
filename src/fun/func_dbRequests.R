@@ -100,8 +100,15 @@ db_get <- function(query, dbname = getOption("DATA_DB")) {
   if (is.null(conn)) {
     return(NULL)
   }
-  tryCatch({
-    out <- dbGetQuery(conn = conn, query)
+  out <- tryCatch({
+    dbGetQuery(conn = conn, query)
+  }, error = function(err) {
+    if (grepl("^no such table: ", err$message)) {
+      # This is to avoid the app to crash when a it use newer db schema
+      # than the current db.
+      warning(err$message)
+      return(NULL)
+    }
   }, finally = {
     dbDisconnect(conn)
   })

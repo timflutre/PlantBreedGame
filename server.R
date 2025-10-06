@@ -36,11 +36,22 @@ shinyServer(function(input, output, session) {
   )
 
   gameInitialised <- function() {
-    (dir.exists(DATA_TRUTH) &
+    if (!(dir.exists(DATA_TRUTH) &
       dir.exists(DATA_SHARED) &
       dir.exists(DATA_INITIAL_DATA) &
       dir.exists(DATA_REPORTS) &
-      file.exists(DATA_DB))
+      file.exists(DATA_DB))) {
+      return(FALSE)
+    }
+    app_version <- package_version(readLines("VERSION"))
+    db_version <- package_version(getBreedingGameConstants()$version)
+    if (length(db_version) == 0) {
+      return(FALSE)
+    }
+    if (app_version$major > db_version$major) {
+      return(FALSE)
+    }
+    return(TRUE)
   }
 
   observe({
