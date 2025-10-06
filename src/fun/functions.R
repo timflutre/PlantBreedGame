@@ -427,37 +427,43 @@ addNewBreeder <- function(breederName,
                           psw,
                           progressNewBreeder = NULL,
                           data_truth = DATA_TRUTH,
-                          data_shared = DATA_SHARED) {
+                          data_shared = DATA_SHARED,
+                          shiny_notification = FALSE) {
   ## this function create a new breeder
   ## breederName (char) name of the new breeder
 
 
   if (!grepl("^[a-zA-Z0-9\\_]+$", breederName, perl = TRUE)) {
     # only alpha numeric and character "_"
-
-    showNotification(
-      "Breeder's name should contain only alpha-numeric characters and special character : _ ",
-      type = "error"
-    )
+    if (shiny_notification) {
+      showNotification(
+        "Breeder's name should contain only alpha-numeric characters and special character : _ ",
+        type = "error"
+      )
+    }
     return(NULL)
   }
   if (status != "tester" & psw == "") {
-    showNotification(
-      paste0(
-        "Breeders with another status than \"tester\"",
-        " can't have the empty password"
-      ),
-      type = "error"
-    )
+    if (shiny_notification) {
+      showNotification(
+        paste0(
+          "Breeders with another status than \"tester\"",
+          " can't have the empty password"
+        ),
+        type = "error"
+      )
+    }
     return(NULL)
   }
 
   #### test if new breeder already exist
   if (breederName %in% getBreederList()) {
-    showNotification(
-      paste("Breeder", breederName, "already exist"),
-      type = "error"
-    )
+    if (shiny_notification) {
+      showNotification(
+        paste("Breeder", breederName, "already exist"),
+        type = "error"
+      )
+    }
     return(NULL)
   }
 
@@ -471,10 +477,12 @@ addNewBreeder <- function(breederName,
   dir.create(newTruthDir)
   dir.create(newSharedDir)
 
-  showNotification(
-    paste("Breeder", breederName, "created"),
-    type = "message"
-  )
+  if (shiny_notification) {
+    showNotification(
+      paste("Breeder", breederName, "created"),
+      type = "message"
+    )
+  }
   return(NULL)
 }
 
