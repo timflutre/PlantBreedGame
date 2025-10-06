@@ -48,6 +48,7 @@ observeEvent(input$addNewBreeder, {
     input$newBreederName,
     input$newBreederStatus,
     input$newBreederPsw,
+    shiny_notification = TRUE
   )
   values$lastDBupdate <- Sys.time()
 })
