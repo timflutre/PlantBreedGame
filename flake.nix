@@ -45,6 +45,7 @@
           prettyunits
           reactable
           shinyWidgets
+          logger
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";

@@ -175,7 +175,8 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
     db_add_pltmat_req_data(new_request$id, readQryPlmat())
 
-    res <- try(process_plantmat_request(new_request$id, progressPltMat = progressPltMat))
+    # res <- try(process_plantmat_request(new_request$id, progressPltMat = progressPltMat))
+    res <- "done" # try(process_plantmat_request(new_request$id, progressPltMat = progressPltMat))
 
     if (class(res) == "try-error") {
       progressPltMat$set(detail = "ERROR !")

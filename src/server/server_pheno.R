@@ -179,7 +179,8 @@ pheno_data <- eventReactive(input$requestPheno, {
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     add_pheno_req_data(req_id = new_request$id, request_data = readQryPheno())
 
-    res <- try(process_pheno_request(new_request$id, progressPheno = progressPheno))
+    # res <- try(process_pheno_request(new_request$id, progressPheno = progressPheno))
+    res <- "done" # try(process_pheno_request(new_request$id, progressPheno = progressPheno))
 
     if (res == "done") {
       writeRequest(readQryPheno(), breeder(), input$file.pheno$name)

@@ -82,11 +82,65 @@ read_sql_file <- function(file, collapse = " ") {
 }
 
 
+#' Execute a database statement with automatic retry on lock errors
+#'
+#' @param conn A database connection object
+#' @param statement SQL statement to execute
+#' @param max_retry Maximum number of retry attempts (default: 5)
+#' @param wait_time Initial wait time in seconds between retries (default: 0.1)
+#' @param backoff_multiplier Multiplier for exponential backoff (default: 2)
+#' @param ... Additional arguments passed to dbExecute
+#'
+#' @return The number of rows affected by the statement
+dbExecute_with_retry <- function(conn,
+                                 statement,
+                                 max_retry = 20,
+                                 wait_time = 0.1,
+                                 backoff_multiplier = 1.1,
+                                 ...) {
+  attempt <- 1
+  current_wait <- wait_time
+  while (attempt <= max_retry) {
+    result <- tryCatch(
+      {
+        dbExecute(conn, statement, ...)
+      },
+      error = function(e) {
+        if (grepl("database is locked", e$message, ignore.case = TRUE)) {
+          if (attempt < max_retry) {
+            message(sprintf(
+              "Database locked. Retry %d/%d after %.2f seconds...",
+              attempt, max_retry, current_wait
+            ))
+            Sys.sleep(current_wait)
+            return(NULL)
+          } else {
+            stop(sprintf(
+              "Database locked after %d attempts: %s",
+              max_retry, e$message
+            ))
+          }
+        } else {
+          stop(e)
+        }
+      }
+    )
+
+    if (!is.null(result)) {
+      return(result)
+    }
+    attempt <- attempt + 1
+    current_wait <- current_wait * backoff_multiplier
+  }
+}
+
 #' connect to the db and return the connection
 connect_to_db <- function(dbname = getOption("DATA_DB")) {
   if (file.exists(dbname)) {
     conn <- DBI::dbConnect(SQLite(), dbname = dbname)
-    dbExecute(conn = conn, "PRAGMA foreign_keys = ON")
+    dbExecute_with_retry(conn = conn, "PRAGMA foreign_keys = ON")
+    dbExecute_with_retry(conn = conn, "PRAGMA busy_timeout = 50000")
+    dbExecute_with_retry(conn = conn, "PRAGMA journal_mode = WAL")
     return(conn)
   }
   return(NULL)
@@ -145,7 +199,7 @@ db_execute <- function(query, dbname = getOption("DATA_DB")) {
     lapply(
       strsplit(query, ";")[[1]],
       function(q) {
-        dbExecute(conn, q)
+        dbExecute_with_retry(conn, q)
       }
     )
     # dbExecute(conn = conn, query)
@@ -164,7 +218,7 @@ db_execute_safe <- function(query, dbname = getOption("DATA_DB"), ...) {
   }
   tryCatch({
     safe_query <- DBI::sqlInterpolate(conn, query, ...)
-    dbExecute(conn = conn, safe_query)
+    dbExecute_with_retry(conn = conn, safe_query)
   }, error = function(err) {
     stop(err)
   }, finally = {
@@ -455,7 +509,11 @@ db_add_request <- function(id = NA,
   )
 }
 
-db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
+db_get_game_requests <- function(breeder = NULL,
+                                 name = NULL,
+                                 type = NULL,
+                                 id = NULL,
+                                 progress = NULL) {
   breeder_condition <- ""
   if (!is.null(breeder)) {
     breeder_condition <- condition("AND", "breeder", "IN", c(breeder, "@ALL"))
@@ -467,6 +525,7 @@ db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = 
     condition("AND", "name", "IN", name),
     condition("AND", "type", "IN", type),
     condition("AND", "id", "IN", id),
+    condition("AND", "progress", "IN", progress),
     "ORDER BY DATE(game_date) DESC"
   )
   db_get(query)
@@ -547,17 +606,38 @@ db_get_game_requests_data <- function(breeder = NULL,
 
 
 
-db_update_request <- function(id, processed = NULL) {
+db_update_request <- function(id, progress = NULL,
+                              inc_retry = NULL,
+                              process_info = NULL) {
   queries <- c()
-  if (!is.null(processed)) {
-    processed <- dbQuoteLiteral(DBI::ANSI(), processed)
+  if (!is.null(progress)) {
+    progress <- dbQuoteLiteral(DBI::ANSI(), progress)
     queries <- c(queries, paste(
-      "UPDATE requests SET processed =",
-      processed,
+      "UPDATE requests SET progress =",
+      progress,
       "WHERE id =",
       id
     ))
   }
+
+  if (isTRUE(inc_retry)) {
+    queries <- c(queries, paste(
+      "UPDATE requests SET n_retry = n_retry + 1",
+      "WHERE id =",
+      id
+    ))
+  }
+
+  if (!is.null(process_info)) {
+    process_info <- dbQuoteLiteral(DBI::ANSI(), process_info)
+    queries <- c(queries, paste(
+      "UPDATE requests SET process_info =",
+      process_info,
+      "WHERE id =",
+      id
+    ))
+  }
+
   queries <- paste(queries,
     collapse = "; "
   )
@@ -828,7 +908,7 @@ db_add_initial_pheno_data <- function(init_pheno_data) {
     pheno_req_id <- db_get_game_requests(breeder = "@ALL", name = request_name)[1, 1]
     add_pheno_req_data(pheno_req_id, request_data)
     db_add_pheno_data(pheno_data, pheno_req_id)
-    db_update_request(id = pheno_req_id, processed = 1)
+    db_update_request(id = pheno_req_id, progress = 1)
   })
 }
 

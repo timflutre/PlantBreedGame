@@ -86,3 +86,25 @@ if (dir.exists(DATA_SESSION)) {
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
+
+
+
+## request processor ----
+
+# Store the background process handle
+bg_process <- NULL
+
+onStop(function() {
+  if (!is.null(bg_process) && bg_process$is_alive()) {
+    bg_process$kill()
+  }
+})
+
+# Start background process when app starts
+bg_process <- callr::r_bg(
+  func = function() {
+    source("./request_processor.R")
+  },
+  supervise = TRUE,
+  stderr = file.path(DATA_SESSION, "request_processor.log")
+)

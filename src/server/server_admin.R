@@ -38,7 +38,17 @@ output$adminUI <- renderUI({
   }
 })
 
+## Request processor ----
 
+output$request_processor_info_ui <- renderUI({
+  invalidateLater(500)
+  running <- bg_process$is_alive()
+  logs <- readLines(con = file.path(DATA_SESSION, "request_processor.log"))
+  div(
+    p("Running:", running),
+    HTML(paste0("<pre>", paste(logs, collapse = "<br>"), "</pre>"))
+  )
+})
 
 
 ## Breeders management ----
