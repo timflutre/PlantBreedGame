@@ -1,0 +1,13 @@
+# the table (below) contains the requested plant material
+# only columns 'parent1', 'parent2' and 'child' are compulsory
+# each row corresponds to a child
+# the 'child' column shouldn't have any duplicate
+# only the 'parent2' column can be empty
+# individual names should only use [a-z], [A-Z], [0-9], [_-] (no space, comma, etc)
+# when requesting several haplodiploidizations, there should be one row per HD
+# use write.table(x=plants, file="<breeder>_<year>_plant_material.txt", quote=FALSE, sep="\t", na="", row.names=FALSE, col.names=TRUE)
+# lines starting with '#' will be ignored
+parent1	parent2	child	explanations
+Coll0037	Coll0008	37-8.1	allofecundation
+Coll0042	Coll0042	42-42.1	autofecundation
+Coll0042		Coll0042.HD1	haplodiploidization

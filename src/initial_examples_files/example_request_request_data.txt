@@ -1,0 +1,18 @@
+# the list (below) contains individuals to genotype and/or phenotype
+# columns 'ind', 'task' and 'details' are compulsory
+# individual names should only use [a-z], [A-Z], [0-9], [_-] (no space, comma, etc)
+# the 'task' column should contain 'pheno-field', 'pheno-patho' or 'geno'
+# if 'task=pheno-field', the 'details' column should contain the number of plots
+# if 'task=pheno-patho', the 'details' column should contain the number of replicates
+# if 'task=geno', the 'details' column should contain 'hd', 'ld' or the SNP identifier
+# individuals should not be duplicated within each task
+# the total number of requested plots (task=pheno-field) should not exceed the total available
+# use write.table(x=inds, file="<breeder>_inds.txt", quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
+# lines starting with '#' will be ignored
+ind	task	details
+Coll0037	pheno-field	2
+Coll0042	pheno-field	5
+Coll0010	pheno-patho	1
+Coll0037	geno	hd
+Coll0042	geno	ld
+Coll0010	geno	snp00007

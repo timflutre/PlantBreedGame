@@ -1857,14 +1857,12 @@ save(afs0, file = f)
 
 ## Example files
 
-Make an example of a "plant material" file:
-```{r ex_cross}
-(plant.examples <- makeExamplePlantFile(init.dir))
-```
+Copy examples requests files:
 
-Make an example of an "data" file:
-```{r ex_data}
-(data.examples <- makeExampleDataFile(init.dir))
+```{r exemple_files}
+file.copy("src/initial_examples_files/example_request_plant_material.txt", init.dir)
+file.copy("src/initial_examples_files/example_request_request_data.txt", init.dir)
+
 ```
 
 
