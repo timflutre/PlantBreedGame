@@ -58,9 +58,8 @@
 
       config = {
         WorkingDir = "/";
-        Run = [
-          "touch"
-          "/toto.txt"
+        Env = [
+          "PLANTBREEDGAME_DATA_ROOT=/var/lib/plantBreedGame"
         ];
         Volume = "/var/lib/plantBreedGame";
         Cmd = [
