@@ -108,7 +108,7 @@
               pkgs.writeShellApplication {
                 name = "PlantBreedGame";
                 text = ''
-                  Rscript --vanilla -e "shiny::runApp(port = as.numeric(Sys.getenv('TEST_PORT')))"
+                  ${nixpkgs.lib.getExe (packages.plantBreedGame-dev)} --port 3000
                 '';
               }
             );
@@ -159,6 +159,12 @@
           src = pkgs.lib.sources.cleanSource ./.;
         };
         packages.default = packages.plantBreedGame;
+
+        packages.plantBreedGame-dev = (
+          packages.plantBreedGame.overrideAttrs (oldAttrs: {
+            doCheck = false;
+          })
+        );
 
         images = {
           latest =
