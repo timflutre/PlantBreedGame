@@ -38,7 +38,17 @@ output$adminUI <- renderUI({
   }
 })
 
+## Request Worker ----
 
+output$request_worker_info_ui <- renderUI({
+  invalidateLater(500)
+  running <- WORKER_PROCESS$is_alive()
+  logs <- readLines(con = REQUEST_WORKER_LOG_FILE)
+  div(
+    p("Running:", running),
+    HTML(paste0("<pre>", paste(logs, collapse = "<br>"), "</pre>"))
+  )
+})
 
 
 ## Breeders management ----

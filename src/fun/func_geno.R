@@ -28,6 +28,13 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
   # inds.todo (data frame) output of "readCheckBreedDataFile"
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
+  db_update_request(request_id,
+    progress = 0.0001,
+    inc_retry = TRUE
+  )
+  progress <- 0
+  n_step <- 6
+
 
   request <- db_get_game_requests(id = request_id)
   stopifnot(request$type == "geno")
@@ -39,7 +46,6 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
   constants <- getBreedingGameConstants()
 
   ## 0. load required data
-  flush.console()
   f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
   subset.snps <- getSNPsubset()
@@ -54,8 +60,14 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
   )
   colnames(geno_request_dta)[colnames(geno_request_dta) == "name"] <- "ind_name"
 
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   genotypes <- load_genotypes(inds_ids = genotyped_inds_ids, UIprogress = progressGeno)
 
+
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
 
   file_types <- c("ld", "hd", "singleSnp")
   geno_file_names <- as.list(
@@ -71,6 +83,9 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
 
   ## 5. handle the 'geno' tasks for the requested individuals
   for (genotyping_density in c("ld", "hd")) {
+    progress <- progress + (1 / (n_step + 1))
+    db_update_request(request_id, progress = progress)
+
     geno_request_dta_filtered <- geno_request_dta[geno_request_dta$type == genotyping_density, ]
 
     if (nrow(geno_request_dta_filtered) == 0) {
@@ -96,6 +111,9 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
   }
 
   ## 6. handle the 'snp' tasks for the requested individuals
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   geno_request_dta_single_snp <- geno_request_dta[!geno_request_dta$type %in% c("ld", "hd"), ]
   if (nrow(geno_request_dta_single_snp) > 0) {
     if (!is.null(progressGeno)) {
@@ -123,15 +141,20 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
       sep = "\t", row.names = FALSE, col.names = TRUE
     )
   }
-  progressGeno$inc(
-    amount = 1,
-    detail = paste0("Finalisation...")
-  )
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
+  if (!is.null(progressGeno)) {
+    progressGeno$inc(
+      amount = 1,
+      detail = paste0("Finalisation...")
+    )
+  }
   db_add_geno_data(
     geno_req_id = request_id,
     genotype_data_files = geno_file_names
   )
-  db_update_request(id = request_id, processed = 1)
+  db_update_request(id = request_id, progress = 1)
   # output
   return("done")
 }

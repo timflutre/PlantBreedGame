@@ -23,6 +23,14 @@
 process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   # function which create the new generations (see game_master_plant-material.R)
 
+  db_update_request(request_id,
+    progress = 0.0001,
+    inc_retry = TRUE
+  )
+  progress <- 0
+  n_step <- 7
+
+
   request <- db_get_game_requests(id = request_id)
   stopifnot(request$type == "pltmat")
 
@@ -35,8 +43,10 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   stopifnot(nrow(existing_childs) == 0)
 
 
-
   ## get parent's informations
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   requested_parents <- db_get_individual(ind_id = unique(c(
     pltmat_request_dta$parent1_id,
     pltmat_request_dta$parent2_id
@@ -55,6 +65,9 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
 
   # initialise parent haplotypes
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   load(requested_parents$haplotype_file[1]) # load the haplotype of one parent to get the general structure of the haplotypes
   parents_haplotypes <- list()
   for (chr.id in names(ind$haplos)) {
@@ -72,6 +85,10 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
       )
     )
   }
+
+
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
 
   if (!is.null(progressPltMat)) {
     progressPltMat$inc(
@@ -104,6 +121,9 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   }
 
   ## perform the requested crosses
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   if (!is.null(progressPltMat)) {
     progressPltMat$inc(
       amount = 1,
@@ -125,6 +145,9 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
 
   ## save the haplotypes of the new individuals
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   haplotype_file_data <- data.frame(
     haplotype_file = rep(NA, nrow(pltmat_request_dta)),
     row.names = pltmat_request_dta$child
@@ -160,6 +183,9 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   }
   colnames(genotypes) <- colnames(ind$genos)
 
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   if (!is.null(progressPltMat)) {
     progressPltMat$inc(
       amount = 1,
@@ -169,19 +195,22 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
   db_add_pltmat(req_id = request_id)
   haplotype_file_data$id <- db_get_individuals_ids(
-    breeder = breeder(),
+    breeder = breeder,
     names = row.names(haplotype_file_data)
   )
   db_update_pltmat(haplotype_file_data)
 
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   GV <- calculate_genetic_values(genotypes)
   GV$id <- db_get_individuals_ids(
-    breeder = breeder(),
+    breeder = breeder,
     names = row.names(GV)
   )
   db_update_pltmat(GV)
 
-  db_update_request(id = request_id, processed = 1)
+  db_update_request(id = request_id, progress = 1)
 }
 
 

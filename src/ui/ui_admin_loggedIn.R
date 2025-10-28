@@ -428,6 +428,10 @@ game_initialisation_tab_content <- div(
   )
 )
 
+request_worker_content <- div(
+  uiOutput("request_worker_info_ui")
+)
+
 
 
 list(
@@ -436,6 +440,10 @@ list(
     tabPanel(
       "Game setup",
       game_setup_tab_content
+    ),
+    tabPanel(
+      "Request Worker",
+      request_worker_content
     ),
     tabPanel(
       "Manage sessions",

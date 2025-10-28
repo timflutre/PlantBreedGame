@@ -163,7 +163,7 @@ budget <- reactive({
 ## Requests history ----
 
 requests_ongoing <- reactive({
-  invalidateLater(5000)
+  invalidateLater(500)
   if (breeder() == "No Identification") {
     return(NULL)
   }
@@ -187,7 +187,7 @@ requests_ongoing <- reactive({
   dta
 })
 
-requests_history <- reactivePoll(5000, session, checkFunc = requests_ongoing, function() {
+requests_history <- reactivePoll(1000, session, checkFunc = requests_ongoing, function() {
   dta <- db_get_game_requests_history(breeder = breeder())
   if (nrow(dta) == 0) {
     dta$status <- character(0)
@@ -290,6 +290,13 @@ output$request_progress_bars_UI <- renderUI({
 output$requests_history_DT <- DT::renderDataTable(
   {
     dta <- requests_history()
+
+    dta$status[dta$status == "Error"] <- "❌ Error"
+    dta$status[dta$status == "Pending"] <- "⏰ Pending"
+    dta$status[dta$status == "Processing"] <- "⚙️ Processing"
+    dta$status[dta$status == "In progress"] <- "⏳ In progress"
+    dta$status[dta$status == "Completed"] <- "✅ Completed"
+
     colnames(dta) <- c(
       "Status",
       "Name",

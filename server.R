@@ -26,7 +26,7 @@ shinyServer(function(input, output, session) {
     ## this variable contain the game time.
     ## it is reevaluated every 250 milliseconds
     ## send a "tic" message to the client to get information about the server status (busy or not)
-    invalidateLater(250)
+    invalidateLater(1000)
     session$sendCustomMessage("serverTic", "tic")
     getGameTime()
   })
