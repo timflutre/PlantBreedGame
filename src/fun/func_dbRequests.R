@@ -87,6 +87,8 @@ connect_to_db <- function(dbname = getOption("DATA_DB")) {
   if (file.exists(dbname)) {
     conn <- DBI::dbConnect(SQLite(), dbname = dbname)
     dbExecute(conn = conn, "PRAGMA foreign_keys = ON")
+    dbExecute(conn = conn, "PRAGMA busy_timeout = 5000")
+    dbExecute(conn = conn, "PRAGMA journal_mode = WAL")
     return(conn)
   }
   return(NULL)
