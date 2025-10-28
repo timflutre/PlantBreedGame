@@ -1428,7 +1428,7 @@ initial_plant_mat_request_id <- db_get_game_requests(name = initial_pltmat_reque
 db_add_init_pltmat_req_data(initial_plant_mat_request_id, initial_pltmat_request)
 db_add_pltmat(req_id = initial_plant_mat_request_id)
 db_mark_as_control(controls)
-db_update_request(id = initial_plant_mat_request_id, processed = 1)
+db_update_request(id = initial_plant_mat_request_id, progress = 1)
 
 init_individuals <- db_get_individual()
 head(init_individuals)
@@ -1515,7 +1515,7 @@ db_add_geno_req_data(init_geno_req_id, init_geno_req)
 
 genotype_data_files <- list(hd = initial_genotype_file)
 db_add_geno_data(init_geno_req_id, genotype_data_files)
-db_update_request(id = init_geno_req_id, processed = 1)
+db_update_request(id = init_geno_req_id, progress = 1)
 ```
 
 
