@@ -86,3 +86,25 @@ if (dir.exists(DATA_SESSION)) {
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
+
+## request worker ----
+REQUEST_WORKER_LOG_FILE <- file.path(DATA_ROOT, "request_worker.log")
+if (!file.exists(REQUEST_WORKER_LOG_FILE)) {
+  file.create(REQUEST_WORKER_LOG_FILE)
+}
+
+WORKER_PROCESS <- NULL
+WORKER_PROCESS <- callr::r_bg(
+  func = function() {
+    source(normalizePath("./src/request_worker.R"))
+  },
+  supervise = TRUE,
+  stderr = REQUEST_WORKER_LOG_FILE
+)
+
+onStop(function() {
+  if (!is.null(WORKER_PROCESS) && WORKER_PROCESS$is_alive()) {
+    WORKER_PROCESS$kill()
+    cat("Request worker stopped\n")
+  }
+})

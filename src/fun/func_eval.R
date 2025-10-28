@@ -83,6 +83,7 @@ phenotype4Eval <- function(nRep = 50) {
       year = 2015,
       pathogen = TRUE
     )
+    phenosField.df$ind <- as.factor(phenosField.df$ind)
 
     phenosField <- simulTraits12(
       dat = phenosField.df,

@@ -25,6 +25,12 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   # function which phenotype the requested individuals
   # request_id the request id in the DB
 
+  db_update_request(request_id,
+    progress = 0.0001,
+    inc_retry = TRUE
+  )
+  progress <- 0
+  n_step <- 6
 
   request <- db_get_game_requests(id = request_id)
   stopifnot(request$type == "pheno")
@@ -41,6 +47,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
 
 
   ## 0. load required data
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   f <- paste0(DATA_TRUTH, "/p0.RData")
   load(f)
   f <- paste0(DATA_TRUTH, "/afs0.RData")
@@ -48,6 +57,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   subset.snps <- getSNPsubset()
 
   ## 1. Calculate year effect
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   # get the seed from database:
   yearEffectSeed <- constants$seed.year.effect
 
@@ -66,6 +78,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   .GlobalEnv$.Random.seed <- saved_seed
 
   ## 2. Get the phenotyped individuals
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   phenotyped_inds_ids <- unique(pheno_request_dta$ind_id)
   phenotyped_inds <- db_get_individual(ind_id = phenotyped_inds_ids)
   pheno_request_dta <- merge(pheno_request_dta,
@@ -77,7 +92,11 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   X <- load_genotypes(inds_ids = phenotyped_inds_ids, UIprogress = progressPheno)
 
 
+
   ## 4.1 handle the 'pheno-field' tasks for the requested individuals
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   pheno_field_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-field", ]
   phenosField.df <- NULL
 
@@ -96,6 +115,8 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
         TRUE, FALSE
       )
     )
+    phenosField.df$ind <- as.factor(phenosField.df$ind)
+
 
     phenosField <- simulTraits12(
       dat = phenosField.df,
@@ -130,6 +151,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   }
 
   ## 4.2 handle the 'pheno-patho' tasks for the requested individuals
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
+
   pheno_patho_request_dta <- pheno_request_dta[pheno_request_dta$type == "pheno-patho", ]
   phenosPatho.df <- NULL
 
@@ -149,9 +173,10 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     phenosPatho.df$plot <- paste0("lab-", phenosPatho.df$plot)
 
     phenosPatho <- list()
+    browser()
     phenosPatho$trait3 <- simulTrait3(
       dat = phenosPatho.df,
-      X = X[levels(phenosPatho.df$ind), , drop = FALSE],
+      X = X[phenosPatho.df$ind, , drop = FALSE],
       qtn.id = p0$trait3$qtn.id,
       resist.genos = p0$trait3$resist.genos,
       prob.resist.no.qtl = 0
@@ -162,6 +187,9 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
     phenosPatho.df$trait3 <- phenosPatho$trait3$y
     phenosPatho.df$trait1 <- NA
   }
+
+  progress <- progress + (1 / (n_step + 1))
+  db_update_request(request_id, progress = progress)
 
   if (!is.null(progressPheno)) {
     progressPheno$inc(
@@ -176,7 +204,7 @@ process_pheno_request <- function(request_id, progressPheno = NULL) {
   if (!is.null(phenosField.df)) {
     db_add_pheno_data(phenosField.df, request_id)
   }
-  db_update_request(id = request_id, processed = 1)
+  db_update_request(id = request_id, progress = 1)
 
   # output
   return("done")

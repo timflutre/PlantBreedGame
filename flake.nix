@@ -45,6 +45,8 @@
           prettyunits
           reactable
           shinyWidgets
+          logger
+          callr
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";
@@ -61,15 +63,14 @@
               Rcpp
             ];
           })
-
-          # dev
-          profvis
-          microbenchmark
         ];
         R-test-packages = with Rpkgs.rPackages; [ testthat ];
         R-dev-packages = with Rpkgs.rPackages; [
+          devtools
           languageserver
           styler
+          profvis
+          microbenchmark
         ];
       in
       rec {
