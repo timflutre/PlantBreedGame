@@ -173,15 +173,15 @@ requests_ongoing <- reactive({
     return(dta)
   }
   dta$status <- "Error"
-  dta$status[dta$processed == 0] <- "Pending"
-  dta$status[dta$processed > 0] <- "Processing"
+  dta$status[dta$progress == 0] <- "Pending"
+  dta$status[dta$progress > 0] <- "Processing"
 
   if (breederStatus() %in% c("game master", "tester")) {
-    dta$status[dta$processed == 1] <- "Completed"
+    dta$status[dta$progress == 1] <- "Completed"
   } else {
     dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
-    dta$status[dta$processed == 1 & !dta$available] <- "In progress"
-    dta$status[dta$processed == 1 & dta$available] <- "Completed"
+    dta$status[dta$progress == 1 & !dta$available] <- "In progress"
+    dta$status[dta$progress == 1 & dta$available] <- "Completed"
   }
   dta <- dta[dta$status != "Completed" & dta$status != "Error", ]
   dta
@@ -204,16 +204,16 @@ requests_history <- reactivePoll(5000, session, checkFunc = requests_ongoing, fu
     return(dta)
   }
   dta$status <- NA
-  dta$status[dta$processed < 0] <- "Error"
-  dta$status[dta$processed == 0] <- "Pending"
-  dta$status[dta$processed > 0] <- "Processing"
+  dta$status[dta$progress < 0] <- "Error"
+  dta$status[dta$progress == 0] <- "Pending"
+  dta$status[dta$progress > 0] <- "Processing"
 
   if (breederStatus() %in% c("game master", "tester")) {
-    dta$status[dta$processed == 1] <- "Completed"
+    dta$status[dta$progress == 1] <- "Completed"
   } else {
     dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
-    dta$status[dta$processed == 1 & !dta$available] <- "In progress"
-    dta$status[dta$processed == 1 & dta$available] <- "Completed"
+    dta$status[dta$progress == 1 & !dta$available] <- "In progress"
+    dta$status[dta$progress == 1 & dta$available] <- "Completed"
   }
 
   dta <- dta[, c(
@@ -237,9 +237,9 @@ requests_progress_bars <- reactive({
   }
   requests <- requests[order(requests$avail_from), ]
   if (breederStatus() %in% c("game master", "tester")) {
-    requests$progress <- requests$processed
+    requests$progress <- requests$progress
     requests$total_time <- 100
-    requests$elapse_time <- as.numeric(requests$processed) * requests$total_time
+    requests$elapse_time <- as.numeric(requests$progress) * requests$total_time
   } else {
     requests$game_date <- strptime(requests$game_date, format = "%Y-%m-%d")
     requests$avail_from <- strptime(requests$avail_from, format = "%Y-%m-%d")

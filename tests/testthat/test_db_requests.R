@@ -386,7 +386,10 @@ test_that("read/write requests", {
       type = character(),
       game_date = character(),
       time = numeric(),
-      processed = numeric()
+      progress = numeric(),
+      n_retry = numeric(),
+      process_info = character()
+
     )
   )
 
@@ -407,7 +410,9 @@ test_that("read/write requests", {
       name = "test_A_1",
       type = "pltmat",
       game_date = "2000-01-01",
-      processed = 0
+      progress = 0,
+      n_retry = 0,
+      process_info = NA_character_
     )
   )
 
@@ -434,7 +439,9 @@ test_that("read/write requests", {
       name = "test_A_1",
       type = "pltmat",
       game_date = "2000-01-01",
-      processed = 0
+      progress = 0,
+      n_retry = 0,
+      process_info = NA_character_
     )
   )
 
@@ -528,11 +535,11 @@ test_that("read/write requests", {
 
 
   request_id <- db_get_game_requests(breeder = "A")[1, "id"]
-  expect_equal(db_get_game_requests(id = request_id)$processed, 0)
+  expect_equal(db_get_game_requests(id = request_id)$progress, 0)
   expect_no_error({
-    db_update_request(id = request_id, processed = 1)
+    db_update_request(id = request_id, progress = 1)
   })
-  expect_equal(db_get_game_requests(id = request_id)$processed, 1)
+  expect_equal(db_get_game_requests(id = request_id)$progress, 1)
 })
 
 
@@ -548,7 +555,7 @@ test_that("plant material data", {
       parent2_request_name = character(),
       child_name = character(),
       cross_type = character()
-      # processed = numeric()
+      # progress = numeric()
     )
   )
 
@@ -790,7 +797,9 @@ test_that("plant material data", {
       "request_type",
       "request_game_date",
       "request_time",
-      "request_processed"
+      "request_progress",
+      "request_n_retry",
+      "request_process_info"
     )
   )
 

@@ -25,11 +25,13 @@ DROP TABLE IF EXISTS "requests";
 CREATE TABLE IF NOT EXISTS "requests" (
 	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
 	"breeder"	TEXT NOT NULL REFERENCES breeders(name) ON DELETE CASCADE,
-	"name"	TEXT,
-	"type"	TEXT,
-	"game_date"	TEXT,
+	"name"	TEXT NOT NULL,
+	"type"	TEXT NOT NULL,
+	"game_date"	TEXT NOT NULL,
 	"time"	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	"processed" INTEGER DEFAULT 0,
+	"progress" FLOAT DEFAULT 0,
+	"n_retry" INTEGER DEFAULT 0,
+	"process_info" TEXT,
 	UNIQUE("breeder", "name")
 );
 
@@ -326,7 +328,7 @@ WITH prices AS (
 				WHEN r.type LIKE 'evaluation%' THEN COUNT(*)
 				ELSE NULL
 		END AS quantity,
-		r.processed
+		r.progress
 	FROM requests r
 	  FULL JOIN pheno_requests pr ON (pr.req_id = r.id)
 	  FULL JOIN pltmat_requests pltr ON (pltr.req_id = r.id)

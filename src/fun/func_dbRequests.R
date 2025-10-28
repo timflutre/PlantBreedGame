@@ -455,7 +455,11 @@ db_add_request <- function(id = NA,
   )
 }
 
-db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = NULL) {
+db_get_game_requests <- function(breeder = NULL,
+                                 name = NULL,
+                                 type = NULL,
+                                 id = NULL,
+                                 progress = NULL) {
   breeder_condition <- ""
   if (!is.null(breeder)) {
     breeder_condition <- condition("AND", "breeder", "IN", c(breeder, "@ALL"))
@@ -467,6 +471,7 @@ db_get_game_requests <- function(breeder = NULL, name = NULL, type = NULL, id = 
     condition("AND", "name", "IN", name),
     condition("AND", "type", "IN", type),
     condition("AND", "id", "IN", id),
+    condition("AND", "progress", "IN", progress),
     "ORDER BY DATE(game_date) DESC"
   )
   db_get(query)
@@ -547,17 +552,38 @@ db_get_game_requests_data <- function(breeder = NULL,
 
 
 
-db_update_request <- function(id, processed = NULL) {
+db_update_request <- function(id, progress = NULL,
+                              inc_retry = NULL,
+                              process_info = NULL) {
   queries <- c()
-  if (!is.null(processed)) {
-    processed <- dbQuoteLiteral(DBI::ANSI(), processed)
+  if (!is.null(progress)) {
+    progress <- dbQuoteLiteral(DBI::ANSI(), progress)
     queries <- c(queries, paste(
-      "UPDATE requests SET processed =",
-      processed,
+      "UPDATE requests SET progress =",
+      progress,
       "WHERE id =",
       id
     ))
   }
+
+  if (isTRUE(inc_retry)) {
+    queries <- c(queries, paste(
+      "UPDATE requests SET n_retry = n_retry + 1",
+      "WHERE id =",
+      id
+    ))
+  }
+
+  if (!is.null(process_info)) {
+    process_info <- dbQuoteLiteral(DBI::ANSI(), process_info)
+    queries <- c(queries, paste(
+      "UPDATE requests SET process_info =",
+      process_info,
+      "WHERE id =",
+      id
+    ))
+  }
+
   queries <- paste(queries,
     collapse = "; "
   )
@@ -828,7 +854,7 @@ db_add_initial_pheno_data <- function(init_pheno_data) {
     pheno_req_id <- db_get_game_requests(breeder = "@ALL", name = request_name)[1, 1]
     add_pheno_req_data(pheno_req_id, request_data)
     db_add_pheno_data(pheno_data, pheno_req_id)
-    db_update_request(id = pheno_req_id, processed = 1)
+    db_update_request(id = pheno_req_id, progress = 1)
   })
 }
 
