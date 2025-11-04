@@ -429,7 +429,23 @@ game_initialisation_tab_content <- div(
 )
 
 request_worker_content <- div(
-  uiOutput("request_worker_info_ui")
+  tags$h2("Request worker status"),
+  div(
+    uiOutput("request_worker_status")
+  ),
+  div(
+    tags$h3("Current request queue:"),
+    dataTableOutput("request_worker_queue"),
+  ),
+  div(
+    tags$h3("Processed requests:"),
+    dataTableOutput("request_worker_processed_requests"),
+  ),
+  div(
+    tags$h3("Worker logs:"),
+    uiOutput("request_worker_logs")
+  ),
+
 )
 
 

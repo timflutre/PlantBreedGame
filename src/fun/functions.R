@@ -501,3 +501,14 @@ get_unique_request_name <- function(breeder, request_base_name) {
   }
   return(request_name)
 }
+
+
+start_worker <- function() {
+  WORKER_PROCESS <<- callr::r_bg(
+    func = function() {
+      source(normalizePath("./src/request_worker.R"))
+    },
+    supervise = TRUE,
+    stderr = REQUEST_WORKER_LOG_FILE
+  )
+}

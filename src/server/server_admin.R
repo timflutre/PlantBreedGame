@@ -39,16 +39,152 @@ output$adminUI <- renderUI({
 })
 
 ## Request Worker ----
-
-output$request_worker_info_ui <- renderUI({
+output$request_worker_status <- renderUI({
   invalidateLater(500)
-  running <- WORKER_PROCESS$is_alive()
-  logs <- readLines(con = REQUEST_WORKER_LOG_FILE)
-  div(
-    p("Running:", running),
-    HTML(paste0("<pre>", paste(logs, collapse = "<br>"), "</pre>"))
+  worker_running <- WORKER_PROCESS$is_alive()
+  if (worker_running) {
+    worker_status_ui <- div(
+      h3(style = "color: green;", icon("thumbs-up"), "Request worker is running.")
+    )
+  } else {
+    worker_status_ui <- div(
+      h2(
+        style = "color: #ff3333;",
+        icon("skull-crossbones"),
+        "Request worker is not running."
+      ),
+      actionButton(
+        "restart_worker_btn",
+        "Restart Worker",
+        icon = icon("rotate-right")
+      )
+    )
+  }
+  return(worker_status_ui)
+})
+
+observeEvent(input$restart_worker_btn, {
+  start_worker()
+})
+
+
+# Elements to show:
+# Queue depth - number of requests waiting to be processed
+# all_game_requests <- reactive({
+#   invalidateLater(1000)
+#
+# })
+
+all_game_requests <- reactivePoll(1000,
+  session = session,
+  checkFunc = db_get_game_requests,
+  valueFunc = function() {
+    dta <- db_get_game_requests()
+    dta[dta$breeder != "@ALL",]
+    dta$status <- NA
+    dta$status[dta$progress == 0] <- "⏰ Pending"
+    dta$status[dta$progress > 0] <- "⚙️ Processing"
+    dta$status[dta$progress >= 1] <- "✅ Success"
+    dta$status[dta$progress < 0] <- "❌ Error"
+    dta <- dta[, c(
+      "id",
+      "breeder",
+      "name",
+      "type",
+      "game_date",
+      "time",
+      "status",
+      "progress",
+      "n_retry",
+      "process_info"
+    )]
+  }
+)
+queued_requests <- reactive({
+  dta <- all_game_requests()
+  dta <- dta[dta$progress >= 0 & dta$progress < 1, ]
+  return(dta)
+})
+processed_requests <- reactive({
+  dta <- all_game_requests()
+  dta <- dta[dta$progress < 0 | dta$progress >= 1, ]
+  dta <- dta[order(dta$time, decreasing = TRUE), ]
+  return(dta)
+})
+
+output$request_worker_queue <- DT::renderDataTable(
+  {
+    dta <- queued_requests()
+    DT::datatable(
+      dta,
+      selection = "single",
+      rownames = FALSE,
+      options = list(
+        lengthMenu = c(10, 20, 50),
+        pageLength = 10,
+        searchDelay = 500
+      )
+    )
+  },
+  server = FALSE
+)
+
+
+output$request_worker_processed_requests <- DT::renderDataTable(
+  {
+    dta <- isolate(processed_requests())
+    rownames(dta) <- dta$id
+    DT::datatable(
+      dta,
+      selection = "none",
+      # rownames = FALSE, not working with replaceData...
+      options = list(
+        lengthMenu = c(10, 20, 50),
+        pageLength = 10,
+        searchDelay = 500
+      )
+    )
+  } # ,
+  # server = FALSE
+)
+
+request_worker_processed_requests_proxy <- dataTableProxy("request_worker_processed_requests")
+
+observe({
+  # browser()
+  replaceData(request_worker_processed_requests_proxy,
+    processed_requests(),
+    resetPaging = FALSE
   )
 })
+
+
+# Requests processed
+
+# worker logs
+worker_log_content <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+  filePath = REQUEST_WORKER_LOG_FILE,
+  readFunc = function(filePath) {
+    if (file.exists(filePath)) {
+      return(readLines(filePath, warn = FALSE))
+    }
+    return(character(0))
+  }
+)
+
+output$request_worker_logs <- renderUI({
+  tags$div(
+    id = "log_container",
+    style = "overflow-y: scroll; max-height: 50lh",
+    tags$pre(paste(worker_log_content(), collapse = "\n"))
+  )
+})
+
+
+
+
 
 
 ## Breeders management ----

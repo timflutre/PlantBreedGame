@@ -94,13 +94,7 @@ if (!file.exists(REQUEST_WORKER_LOG_FILE)) {
 }
 
 WORKER_PROCESS <- NULL
-WORKER_PROCESS <- callr::r_bg(
-  func = function() {
-    source(normalizePath("./src/request_worker.R"))
-  },
-  supervise = TRUE,
-  stderr = REQUEST_WORKER_LOG_FILE
-)
+start_worker()
 
 onStop(function() {
   if (!is.null(WORKER_PROCESS) && WORKER_PROCESS$is_alive()) {
