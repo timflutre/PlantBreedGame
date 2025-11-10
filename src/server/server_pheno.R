@@ -173,6 +173,7 @@ pheno_data <- eventReactive(input$requestPheno, {
     )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     add_pheno_req_data(req_id = new_request$id, request_data = readQryPheno())
+    alert_if_worker_is_dead()
     return(TRUE)
   } else {
     return(NULL)

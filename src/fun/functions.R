@@ -512,3 +512,21 @@ start_worker <- function() {
     stderr = REQUEST_WORKER_LOG_FILE
   )
 }
+
+
+
+#' raise an html alert if the WORKER_PROCESS is not running
+alert_if_worker_is_dead <- function(msg = NULL) {
+  if (is.null(msg)) {
+    msg <- paste0(
+      "Your request have been successfully registered. ",
+      "However the system is currently unable to process it. ",
+      "Please notify your game master of this issue. ",
+      "Your request will be processed once the request processor will be available.",
+      "You do not have to upload it again."
+    )
+  }
+  if (!WORKER_PROCESS$is_alive()) {
+    alert(msg)
+  }
+}

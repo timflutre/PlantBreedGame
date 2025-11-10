@@ -166,6 +166,7 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
     db_add_pltmat_req_data(new_request$id, readQryPlmat())
+    alert_if_worker_is_dead()
     return(TRUE)
   } else {
     return(NULL)
