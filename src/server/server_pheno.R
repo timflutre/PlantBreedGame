@@ -156,7 +156,7 @@ output$submitPhenoRequest <- renderUI({
 })
 
 # output
-pheno_data <- eventReactive(input$requestPheno, {
+observeEvent(input$requestPheno, {
   request_time <- getGameTime()
   if (is.data.frame(readQryPheno())) {
     request_name <- get_unique_request_name(
@@ -174,23 +174,16 @@ pheno_data <- eventReactive(input$requestPheno, {
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     add_pheno_req_data(req_id = new_request$id, request_data = readQryPheno())
     alert_if_worker_is_dead()
+
+    # reset UI
+    reset("file.pheno")
+    session$sendCustomMessage(type = "resetValue", message = "file.pheno")
+    updateTabsetPanel(session, "pheno_tabset", selected = "Check")
     return(TRUE)
   } else {
     return(NULL)
   }
 })
-
-
-output$phenoRequestResultUI <- renderUI({
-  if (!is.null(pheno_data()) && pheno_data() == "done") {
-    reset("file.pheno")
-    session$sendCustomMessage(type = "resetValue", message = "file.pheno")
-    p("Great ! Your results will be available soon.")
-  } else if (!is.null(pheno_data()) && pheno_data() == "error") {
-    p("Something went wrong. Please check your file.")
-  }
-})
-
 
 
 ## Breeder information ----

@@ -153,7 +153,7 @@ output$submitPlmatRequest <- renderUI({
 
 
 # output
-plantMatRequested <- eventReactive(input$requestPlmat, {
+observeEvent(input$requestPlmat, {
   request_time <- getGameTime()
   if (is.data.frame(readQryPlmat())) {
     request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.plmat$name))
@@ -167,32 +167,18 @@ plantMatRequested <- eventReactive(input$requestPlmat, {
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
     db_add_pltmat_req_data(new_request$id, readQryPlmat())
     alert_if_worker_is_dead()
+
+    # reset UI
+    reset("file.plmat")
+    session$sendCustomMessage(type = "resetValue", message = "file.plmat")
+    updateTabsetPanel(session, "cross_tabset", selected = "Check")
     return(TRUE)
   } else {
     return(NULL)
   }
 })
 
-
-output$plmatRequestResultUI <- renderUI({
-  if (!is.null(plantMatRequested()) && plantMatRequested() == "done") {
-    # reset inputs
-    reset("file.plmat")
-    session$sendCustomMessage(type = "resetValue", message = "file.plmat")
-
-    # display message
-
-    p("\n Great ! Your plants are growing up !")
-  } else if (!is.null(plantMatRequested()) && plantMatRequested() == "error") {
-    p("\n Something went wrong. Please check your file.")
-  } else {
-    p("")
-  }
-})
-
-
-
-## Breeder information ----
+# Breeder information ----
 breeder_info_server("breederInfo_pltmat",
   breeder = breeder,
   breederStatus = breederStatus,

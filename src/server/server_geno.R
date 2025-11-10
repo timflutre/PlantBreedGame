@@ -145,7 +145,7 @@ output$submitGenoRequest <- renderUI({
 })
 
 ## output
-geno_data <- eventReactive(input$requestGeno, {
+observeEvent(input$requestGeno, {
   request_time <- getGameTime()
   if (is.data.frame(readQryGeno())) {
     request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.geno$name))
@@ -159,36 +159,16 @@ geno_data <- eventReactive(input$requestGeno, {
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
     alert_if_worker_is_dead()
+
+    # reset UI
+    reset("file.geno")
+    session$sendCustomMessage(type = "resetValue", message = "file.geno")
+    updateTabsetPanel(session, "geno_tabset", selected = "Check")
     return(TRUE)
   } else {
     return(NULL)
   }
 })
-
-
-
-output$genoRequestResultUI <- renderUI({
-  if (!is.null(geno_data()) && geno_data() == "done") {
-    # reset inputs
-    reset("file.geno")
-    session$sendCustomMessage(type = "resetValue", message = "file.geno")
-
-    # display message
-    p(
-      "Great ! Your results will be available in ",
-      getBreedingGameConstants()$duration.geno.hd, " months."
-    )
-  } else if (!is.null(geno_data()) && geno_data() == "error") {
-    p("Something went wrong. Please check your file.")
-  } else {
-    p("")
-  }
-})
-
-
-
-
-
 
 ## Breeder information ----
 breeder_info_server("breederInfo_geno",
