@@ -85,26 +85,29 @@ all_game_requests <- reactivePoll(1000,
   },
   valueFunc = function() {
     dta <- db_get_game_requests()
-    dta <- dta[dta$breeder != "@ALL",]
-    dta$status <- NA
-    dta$status[dta$progress == 0] <- "⏰ Pending"
-    dta$status[dta$progress > 0] <- "⚙️ Processing"
-    dta$status[dta$progress >= 1] <- "✅ Success"
-    dta$status[dta$progress < 0] <- "❌ Error"
-    dta <- dta[, c(
-      "id",
-      "breeder",
-      "name",
-      "type",
-      "game_date",
-      "time",
-      "status",
-      "progress",
-      "n_retry",
-      "started_at",
-      "ended_at",
-      "process_info"
-    )]
+    dta <- dta[dta$breeder != "@ALL", ]
+    if (nrow(dta) > 0) {
+      dta$status <- NA
+      dta$status[dta$progress == 0] <- "⏰ Pending"
+      dta$status[dta$progress > 0] <- "⚙️ Processing"
+      dta$status[dta$progress >= 1] <- "✅ Success"
+      dta$status[dta$progress < 0] <- "❌ Error"
+      dta <- dta[, c(
+        "id",
+        "breeder",
+        "name",
+        "type",
+        "game_date",
+        "time",
+        "status",
+        "progress",
+        "n_retry",
+        "started_at",
+        "ended_at",
+        "process_info"
+      )]
+    }
+    return(dta)
   }
 )
 queued_requests <- reactive({
