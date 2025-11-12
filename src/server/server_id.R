@@ -262,9 +262,12 @@ requests_progress_bars <- reactive({
     shinyWidgets::progressBar(
       id = paste0("progress-", r["name"]),
       title = title,
-      # value = as.numeric(r["progress"]),
       value = round(as.numeric(r["elapse_time"])),
-      status = ifelse(r["status"] == "In progress", "success", "warning"),
+      status = switch(r["status"],
+        "In progress" = "success",
+        "Pending" = "secondary",
+        "warning"
+      ),
       total = round(as.numeric(r["total_time"])),
       display_pct = TRUE,
       striped = TRUE
