@@ -68,13 +68,6 @@ observeEvent(input$restart_worker_btn, {
 })
 
 
-# Elements to show:
-# Queue depth - number of requests waiting to be processed
-# all_game_requests <- reactive({
-#   invalidateLater(1000)
-#
-# })
-
 all_game_requests <- reactivePoll(1000,
   session = session,
   checkFunc = function() {
@@ -85,38 +78,47 @@ all_game_requests <- reactivePoll(1000,
   },
   valueFunc = function() {
     dta <- db_get_game_requests()
+    if (is.null(dta)) {
+      return(NULL)
+    }
     dta <- dta[dta$breeder != "@ALL", ]
+    dta$status <- rep(NA, nrow(dta))
     if (nrow(dta) > 0) {
-      dta$status <- NA
       dta$status[dta$progress == 0] <- "⏰ Pending"
       dta$status[dta$progress > 0] <- "⚙️ Processing"
       dta$status[dta$progress >= 1] <- "✅ Success"
       dta$status[dta$progress < 0] <- "❌ Error"
-      dta <- dta[, c(
-        "id",
-        "breeder",
-        "name",
-        "type",
-        "game_date",
-        "time",
-        "status",
-        "progress",
-        "n_retry",
-        "started_at",
-        "ended_at",
-        "process_info"
-      )]
     }
+    dta <- dta[, c(
+      "id",
+      "breeder",
+      "name",
+      "type",
+      "game_date",
+      "time",
+      "status",
+      "progress",
+      "n_retry",
+      "started_at",
+      "ended_at",
+      "process_info"
+    )]
     return(dta)
   }
 )
 queued_requests <- reactive({
   dta <- all_game_requests()
+  if (is.null(dta)) {
+    return(NULL)
+  }
   dta <- dta[dta$progress >= 0 & dta$progress < 1, ]
   return(dta)
 })
 processed_requests <- reactive({
   dta <- all_game_requests()
+  if (is.null(dta)) {
+    return(NULL)
+  }
   dta <- dta[dta$progress < 0 | dta$progress >= 1, ]
   dta <- dta[order(dta$time, decreasing = TRUE), ]
   return(dta)
@@ -140,32 +142,31 @@ output$request_worker_queue <- DT::renderDataTable(
 )
 
 
-output$request_worker_processed_requests <- DT::renderDataTable(
-  {
-    dta <- isolate(processed_requests())
-    rownames(dta) <- dta$id
-    DT::datatable(
-      dta,
-      selection = "none",
-      # rownames = FALSE, not working with replaceData...
-      options = list(
-        lengthMenu = c(10, 20, 50),
-        pageLength = 10,
-        searchDelay = 500
-      )
+output$request_worker_processed_requests <- DT::renderDataTable({
+  dta <- isolate(processed_requests())
+  rownames(dta) <- dta$id
+  DT::datatable(
+    dta,
+    selection = "none",
+    # rownames = FALSE, not working with replaceData...
+    options = list(
+      lengthMenu = c(10, 20, 50),
+      pageLength = 10,
+      searchDelay = 500
     )
-  } # ,
-  # server = FALSE
-)
+  )
+})
 
 request_worker_processed_requests_proxy <- dataTableProxy("request_worker_processed_requests")
 
 observe({
-  # browser()
-  replaceData(request_worker_processed_requests_proxy,
-    processed_requests(),
-    resetPaging = FALSE
-  )
+  dta <- processed_requests()
+  if (!is.null(dta)) {
+    replaceData(request_worker_processed_requests_proxy,
+      dta,
+      resetPaging = FALSE
+    )
+  }
 })
 
 
