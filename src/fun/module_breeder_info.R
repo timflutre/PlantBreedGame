@@ -30,7 +30,7 @@ breeder_info_server <- function(id,
         subtitle = paste("Status:", breederStatus()),
         icon = icon("user"),
         color = "yellow",
-        width = 3
+        width = 4
       )
     })
 
@@ -44,7 +44,7 @@ breeder_info_server <- function(id,
         value = strftime(currentGTime(), format = "%d %b %Y"),
         icon = icon("calendar"),
         color = "yellow",
-        width = 3
+        width = 4
       )
     })
 
@@ -58,22 +58,7 @@ breeder_info_server <- function(id,
         subtitle = "Budget",
         icon = icon("credit-card"),
         color = "yellow",
-        width = 3
-      )
-    })
-
-    # output$serverIndic <- renderValueBox({
-    output$serverIndic <- renderUI({
-      if (breeder() == "No Identification") {
-        return(NULL)
-      }
-      ## this bow will be modified by some javascript
-      valueBoxServer(
-        value = "",
-        subtitle = "Server load",
-        icon = icon("server"),
-        color = "yellow",
-        width = 3
+        width = 4
       )
     })
 
