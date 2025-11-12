@@ -461,7 +461,9 @@ db_get_game_requests <- function(breeder = NULL,
                                  name = NULL,
                                  type = NULL,
                                  id = NULL,
-                                 progress = NULL) {
+                                 progress = NULL,
+                                 progress_gt = NULL,
+                                 progress_lt = NULL) {
   breeder_condition <- ""
   if (!is.null(breeder)) {
     breeder_condition <- condition("AND", "breeder", "IN", c(breeder, "@ALL"))
@@ -474,6 +476,8 @@ db_get_game_requests <- function(breeder = NULL,
     condition("AND", "type", "IN", type),
     condition("AND", "id", "IN", id),
     condition("AND", "progress", "IN", progress),
+    condition("AND", "progress", ">", progress_gt),
+    condition("AND", "progress", "<", progress_lt),
     "ORDER BY DATE(game_date) DESC"
   )
   db_get(query)

@@ -27,7 +27,6 @@ if (!dir.exists(DATA_ROOT)) {
   ))
 }
 
-
 process_request <- function(request) {
   if (request$type == "geno") {
     process_geno_request(request$id)
@@ -42,6 +41,7 @@ process_request <- function(request) {
 
 MAX_RETRY <- 3
 SLEEP_TIME <- 3
+MAX_PROCESS_TIME <- 5 * 60
 
 
 log_info("Initialisation done, starting loop")
@@ -78,6 +78,36 @@ while (TRUE) {
       DATA_DB <- file.path(DATA_SESSION, "breeding-game.sqlite")
       options(DATA_DB = DATA_DB)
 
+
+      unfinished_requests <- db_get_game_requests(
+        progress_gt = 0,
+        progress_lt = 1,
+      )
+      if (nrow(unfinished_requests) > 0) {
+        log_warn("Found {nrow(unfinished_requests)} unfinished request(s).")
+        apply(unfinished_requests, MARGIN = 1, function(r) {
+          # this could happens if the worker died durring the request processing.
+          time_since_started <- as.numeric(difftime(
+            Sys.time(),
+            as.POSIXct(r["started_at"]),
+            units = "secs"
+          ))
+          if (time_since_started > MAX_PROCESS_TIME) {
+            r_id <- r["id"]
+            log_warn(
+              "Request [ID: {r_id}] appear unfinished for an unexpected long ",
+              "time. Marking this request as failed."
+            )
+            db_update_request(
+              id = r_id,
+              progress = -1,
+              process_info = "Unexpected long processing time (worker probably die durring the process)",
+            )
+          }
+        })
+      }
+
+
       requests <- db_get_game_requests(progress = 0)
       if (nrow(requests) == 0) {
         Sys.sleep(SLEEP_TIME)
@@ -95,7 +125,7 @@ while (TRUE) {
         "(attempt {request_to_process$n_retry + 1}/{MAX_RETRY})"
       )
 
-
+      # Process request
       tryCatch(
         {
           start_time <- Sys.time()
