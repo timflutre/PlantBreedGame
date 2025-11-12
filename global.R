@@ -18,6 +18,8 @@
 ## License along with PlantBreedGame.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
+library(logger)
+log_threshold(DEBUG) # TODO: update according to env variable
 
 source("src/dependencies.R", local = TRUE, encoding = "UTF-8")
 
@@ -82,6 +84,26 @@ GAME_INIT_REPORT <- file.path(DATA_REPORTS, "plantBreedGame_initialisation_repor
 
 if (dir.exists(DATA_SESSION)) {
   addResourcePath("reports", DATA_REPORTS)
+
+  app_version <- package_version(readLines("VERSION"))
+  db_version <- package_version(getBreedingGameConstants()$version)
+  incompatible_db <- FALSE
+  if (length(db_version) == 0) {
+    incompatible_db <- TRUE
+  }
+  if (app_version$major > db_version$major) {
+    incompatible_db <- TRUE
+  }
+  if (incompatible_db) {
+    log_error(
+      "The current game session was initialized with this application at ",
+      "version `{db_version}`. However, it is incompatible with the current ",
+      "version of the application (`{app_version}`). This may cause the ",
+      "application to crash or behave unexpectedly, although the issues may not ",
+      "always be immediate. To prevent any issues, we recommend deleting the ",
+      "application's data and restarting the app."
+    )
+  }
 }
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"

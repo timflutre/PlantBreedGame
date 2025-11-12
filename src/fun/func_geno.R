@@ -30,7 +30,8 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
 
   db_update_request(request_id,
     progress = 0.0001,
-    inc_retry = TRUE
+    inc_retry = TRUE,
+    started_at = Sys.time()
   )
   progress <- 0
   n_step <- 6
@@ -154,7 +155,7 @@ process_geno_request <- function(request_id, progressGeno = NULL) {
     geno_req_id = request_id,
     genotype_data_files = geno_file_names
   )
-  db_update_request(id = request_id, progress = 1)
+  db_update_request(id = request_id, progress = 1, ended_at = Sys.time())
   # output
   return("done")
 }

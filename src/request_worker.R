@@ -112,7 +112,8 @@ while (TRUE) {
           log_debug("Error details: {capture.output(print(err))}")
           db_update_request(
             id = request_to_process$id,
-            process_info = conditionMessage(err)
+            process_info = conditionMessage(err),
+            ended_at = Sys.time()
           )
 
           if (request_to_process$n_retry < MAX_RETRY) {

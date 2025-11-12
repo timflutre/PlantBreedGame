@@ -388,8 +388,9 @@ test_that("read/write requests", {
       time = numeric(),
       progress = numeric(),
       n_retry = numeric(),
-      process_info = character()
-
+      process_info = character(),
+      started_at = numeric(),
+      ended_at = numeric()
     )
   )
 
@@ -412,7 +413,9 @@ test_that("read/write requests", {
       game_date = "2000-01-01",
       progress = 0,
       n_retry = 0,
-      process_info = NA_character_
+      process_info = NA_character_,
+      started_at = NA_integer_,
+      ended_at = NA_integer_
     )
   )
 
@@ -441,7 +444,9 @@ test_that("read/write requests", {
       game_date = "2000-01-01",
       progress = 0,
       n_retry = 0,
-      process_info = NA_character_
+      process_info = NA_character_,
+      started_at = NA_integer_,
+      ended_at = NA_integer_
     )
   )
 
@@ -536,10 +541,29 @@ test_that("read/write requests", {
 
   request_id <- db_get_game_requests(breeder = "A")[1, "id"]
   expect_equal(db_get_game_requests(id = request_id)$progress, 0)
+  started_at <- Sys.time()
   expect_no_error({
-    db_update_request(id = request_id, progress = 1)
+    db_update_request(
+      id = request_id,
+      progress = 1,
+      started_at = started_at
+    )
   })
   expect_equal(db_get_game_requests(id = request_id)$progress, 1)
+  expect_equal(as.POSIXct(db_get_game_requests(id = request_id)$started_at),
+               started_at)
+  expect_true(is.na(db_get_game_requests(id = request_id)$ended_at))
+
+  ended_at <- Sys.time()
+  expect_no_error({
+    db_update_request(
+      id = request_id,
+      progress = 1,
+      ended_at = ended_at
+    )
+  })
+  expect_equal(as.POSIXct(db_get_game_requests(id = request_id)$ended_at),
+               ended_at)
 })
 
 
@@ -799,7 +823,9 @@ test_that("plant material data", {
       "request_time",
       "request_progress",
       "request_n_retry",
-      "request_process_info"
+      "request_process_info",
+      "request_started_at",
+      "request_ended_at"
     )
   )
 

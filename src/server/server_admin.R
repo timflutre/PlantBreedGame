@@ -77,10 +77,15 @@ observeEvent(input$restart_worker_btn, {
 
 all_game_requests <- reactivePoll(1000,
   session = session,
-  checkFunc = db_get_game_requests,
+  checkFunc = function() {
+    if (breederStatus() != "game master") {
+      return(NULL)
+    }
+    return(db_get_game_requests())
+  },
   valueFunc = function() {
     dta <- db_get_game_requests()
-    dta[dta$breeder != "@ALL",]
+    dta <- dta[dta$breeder != "@ALL",]
     dta$status <- NA
     dta$status[dta$progress == 0] <- "⏰ Pending"
     dta$status[dta$progress > 0] <- "⚙️ Processing"
@@ -96,6 +101,8 @@ all_game_requests <- reactivePoll(1000,
       "status",
       "progress",
       "n_retry",
+      "started_at",
+      "ended_at",
       "process_info"
     )]
   }

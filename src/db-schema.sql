@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS "requests" (
 	"progress" FLOAT DEFAULT 0,
 	"n_retry" INTEGER DEFAULT 0,
 	"process_info" TEXT,
+	"started_at" TIMESTAMP,
+	"ended_at" TIMESTAMP,
 	UNIQUE("breeder", "name")
 );
 

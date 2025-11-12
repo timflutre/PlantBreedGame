@@ -25,7 +25,8 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
 
   db_update_request(request_id,
     progress = 0.0001,
-    inc_retry = TRUE
+    inc_retry = TRUE,
+    started_at = Sys.time()
   )
   progress <- 0
   n_step <- 7
@@ -210,7 +211,7 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
   )
   db_update_pltmat(GV)
 
-  db_update_request(id = request_id, progress = 1)
+  db_update_request(id = request_id, progress = 1, ended_at = Sys.time())
 }
 
 

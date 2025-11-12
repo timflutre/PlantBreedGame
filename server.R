@@ -57,8 +57,10 @@ shinyServer(function(input, output, session) {
   observe({
     if (!gameInitialised()) {
       msg <- paste(
-        "The game have not been initialised. It is therefore currently impossible to play.",
-        '\nTo initialise the game, go to the "Admin" menu and in the "Game setup" tab.',
+        "The game have not been initialised or the current game session is ",
+        "incompatible with this application version. ",
+        "It is therefore currently impossible to play.",
+        '\nTo (re)-initialise the game, go to the "Admin" menu and in the "Game setup" tab.',
         "From there you will be able to initialise a new game."
       )
       alert(msg)

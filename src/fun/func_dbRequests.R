@@ -556,7 +556,9 @@ db_get_game_requests_data <- function(breeder = NULL,
 
 db_update_request <- function(id, progress = NULL,
                               inc_retry = NULL,
-                              process_info = NULL) {
+                              process_info = NULL,
+                              started_at = NULL,
+                              ended_at = NULL) {
   queries <- c()
   if (!is.null(progress)) {
     progress <- dbQuoteLiteral(DBI::ANSI(), progress)
@@ -581,6 +583,28 @@ db_update_request <- function(id, progress = NULL,
     queries <- c(queries, paste(
       "UPDATE requests SET process_info =",
       process_info,
+      "WHERE id =",
+      id
+    ))
+  }
+
+  if (!is.null(started_at)) {
+    started_at <- format(started_at, "%Y-%m-%d %H:%M:%OS3%z")
+    started_at <- dbQuoteLiteral(DBI::ANSI(), started_at)
+    queries <- c(queries, paste(
+      "UPDATE requests SET started_at=",
+      started_at,
+      "WHERE id =",
+      id
+    ))
+  }
+
+  if (!is.null(ended_at)) {
+    ended_at <- format(ended_at, "%Y-%m-%d %H:%M:%OS3%z")
+    ended_at <- dbQuoteLiteral(DBI::ANSI(), ended_at)
+    queries <- c(queries, paste(
+      "UPDATE requests SET ended_at=",
+      ended_at,
       "WHERE id =",
       id
     ))
