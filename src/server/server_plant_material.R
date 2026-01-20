@@ -166,7 +166,12 @@ observeEvent(input$requestPlmat, {
     )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
     db_add_pltmat_req_data(new_request$id, readQryPlmat())
+
     alert_if_worker_is_dead()
+    showNotification(
+      paste("Plant-material request successfully sent"),
+      type = "message"
+    )
 
     # reset UI
     reset("file.plmat")

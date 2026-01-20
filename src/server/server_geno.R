@@ -158,7 +158,13 @@ observeEvent(input$requestGeno, {
     )
     new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
     db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
+
     alert_if_worker_is_dead()
+    showNotification(
+      paste("Genotyping request successfully sent"),
+      type = "message"
+    )
+
 
     # reset UI
     reset("file.geno")
