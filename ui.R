@@ -88,11 +88,8 @@ shinyUI(
       useShinyjs(),
       ## javascript function
       tags$head(
-        tags$script(src = "busyServer.js"),
         tags$script(src = "clientTimeZone.js"),
-        tags$script("Shiny.addCustomMessageHandler(
-                                  'resetValue',function(variableName){
-                                  Shiny.onInputChange(variableName, null);});"),
+        tags$script(src = "customMessageHandler.js"),
         tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
         tags$link(href = "https://fonts.googleapis.com/css?family=Nunito", rel = "stylesheet")
       ),
