@@ -1140,6 +1140,10 @@ db_add_evaluation_inds <- function(breeder, ind_ids, game_date) {
       "ind_id" = ind_ids
     )
   )
+  db_update_request(
+    id = new_request$id,
+    progress = 1
+  )
 }
 
 db_get_evaluation_requests <- function() {
@@ -1170,6 +1174,10 @@ db_remove_evaluation_inds <- function(breeder, ind_ids, game_date) {
       "action" = "remove",
       "ind_id" = ind_ids
     )
+  )
+  db_update_request(
+    id = new_request$id,
+    progress = 1
   )
 }
 

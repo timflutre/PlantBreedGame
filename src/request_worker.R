@@ -13,7 +13,12 @@ source("./src/fun/func_geno.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_pheno.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_plant_material.R", local = TRUE, encoding = "UTF-8")
 
-
+HANDLED_REQUEST_TYPES <- c(
+  # list of request types the worker should handle
+  "pheno",
+  "geno",
+  "pltmat"
+)
 
 DATA_ROOT <- Sys.getenv("PLANTBREEDGAME_DATA_ROOT")
 if (identical(DATA_ROOT, "")) {
@@ -37,6 +42,10 @@ process_request <- function(request) {
   if (request$type == "pltmat") {
     process_plantmat_request(request$id)
   }
+}
+
+get_request_to_process <- function(unfinished = FALSE) {
+  return(db_get_game_requests(progress = 0, type = HANDLED_REQUEST_TYPES))
 }
 
 MAX_RETRY <- 3
@@ -82,6 +91,7 @@ while (TRUE) {
       unfinished_requests <- db_get_game_requests(
         progress_gt = 0,
         progress_lt = 1,
+        type = HANDLED_REQUEST_TYPES
       )
       if (nrow(unfinished_requests) > 0) {
         log_warn("Found {nrow(unfinished_requests)} unfinished request(s).")
@@ -108,7 +118,7 @@ while (TRUE) {
       }
 
 
-      requests <- db_get_game_requests(progress = 0)
+      requests <- get_request_to_process()
       if (nrow(requests) == 0) {
         Sys.sleep(SLEEP_TIME)
         next
