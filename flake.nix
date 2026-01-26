@@ -121,7 +121,6 @@
               pkgs.writeShellApplication {
                 name = "PlantBreedGame-test_ui";
                 text = ''
-                  # npx playwright test "$@"
                   make ui_tests
                 '';
               }

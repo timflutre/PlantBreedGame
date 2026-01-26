@@ -1,4 +1,4 @@
-.PHONY: data
+.PHONY: $(MAKECMDGOALS)
 version=`cat VERSION`
 data:
 	Rscript --vanilla ./initialise_data.R
@@ -7,7 +7,7 @@ unit_tests:
 	Rscript --vanilla ./tests/testthat.R
 
 ui_tests:
-	npx playwright test "$@"
+	npx playwright test $(ARGS)
 
 docker-image:
 	nix run .\#images.x86_64-linux.latest.copyToDockerDaemon
