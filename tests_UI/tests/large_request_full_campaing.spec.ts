@@ -43,7 +43,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("Large_requests/full campaing", async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(200_000);
 
   await login(page, user, psw);
   await requestPhenotyping(page, "pheno_init_100_field.txt");

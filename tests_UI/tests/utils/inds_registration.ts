@@ -21,6 +21,7 @@ export async function add_registerIndividual(page: Page, inds: string[]) {
     await page.keyboard.press("Enter");
   }
   await page.keyboard.press("Escape");
+  await page.click("body");
   await page.getByRole("button", { name: "submit" }).click();
 }
 
