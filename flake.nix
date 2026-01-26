@@ -1,7 +1,7 @@
 {
   description = "Flake for a R environment";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-25.05";
+    nixpkgs.url = "nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
 
     nix2container.url = "github:nlewo/nix2container";
