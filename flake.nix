@@ -5,7 +5,7 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     nix2container.url = "github:nlewo/nix2container";
-    nix2container.inputs.nixpkgs.follows = "nixpkgs";
+    # nix2container.inputs.nixpkgs.follows = "nixpkgs"; # TODO: problem building skopeo
   };
 
   outputs =
