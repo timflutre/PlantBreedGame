@@ -149,13 +149,6 @@ if (gameInitialised()) {
             )
           ),
           tags$td(
-            style = "width: 25%; vertical-align: bottom; padding: 10px;",
-            selectInput("newBreederStatus", "Status",
-              choices = c("player", "tester", "game master"),
-              width = "100%"
-            )
-          ),
-          tags$td(
             style = "width: 25%; vertical-align: bottom; padding: 10px; padding-bottom: 13.8px;",
             passwordInput("newBreederPsw", "Password",
               width = "100%"
@@ -168,7 +161,48 @@ if (gameInitialised()) {
             )
           )
         )
-      ) # end tags$table
+      ), # end tags$table
+      div(
+        id = "new_breeder_permissions_container",
+        style = "padding: 10px",
+        div(
+          id = "new_breeder_permissions_preset_container",
+          style = "padding-bottom: 15px",
+          radioButtons(
+            inputId = "new_breeder_permissions_preset",
+            label = tooltip_label(
+              "Permissions preset",
+              tagList(lapply(PERMISSIONS_PRESETS, function(p) {
+                p(strong(p$label_name), ": ", p$desc)
+              }))
+            ),
+            choiceNames = as.character(sapply(PERMISSIONS_PRESETS, function(p) {
+              p$label_name
+            })),
+            choiceValues = names(PERMISSIONS_PRESETS),
+            selected = "hard",
+            inline = TRUE
+          ),
+        ),
+        div(
+          id = "new_breeder_permissions_checkboxes_container",
+          tags$label("Permissions:"),
+          tagList(
+            div(
+              class = "permissions-container",
+              lapply(names(PERMISSIONS_LIST), function(p) {
+                perm <- PERMISSIONS_LIST[[p]]
+                checkboxInput(
+                  inputId = paste0("perm_", perm$name),
+                  label = tooltip_label(perm$label_name, perm$desc),
+                  value = FALSE,
+                  width = "100%"
+                )
+              })
+            )
+          )
+        )
+      )
     ), # end div "add new breeder"
 
 
@@ -445,7 +479,6 @@ request_worker_content <- div(
     tags$h3("Worker logs:"),
     uiOutput("request_worker_logs")
   ),
-
 )
 
 

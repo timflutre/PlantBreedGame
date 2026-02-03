@@ -33,14 +33,14 @@ output$evalUI <- renderUI({
     )
   }
 
-  if (breeder() != "No Identification" & breederStatus() != "player") {
+  if (breeder() != "No Identification" & "evaluation" %in% breederPermissions()) {
     return(source("src/ui/ui_eval_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
   }
 
   return(
     shinydashboard::box(
       width = 12, title = "Content unavailable",
-      div(p("Sorry, you need the 'game-master' status or the 'tester' status to access this."))
+      div(p("Sorry, you need the 'evaluation' permission to access this."))
     )
   )
 })

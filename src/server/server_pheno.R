@@ -62,7 +62,7 @@ readQryPheno <- reactive({
   }
 
   # read input file
-  max.nb.plots <- ifelse(breederStatus() != "player",
+  max.nb.plots <- ifelse("no_request_size_constraint" %in% breederPermissions(),
     Inf, getBreedingGameConstants()$nb.plots
   )
 
@@ -95,7 +95,7 @@ readQryPheno <- reactive({
     if (!indAvail$indExist) {
       return("error - Some requested individuals do not exist")
     }
-    if (breederStatus() != "player") {
+    if ("no_request_size_constraint" %in% breederPermissions()) {
       return(df)
     }
     if (!indAvail$indGrown) {
@@ -194,7 +194,6 @@ observeEvent(input$requestPheno, {
 ## Breeder information ----
 breeder_info_server("breederInfo_pheno",
   breeder = breeder,
-  breederStatus = breederStatus,
   requests_progress_bars = requests_progress_bars,
   currentGTime = currentGTime
 )

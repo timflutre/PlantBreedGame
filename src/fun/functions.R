@@ -402,8 +402,8 @@ create_issue_link <- function(title = "", body = "") {
 
 
 addNewBreeder <- function(breederName,
-                          status,
                           psw,
+                          permissions,
                           progressNewBreeder = NULL,
                           data_truth = DATA_TRUTH,
                           data_shared = DATA_SHARED,
@@ -422,12 +422,19 @@ addNewBreeder <- function(breederName,
     }
     return(NULL)
   }
-  if (status != "tester" & psw == "") {
+
+  # check permissions
+  if (any(!permissions %in% sapply(PERMISSIONS_LIST, function(p) {
+    p$name
+  }))) {
+    stop("Unrecognised breeder permissions")
+  }
+
+  if ("admin" %in% permissions & psw == "") {
     if (shiny_notification) {
       showNotification(
         paste0(
-          "Breeders with another status than \"tester\"",
-          " can't have the empty password"
+          'Breeders with "Admin" permission can\'t have the empty password'
         ),
         type = "error"
       )
@@ -448,7 +455,7 @@ addNewBreeder <- function(breederName,
 
   #### add breeder in the "breeders" table of database:
   hashed.psw <- digest(psw, "md5", serialize = FALSE)
-  db_add_breeder(breederName, status, hashed.psw)
+  db_add_breeder(breederName, hashed.psw, permissions)
 
   #### create folders of the new breeder:
   newTruthDir <- paste0(data_truth, "/", breederName)

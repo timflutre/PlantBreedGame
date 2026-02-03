@@ -63,7 +63,7 @@ readQryGeno <- reactive({
   }
 
   # read input file
-  max.nb.inds <- ifelse(breederStatus() != "player",
+  max.nb.inds <- ifelse("no_request_size_constraint" %in% breederPermissions(),
     Inf, getBreedingGameConstants()$max.nb.inds
   )
   subset.snps <- getSNPsubset()
@@ -86,7 +86,7 @@ readQryGeno <- reactive({
     if (!indAvail$indExist) {
       return("error - Some requested individuals do not exist")
     }
-    if (breederStatus() != "player") {
+    if ("no_time_constraint" %in% breederPermissions()) {
       return(df)
     }
     if (!indAvail$indGrown) {
@@ -179,7 +179,6 @@ observeEvent(input$requestGeno, {
 ## Breeder information ----
 breeder_info_server("breederInfo_geno",
   breeder = breeder,
-  breederStatus = breederStatus,
   requests_progress_bars = requests_progress_bars,
   currentGTime = currentGTime
 )

@@ -300,20 +300,20 @@ test_that("read/write breeders", {
     db_get_all("breeders"),
     data.frame(
       name = character(),
-      status = character(),
-      h_psw = character()
+      h_psw = character(),
+      permissions = character()
     )
   )
 
-  db_add_breeder("test-db 1", "admin", "1234")
-  db_add_breeder("test-db 2", "player", "abcd")
+  db_add_breeder("test-db 1", "1234", c())
+  db_add_breeder("test-db 2", "abcd", c())
 
   expect_equal(
     db_get_all("breeders"),
     data.frame(
       name = c("test-db 1", "test-db 2"),
-      status = c("admin", "player"),
-      h_psw = c("1234", "abcd")
+      h_psw = c("1234", "abcd"),
+      permissions = c("[]", "[]")
     )
   )
 
@@ -326,8 +326,8 @@ test_that("read/write breeders", {
     db_get_breeder("test-db 1"),
     list(
       name = "test-db 1",
-      status = "admin",
-      h_psw = "1234"
+      h_psw = "1234",
+      permissions = list()
     )
   )
 
@@ -336,8 +336,8 @@ test_that("read/write breeders", {
     db_get_all("breeders"),
     data.frame(
       name = "test-db 2",
-      status = "player",
-      h_psw = "abcd"
+      h_psw = "abcd",
+      permissions = "[]"
     )
   )
   expect_no_error({
@@ -350,29 +350,96 @@ test_that("read/write breeders", {
     db_get_all("breeders"),
     data.frame(
       name = "test-db 2",
-      status = "player",
-      h_psw = "1234"
-    )
-  )
-  expect_no_error({
-    db_update_breeder(
-      breeder = "test-db 2",
-      new_status = "tester"
-    )
-  })
-  expect_equal(
-    db_get_all("breeders"),
-    data.frame(
-      name = "test-db 2",
-      status = "tester",
-      h_psw = "1234"
+      h_psw = "1234",
+      permissions = "[]"
     )
   )
   db_delete_breeder("test-db 2")
 
-  db_add_breeder("@ALL", NA, NA)
-  db_add_breeder("A", "player", "1234")
-  db_add_breeder("B", "player", "1234")
+  # premissions
+  db_add_breeder("test-permissions no perm", "1234", c())
+  db_add_breeder("test-permissions 1 perm", "1234", c("perm_1"))
+  db_add_breeder("test-permissions 2 perm", "1234", c("perm_1", "perm_2"))
+
+  expect_equal(
+    db_get_breeder("test-permissions no perm"),
+    list(
+      name = "test-permissions no perm",
+      h_psw = "1234",
+      permissions = list()
+    )
+  )
+  expect_equal(
+    db_get_breeder("test-permissions 1 perm"),
+    list(
+      name = "test-permissions 1 perm",
+      h_psw = "1234",
+      permissions = "perm_1"
+    )
+  )
+  expect_equal(
+    db_get_breeder("test-permissions 2 perm"),
+    list(
+      name = "test-permissions 2 perm",
+      h_psw = "1234",
+      permissions = c("perm_1", "perm_2")
+    )
+  )
+  db_delete_breeder("test-permissions no perm")
+  db_delete_breeder("test-permissions 1 perm")
+  db_delete_breeder("test-permissions 2 perm")
+
+  # updating premissions
+  db_add_breeder("test-permissions updated perm", "1234", c())
+  expect_no_error({
+    db_update_breeder(
+      breeder = "test-permissions updated perm",
+      new_permissions = c("perm_1")
+    )
+  })
+  expect_equal(
+    db_get_breeder("test-permissions updated perm"),
+    list(
+      name = "test-permissions updated perm",
+      h_psw = "1234",
+      permissions = "perm_1"
+    )
+  )
+
+  expect_no_error({
+    db_update_breeder(
+      breeder = "test-permissions updated perm",
+      new_permissions = c("perm_1", "perm_2")
+    )
+  })
+  expect_equal(
+    db_get_breeder("test-permissions updated perm"),
+    list(
+      name = "test-permissions updated perm",
+      h_psw = "1234",
+      permissions = c("perm_1", "perm_2")
+    )
+  )
+  expect_no_error({
+    db_update_breeder(
+      breeder = "test-permissions updated perm",
+      new_permissions = list()
+    )
+  })
+  expect_equal(
+    db_get_breeder("test-permissions updated perm"),
+    list(
+      name = "test-permissions updated perm",
+      h_psw = "1234",
+      permissions = list()
+    )
+  )
+  db_delete_breeder("test-permissions updated perm")
+
+
+  db_add_breeder("@ALL", NA, c())
+  db_add_breeder("A", "1234", c())
+  db_add_breeder("B", "1234", c())
 })
 
 
@@ -481,7 +548,7 @@ test_that("read/write requests", {
   )
 
   # cascade delete
-  db_add_breeder("test_req", "player", "1234")
+  db_add_breeder("test_req", "1234", c())
   db_add_request(
     id = NA,
     breeder = "test_req",
@@ -550,8 +617,10 @@ test_that("read/write requests", {
     )
   })
   expect_equal(db_get_game_requests(id = request_id)$progress, 1)
-  expect_equal(as.POSIXct(db_get_game_requests(id = request_id)$started_at),
-               started_at)
+  expect_equal(
+    as.POSIXct(db_get_game_requests(id = request_id)$started_at),
+    started_at
+  )
   expect_true(is.na(db_get_game_requests(id = request_id)$ended_at))
 
   ended_at <- Sys.time()
@@ -562,8 +631,10 @@ test_that("read/write requests", {
       ended_at = ended_at
     )
   })
-  expect_equal(as.POSIXct(db_get_game_requests(id = request_id)$ended_at),
-               ended_at)
+  expect_equal(
+    as.POSIXct(db_get_game_requests(id = request_id)$ended_at),
+    ended_at
+  )
 })
 
 

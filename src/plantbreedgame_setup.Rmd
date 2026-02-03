@@ -136,6 +136,8 @@ source("src/fun/module_gameInit_params.R")
 source("src/fun/func_gameInit_validation.R")
 source("src/fun/func_dbRequests.R")
 source("src/fun/func_pheno.R")
+source("src/fun/func_permissions.R")
+
 
 session_id <- uuid::UUIDgenerate()
 ```
@@ -1554,14 +1556,20 @@ progressBar$inc(
   detail = progress_detail
 )
 addNewBreeder("admin",
-  "game master",
   "1234",
+  permissions = sapply(PERMISSIONS_LIST, function(p) { # all premissions
+    p$name
+  }),
   data_truth = truth.dir,
   data_shared = shared.dir
 )
 addNewBreeder("test",
-  "tester",
   "",
+  permissions = c(
+    "no_time_constraint",
+    "data_viz",
+    "evaluation"
+  ),
   data_truth = truth.dir,
   data_shared = shared.dir
 )

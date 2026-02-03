@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 DROP TABLE IF EXISTS "breeders";
 CREATE TABLE IF NOT EXISTS "breeders" (
 	"name"	TEXT NOT NULL PRIMARY KEY,
-	"status"	TEXT,
-	"h_psw"	TEXT
+	"h_psw"	TEXT,
+	"permissions"	TEXT DEFAULT '[]'
 );
 
 DROP TABLE IF EXISTS "requests";

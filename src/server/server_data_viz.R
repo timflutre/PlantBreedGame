@@ -33,14 +33,14 @@ output$data_viz_UI <- renderUI({
     )
   }
 
-  if (breeder() != "No Identification" & breederStatus() != "player") {
+  if (breeder() != "No Identification" & "data_viz" %in% breederPermissions()) {
     return(source("src/ui/ui_data-viz_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
   }
 
   return(
     shinydashboard::box(
       width = 12, title = "Content unavailable",
-      div(p("Sorry, you need the 'game-master' status or the 'tester' status to access this."))
+      div(p("Sorry, you need the 'Data vizualisation' permission to access this."))
     )
   )
 })
@@ -66,7 +66,7 @@ filtered_pheno_data <- reactive({
   )
 
   # mask phenotype data that are not yet available for players
-  if (breederStatus() == "player") {
+  if (!"no_time_constraint" %in% breederPermissions()) {
     not_available <- pheno_data$avail_from > getGameTime()
     pheno_data[not_available, c("pathogen", "trait1", "trait2", "trait3")] <- NA
   }
@@ -199,7 +199,6 @@ data_viz_server("data-viz_file", data_from_file)
 ## Breeder information ----
 breeder_info_server("breederInfoDtaViz",
   breeder = breeder,
-  breederStatus = breederStatus,
   requests_progress_bars = requests_progress_bars,
   currentGTime = currentGTime
 )

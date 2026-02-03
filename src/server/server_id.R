@@ -141,13 +141,14 @@ breeder <- reactive({
   }
 })
 
-breederStatus <- reactive({
+breederPermissions <- reactive({
   if (accessGranted()) {
-    return(db_get_breeder(input$breederName)$status)
+    return(db_get_breeder(input$breederName)$permissions)
   } else {
-    return("No Identification")
+    return(list())
   }
 })
+
 
 budget <- reactive({
   input$leftMenu
@@ -176,7 +177,7 @@ requests_ongoing <- reactive({
   dta$status[dta$progress == 0] <- "Pending"
   dta$status[dta$progress > 0] <- "Processing"
 
-  if (breederStatus() %in% c("game master", "tester")) {
+  if ("no_time_constraint" %in% breederPermissions()) {
     dta$status[dta$progress == 1] <- "Completed"
   } else {
     dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
@@ -208,7 +209,7 @@ requests_history <- reactivePoll(1000, session, checkFunc = requests_ongoing, fu
   dta$status[dta$progress == 0] <- "Pending"
   dta$status[dta$progress > 0] <- "Processing"
 
-  if (breederStatus() %in% c("game master", "tester")) {
+  if ("no_time_constraint" %in% breederPermissions()) {
     dta$status[dta$progress == 1] <- "Completed"
   } else {
     dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
@@ -236,7 +237,7 @@ requests_progress_bars <- reactive({
     return(NULL)
   }
   requests <- requests[order(requests$avail_from), ]
-  if (breederStatus() %in% c("game master", "tester")) {
+  if ("no_time_constraint" %in% breederPermissions()) {
     requests$progress <- requests$progress
     requests$total_time <- 100
     requests$elapse_time <- as.numeric(requests$progress) * requests$total_time
@@ -515,7 +516,7 @@ output$selected_geno_data_UI_info <- renderUI({
     inds_samples_str <- paste0("(", paste(inds_samples, collapse = ", "), ")")
 
     is_available <- difftime(getGameTime(), strptime(info$avail_date, format = "%Y-%m-%d")) >= 0
-    if (breederStatus() %in% c("game master", "tester")) {
+    if ("no_time_constraint" %in% breederPermissions()) {
       is_available <- TRUE
     }
 
@@ -566,7 +567,7 @@ output$selected_geno_data_UI_info <- renderUI({
         getGameTime(),
         strptime(geno_info$avail_date, format = "%Y-%m-%d")
       ) >= 0
-      if (breederStatus() %in% c("game master", "tester")) {
+      if ("no_time_constraint" %in% breederPermissions()) {
         is_available <- TRUE
       }
       if (!is_available) {
@@ -590,7 +591,7 @@ output$selected_geno_data_UI_info <- renderUI({
         getGameTime(),
         strptime(geno_info$avail_date, format = "%Y-%m-%d")
       ) >= 0
-      if (breederStatus() %in% c("game master", "tester")) {
+      if ("no_time_constraint" %in% breederPermissions()) {
         is_available <- TRUE
       }
       if (!is_available) {
@@ -759,7 +760,7 @@ pheno_data_preview <- reactive({
   )
 
   # mask phenotype data that are not yet available for players
-  if (breederStatus() == "player") {
+  if (!"no_time_constraint" %in% breederPermissions()) {
     not_available <- pheno_data$avail_from > getGameTime()
     pheno_data[not_available, c("pathogen", "trait1", "trait2", "trait3")] <- paste0("available on ", pheno_data$avail_from[not_available])
   }
@@ -942,7 +943,6 @@ output$submittedIndsDT <- renderDataTable({
 ## Breeder information ----
 breeder_info_server("breederInfoID",
   breeder = breeder,
-  breederStatus = breederStatus,
   requests_progress_bars = requests_progress_bars,
   currentGTime = currentGTime
 )

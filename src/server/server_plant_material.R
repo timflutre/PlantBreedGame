@@ -65,10 +65,10 @@ readQryPlmat <- reactive({
 
   # read input file
   constants <- getBreedingGameConstants()
-  maxHD <- ifelse(breederStatus() != "player",
+  maxHD <- ifelse("no_request_size_constraint" %in% breederPermissions(),
     Inf, constants$max.nb.haplodiplos
   )
-  maxReq <- ifelse(breederStatus() != "player",
+  maxReq <- ifelse("no_request_size_constraint" %in% breederPermissions(),
     Inf, constants$max.nb.pltmatReq
   )
 
@@ -97,7 +97,7 @@ readQryPlmat <- reactive({
   indAvail <- indAvailable(indList, getGameTime(), breeder())
 
   # check if individuals are available
-  if ((indAvail$indGrown | breederStatus() != "player") &
+  if ((indAvail$indGrown | "no_time_constraint" %in% breederPermissions()) &
     indAvail$indExist) {
     return(df)
   } else {
@@ -186,7 +186,6 @@ observeEvent(input$requestPlmat, {
 # Breeder information ----
 breeder_info_server("breederInfo_pltmat",
   breeder = breeder,
-  breederStatus = breederStatus,
   requests_progress_bars = requests_progress_bars,
   currentGTime = currentGTime
 )

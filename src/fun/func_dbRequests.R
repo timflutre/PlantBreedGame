@@ -366,14 +366,16 @@ db_delete_game_session <- function(id) {
 
 
 ## Breeders ----
-db_add_breeder <- function(name, status, hashed_psw) {
+db_add_breeder <- function(name, hashed_psw, permissions = c()) {
+  if (identical(permissions, c())) permissions <- list()
+  permissions_json <- jsonlite::toJSON(permissions)
   query <- paste0(
-    "INSERT INTO breeders (name, status, h_psw) VALUES (?name, ?status, ?hashed_psw) "
+    "INSERT INTO breeders (name, h_psw, permissions) VALUES (?name, ?hashed_psw, ?permissions_json) "
   )
   db_execute_safe(query,
     name = name,
-    status = status,
-    hashed_psw = hashed_psw
+    hashed_psw = hashed_psw,
+    permissions_json = permissions_json
   )
 }
 
@@ -394,10 +396,16 @@ getBreederList <- function() {
 
 db_get_breeder <- function(breeder.name) {
   query <- paste("SELECT * FROM breeders WHERE name = ?name")
-  as.list(db_get_safe(query, name = breeder.name))
+  breeder <- as.list(db_get_safe(query, name = breeder.name))
+  breeder$permissions <- jsonlite::fromJSON(breeder$permissions)
+  breeder
 }
 
-db_update_breeder <- function(breeder, new_status = NULL, new_h_psw = NULL) {
+db_update_breeder <- function(breeder,
+                              new_status = NULL,
+                              new_h_psw = NULL,
+                              new_permissions = NULL # use `list()` for deleting all permissions (`c()` wont work because it is considered `NULL` by R)
+) {
   queries <- c()
   breeder <- dbQuoteLiteral(DBI::ANSI(), breeder)
   if (!is.null(new_status)) {
@@ -414,6 +422,17 @@ db_update_breeder <- function(breeder, new_status = NULL, new_h_psw = NULL) {
     queries <- c(queries, paste(
       "UPDATE breeders SET h_psw =",
       new_h_psw,
+      "WHERE name =",
+      breeder
+    ))
+  }
+  if (!is.null(new_permissions)) {
+    if (identical(new_permissions, c())) new_permissions <- list()
+    permissions_json <- jsonlite::toJSON(new_permissions)
+    permissions_json <- dbQuoteLiteral(DBI::ANSI(), permissions_json)
+    queries <- c(queries, paste(
+      "UPDATE breeders SET permissions =",
+      permissions_json,
       "WHERE name =",
       breeder
     ))

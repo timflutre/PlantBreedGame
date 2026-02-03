@@ -15,7 +15,6 @@ breeder_info_UI <- function(id) {
 
 breeder_info_server <- function(id,
                                 breeder = NULL,
-                                breederStatus = NULL,
                                 requests_progress_bars = NULL,
                                 currentGTime = NULL) {
   moduleServer(id, function(input, output, session) {
@@ -27,7 +26,7 @@ breeder_info_server <- function(id,
       }
       valueBox(
         value = breeder(),
-        subtitle = paste("Status:", breederStatus()),
+        subtitle = "Breeder",
         icon = icon("user"),
         color = "yellow",
         width = 4

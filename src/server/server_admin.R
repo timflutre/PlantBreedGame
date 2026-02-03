@@ -26,13 +26,13 @@ source("src/fun/func_admin.R", local = TRUE, encoding = "UTF-8")$value
 
 ## Main UI: ----
 output$adminUI <- renderUI({
-  if (breederStatus() == "game master" | !gameInitialised()) {
+  if ("admin" %in% breederPermissions() | !gameInitialised()) {
     return(source("src/ui/ui_admin_loggedIn.R", local = TRUE, encoding = "UTF-8")$value)
   } else {
     return(
       shinydashboard::box(
         width = 12, title = "Content unavailable",
-        div(p("Sorry, you need the 'game-master' status to access this."))
+        div(p("Sorry, you need the 'Admin' permission to access this."))
       )
     )
   }
@@ -71,7 +71,7 @@ observeEvent(input$restart_worker_btn, {
 all_game_requests <- reactivePoll(1000,
   session = session,
   checkFunc = function() {
-    if (breederStatus() != "game master") {
+    if ("admin" %in% breederPermissions()) {
       return(NULL)
     }
     return(db_get_game_requests())
@@ -199,16 +199,48 @@ output$request_worker_logs <- renderUI({
 
 
 ## Breeders management ----
+
+observeEvent(input$new_breeder_permissions_preset,
+  {
+    preset <- input$new_breeder_permissions_preset
+    perm_checkbox_ids <- lapply(PERMISSIONS_LIST, function(p) {
+      paste0("perm_", p$name)
+    })
+    checkbox_to_enable_ids <- paste0("perm_", PERMISSIONS_PRESETS[[preset]]$permissions)
+    for (p_id in perm_checkbox_ids) {
+      if (p_id %in% checkbox_to_enable_ids) {
+        updateCheckboxInput(inputId = p_id, value = TRUE)
+      } else {
+        updateCheckboxInput(inputId = p_id, value = FALSE)
+      }
+    }
+    return(NULL)
+  },
+  ignoreNULL = TRUE,
+  ignoreInit = TRUE
+)
+
 # add new breeder:
 observeEvent(input$addNewBreeder, {
+  permissions <- unname(sapply(Filter(
+    function(p) {
+      input[[paste0("perm_", p$name)]]
+    },
+    PERMISSIONS_LIST
+  ), function(p) {
+    p$name
+  }))
   addNewBreeder(
     input$newBreederName,
-    input$newBreederStatus,
     input$newBreederPsw,
+    permissions = permissions,
     shiny_notification = TRUE
   )
   values$lastDBupdate <- Sys.time()
 })
+
+
+
 
 # delete breeder:
 breeder_list_server("admin_breeder_list_for_deletion", "delBreederName", breederList)
