@@ -100,8 +100,8 @@ tabItem(
         ),
         h2("Final trial"),
         p(
-          "At the end of the game, each team will have to propose to register their best genotypes (up to", constants_ui("info_maxEvalInds"), ").",
-          " The registration fee is ", constants_ui("info_cost.register.mendels"), " Mendels per genotype."
+          "At the end of the game, each team will have to propose to register their best genotypes (excluding those from the initial collection and not more than", constants_ui("info_maxEvalInds"), ").",
+          " The registration fee is ", constants_ui("info_cost.register.mendels")
         ),
         p(
           " Each of them must meet the DHS criteria, which will be assessed primarily on their heterozygosity: < 3%.",
@@ -145,8 +145,19 @@ tabItem(
 
     shinydashboard::box(
       height = 400, width = 12, title = "Initial data",
-      p("Select and download each file:"),
-      selectInput("iniDataFile", "", choices = list.files(DATA_INITIAL_DATA)),
+      p(
+        "To get started or have a better view of this game, you can download",
+        "here the initial data accessible to new players. They includes the",
+        "genotypes and phenotypes data of a subset of the initial collections,",
+        "example of requests and SNP coodinates of the genotyped markers. These",
+        "data serve as the starting point for analysis and decision-making",
+        "throughout the game. Simply click the link below to download the",
+        "dataset and begin planning your breeding strategy!"
+      ),
+      selectInput("iniDataFile", "", choices = c(
+        list.files(DATA_INITIAL_DATA),
+        "initial_phenotypes.tsv"
+      )),
       downloadButton("dwnlIniData", "Download your file")
     ),
     if (debugDisplay) {

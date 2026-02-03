@@ -11,8 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "1.40.0",
-    "@types/node": "^20.12.2"
+    "@playwright/test": "1.56.1"
   },
   "dependencies": {
     "gunzip-file": "^0.1.1"

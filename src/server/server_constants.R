@@ -1,4 +1,3 @@
-
 # Information page: ("How to play?")
 constants_server("chr.length.Mb", constantsReactive)("info_chr.length.Mb")
 constants_server("cost.allof", constantsReactive)("info_cost.allof")

@@ -24,6 +24,17 @@ source("src/fun/func_geno.R", local = TRUE, encoding = "UTF-8")$value
 
 
 ###### server for "genotyping" ######
+output$dwnld_geno_request_example <- downloadHandler(
+  filename = "example_request_data.txt",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "example_request_data.txt")
+    file.copy(filePath, file)
+  }
+)
+
+
+
+
 output$geno_main_UI <- renderUI({
   if (!gameInitialised()) {
     return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
@@ -69,18 +80,22 @@ readQryGeno <- reactive({
 
     # list individuals
     indList <- unique(as.character(df$ind))
-    indAvail <- indAvailable(indList, getGameTime(), breeder())
+    geno_start_date <- getGameTime()
+    indAvail <- indAvailable(indList, geno_start_date, breeder())
 
-    # check if individuals are available
-    if ((indAvail$indGrown | breederStatus() != "player") &
-      indAvail$indExist) {
-      return(df)
-    } else {
-      return("error - Individuals not availables")
+    if (!indAvail$indExist) {
+      return("error - Some requested individuals do not exist")
     }
+    if (breederStatus() != "player") {
+      return(df)
+    }
+    if (!indAvail$indGrown) {
+      return("error - Some requested individuals are not available for phenotyping this season")
+    }
+    return(df)
   } else {
     return(test)
-  } # wrong file
+  }
 })
 
 
@@ -130,112 +145,44 @@ output$submitGenoRequest <- renderUI({
 })
 
 ## output
-geno_data <- eventReactive(input$requestGeno, {
+observeEvent(input$requestGeno, {
+  request_time <- getGameTime()
   if (is.data.frame(readQryGeno())) {
-    # Create a Progress object
-    progressGeno <- shiny::Progress$new(session, min = 0, max = 4)
-    progressGeno$set(
-      value = 0,
-      message = "Process Geno request:",
-      detail = "Initialisation..."
+    request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.geno$name))
+    db_add_request(
+      id = NA,
+      breeder = breeder(),
+      name = request_name,
+      type = "geno",
+      game_date = request_time
+    )
+    new_request <- db_get_game_requests(breeder = breeder(), name = request_name)
+    db_add_geno_req_data(req_id = new_request$id, request_data = readQryGeno())
+
+    alert_if_worker_is_dead()
+    showNotification(
+      paste("Genotyping request successfully sent"),
+      type = "message"
     )
 
-    res <- try(genotype(
-      breeder(),
-      readQryGeno(),
-      getGameTime(),
-      progressGeno,
-      input$file.geno$name
-    ))
-    if (res == "done") {
-      writeRequest(readQryGeno(), breeder(), input$file.geno$name)
-      progressGeno$set(
-        value = 4,
-        detail = "Done"
-      )
 
-      return(res)
-    } else {
-      progressGeno$set(detail = "ERROR !")
-      return("error")
-    }
+    # reset UI
+    reset("file.geno")
+    session$sendCustomMessage(type = "resetValue", message = "file.geno")
+    updateTabsetPanel(session, "geno_tabset", selected = "Check")
+    return(TRUE)
   } else {
     return(NULL)
   }
 })
 
-
-
-output$genoRequestResultUI <- renderUI({
-  if (!is.null(geno_data()) && geno_data() == "done") {
-    # reset inputs
-    reset("file.geno")
-    session$sendCustomMessage(type = "resetValue", message = "file.geno")
-
-    # display message
-    p(
-      "Great ! Your results will be available in ",
-      getBreedingGameConstants()$duration.geno.hd, " months."
-    )
-  } else if (!is.null(geno_data()) && geno_data() == "error") {
-    p("Something went wrong. Please check your file.")
-  } else {
-    p("")
-  }
-})
-
-
-
-
-
-## Breeder information :
-output$breederBoxGeno <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxGeno <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-output$budgetBoxGeno <- renderValueBox({
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-
-output$serverIndicGeno <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoGeno <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxGeno", width = 3),
-      infoBoxOutput("dateBoxGeno", width = 3),
-      infoBoxOutput("budgetBoxGeno", width = 3),
-      infoBoxOutput("serverIndicGeno", width = 3)
-    )
-  }
-})
+## Breeder information ----
+breeder_info_server("breederInfo_geno",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 
 ##  DEBUG

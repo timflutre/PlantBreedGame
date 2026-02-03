@@ -25,6 +25,16 @@ source("src/fun/func_plant_material.R", local = TRUE, encoding = "UTF-8")$value
 
 ## server for "plant material"
 
+output$dwnld_pltmat_request_example <- downloadHandler(
+  filename = "example_request_plant_material.txt",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "example_request_plant_material.txt")
+    file.copy(filePath, file)
+  }
+)
+
+
+
 output$pltmat_main_UI <- renderUI({
   if (!gameInitialised()) {
     return(source("./src/ui/ui_gameNotInitialised.R", local = TRUE, encoding = "UTF-8")$value)
@@ -143,112 +153,43 @@ output$submitPlmatRequest <- renderUI({
 
 
 # output
-plantMatRequested <- eventReactive(input$requestPlmat, {
+observeEvent(input$requestPlmat, {
+  request_time <- getGameTime()
   if (is.data.frame(readQryPlmat())) {
-    # Create a Progress object
-    progressPltMat <- shiny::Progress$new(session, min = 0, max = 5)
-    progressPltMat$set(
-      value = 0,
-      message = "Create Plant Material:",
-      detail = "Initialisation..."
+    request_name <- get_unique_request_name(breeder(), tools::file_path_sans_ext(input$file.plmat$name))
+    db_add_request(
+      id = NA,
+      breeder = breeder(),
+      name = request_name,
+      type = "pltmat",
+      game_date = request_time
+    )
+    new_request <- db_get_game_requests(breeder = breeder(), name = request_name, type = "pltmat")
+    db_add_pltmat_req_data(new_request$id, readQryPlmat())
+
+    alert_if_worker_is_dead()
+    showNotification(
+      paste("Plant-material request successfully sent"),
+      type = "message"
     )
 
-
-    res <- try(create_plant_material(
-      breeder(),
-      readQryPlmat(),
-      getGameTime(),
-      progressPltMat
-    ))
-
-    if (res == "done") {
-      writeRequest(readQryPlmat(), breeder(), input$file.plmat$name)
-      progressPltMat$set(
-        value = 5,
-        detail = "Done !"
-      )
-
-      return(res)
-    } else {
-      progressPltMat$set(detail = "ERROR !")
-      return("error")
-    }
+    # reset UI
+    reset("file.plmat")
+    session$sendCustomMessage(type = "resetValue", message = "file.plmat")
+    updateTabsetPanel(session, "cross_tabset", selected = "Check")
+    return(TRUE)
   } else {
     return(NULL)
   }
 })
 
-
-output$plmatRequestResultUI <- renderUI({
-  if (!is.null(plantMatRequested()) && plantMatRequested() == "done") {
-    # reset inputs
-    reset("file.plmat")
-    session$sendCustomMessage(type = "resetValue", message = "file.plmat")
-
-    # display message
-
-    p("\n Great ! Your plants are growing up !")
-  } else if (!is.null(plantMatRequested()) && plantMatRequested() == "error") {
-    p("\n Something went wrong. Please check your file.")
-  } else {
-    p("")
-  }
-})
-
-
-
-## Breeder information :
-output$breederBoxPltMat <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxPltMat <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-
-
-output$budgetBoxPltMat <- renderValueBox({
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-
-output$serverIndicPltMat <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoPltMat <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxPltMat", width = 3),
-      infoBoxOutput("dateBoxPltMat", width = 3),
-      infoBoxOutput("budgetBoxPltMat", width = 3),
-      infoBoxOutput("serverIndicPltMat", width = 3)
-    )
-  }
-})
-
-
+# Breeder information ----
+breeder_info_server("breederInfo_pltmat",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 
 

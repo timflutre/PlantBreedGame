@@ -1,4 +1,3 @@
-
 # this file list all the game initialisation parameters (implemented in the
 # application)
 # It takes the forms of "shiny modules" to:
@@ -22,8 +21,10 @@ gameInit_seed_ui <- function(id) {
     "RNG seed",
     div(
       p("Random number generation seed."),
-      p("A positive integer used as a seed for random generation.",
-        "This ensures reproducibility of the game initialisation")
+      p(
+        "A positive integer used as a seed for random generation.",
+        "This ensures reproducibility of the game initialisation"
+      )
     )
   )
   div(
@@ -34,12 +35,11 @@ gameInit_seed_ui <- function(id) {
 
 gameInit_seed_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
-
     iv$add_rule("seed", valid_positive_integer)
     return(
       list(
         value = reactive({
-          if (is.null(iv$validate()[[session$ns('seed')]])) {
+          if (is.null(iv$validate()[[session$ns("seed")]])) {
             return(input$seed)
           }
           return(NA)
@@ -47,7 +47,6 @@ gameInit_seed_server <- function(id, iv) {
         iv = iv
       )
     )
-
   })
 }
 
@@ -62,7 +61,8 @@ gameInit_costs_ui <- function(id) {
   initBudget_label <- tooltip_label(
     "Initial budget",
     div(
-      p("The budget is not limiting for players.",
+      p(
+        "The budget is not limiting for players.",
         "If a player make a request without sufficient budget, the request",
         "will be processed and player's remaining budget will be negative."
       ),
@@ -78,43 +78,44 @@ gameInit_costs_ui <- function(id) {
   )
 
   div(
-
     collapible_section(
       title = "Costs and budget:",
       title_id = ns("cost_budget_title"),
       div(
-        tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
-          p("Note: Unless explicitly mentioned, all costs are expressed",
+        tags$blockquote(
+          style = "font-weight: normal; font-size: inherit; font-style: italic;",
+          p(
+            "Note: Unless explicitly mentioned, all costs are expressed",
             strong("relative to the cost of phenotyping one plot"),
-            ".")
+            "."
+          )
         ),
-
-        div(style = "display: flex;",
-          div(style = "flex: 1;",
+        div(
+          style = "display: flex;",
+          div(
+            style = "flex: 1;",
             h4("Phenotyping:", style = "margin-top: 20px;"),
             shiny::numericInput(ns("cost.pheno.field"), label = "Field phenotyping for 1 plot (in Mendels)", value = 50, step = 1, width = width_numInput),
-            shiny::numericInput(ns("cost.pheno.patho"), label = 'Pathogene phenotyping', value = 0.1, step = 0.1, width = width_numInput),
-
+            shiny::numericInput(ns("cost.pheno.patho"), label = "Pathogene phenotyping", value = 0.1, step = 0.1, width = width_numInput),
             h4("Crossing:", style = "margin-top: 20px;"),
-            shiny::numericInput(ns("cost.allof"), label = 'Allo-fecundation', value = 0.1, step = 0.1, width = width_numInput),
-            shiny::numericInput(ns("cost.autof"), label = 'Auto-fecundation', value = 0.25, step = 0.1, width = width_numInput),
-            shiny::numericInput(ns("cost.haplodiplo"), label = 'Haplo-diploidisation', value = 1, step = 0.1, width = width_numInput),
-
+            shiny::numericInput(ns("cost.allof"), label = "Allo-fecundation", value = 0.1, step = 0.1, width = width_numInput),
+            shiny::numericInput(ns("cost.autof"), label = "Auto-fecundation", value = 0.25, step = 0.1, width = width_numInput),
+            shiny::numericInput(ns("cost.haplodiplo"), label = "Haplo-diploidisation", value = 1, step = 0.1, width = width_numInput),
             h4("Genotyping:", style = "margin-top: 20px;"),
-            shiny::numericInput(ns("cost.geno.hd"), label = 'Genotyping HD', value = 1, step = 0.1, width = width_numInput),
-            shiny::numericInput(ns("cost.geno.ld"), label = 'Genotyping LD', value = 0.5, step = 0.1, width = width_numInput),
-            shiny::numericInput(ns("cost.geno.single"), label = 'Genotyping single SNP', value = 0.02, step = 0.1, width = width_numInput),
-
+            shiny::numericInput(ns("cost.geno.hd"), label = "Genotyping HD", value = 1, step = 0.1, width = width_numInput),
+            shiny::numericInput(ns("cost.geno.ld"), label = "Genotyping LD", value = 0.5, step = 0.1, width = width_numInput),
+            shiny::numericInput(ns("cost.geno.single"), label = "Genotyping single SNP", value = 0.02, step = 0.1, width = width_numInput),
             h4("Other:", style = "margin-top: 20px;"),
             shiny::numericInput(ns("cost.register"), label = final_eval_label, value = 4, step = 0.1, width = width_numInput),
             shiny::numericInput(ns("initialBudget"), label = initBudget_label, value = 3900, step = 100, width = width_numInput)
             # 3900 = 300 plots * 10 years + 30%
           ),
-
-          div(style = "flex: 1;",
+          div(
+            style = "flex: 1;",
             h4("Cost and budget summary", style = "margin-top: 20px;"),
             tableOutput(ns("costs_table")),
-            tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+            tags$blockquote(
+              style = "font-weight: normal; font-size: inherit; font-style: italic;",
               textOutput(ns("init_budget_summary"))
             )
           )
@@ -122,43 +123,43 @@ gameInit_costs_ui <- function(id) {
       )
     )
   )
-
-
 }
 
 gameInit_costs_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
-
-    output$costs_table <- renderTable({
-      cost_df <- data.frame(
-        Plot = c(
-          1,
-          input$cost.pheno.patho,
-          input$cost.allof,
-          input$cost.autof,
-          input$cost.haplodiplo,
-          input$cost.geno.hd,
-          input$cost.geno.ld,
-          input$cost.geno.single,
-          input$cost.register,
-          input$initialBudget
-        ),
-        row.names = c(
-          "Phenotyping plot",
-          "Phenotyping pathogene",
-          "Allo-fecundation",
-          "Auto-fecundation",
-          "Haplo-diploidisation",
-          "Genotyping HD",
-          "Genotyping LD",
-          "Genotyping single SNP",
-          "Registration",
-          "Initial Budget"
+    output$costs_table <- renderTable(
+      {
+        cost_df <- data.frame(
+          Plot = c(
+            1,
+            input$cost.pheno.patho,
+            input$cost.allof,
+            input$cost.autof,
+            input$cost.haplodiplo,
+            input$cost.geno.hd,
+            input$cost.geno.ld,
+            input$cost.geno.single,
+            input$cost.register,
+            input$initialBudget
+          ),
+          row.names = c(
+            "Phenotyping plot",
+            "Phenotyping pathogene",
+            "Allo-fecundation",
+            "Auto-fecundation",
+            "Haplo-diploidisation",
+            "Genotyping HD",
+            "Genotyping LD",
+            "Genotyping single SNP",
+            "Registration",
+            "Initial Budget"
+          )
         )
-      )
-      cost_df$Mendels <- cost_df$Plot * input$cost.pheno.field
-      return(cost_df)
-    }, rownames = TRUE)
+        cost_df$Mendels <- cost_df$Plot * input$cost.pheno.field
+        return(cost_df)
+      },
+      rownames = TRUE
+    )
 
     output$init_budget_summary <- renderText({
       n_plot <- 300 # TODO used game init parameter instead
@@ -167,7 +168,8 @@ gameInit_costs_server <- function(id, iv) {
 
       bonus <- ((initB / (n_plot * n_year)) - 1) * 100
 
-      paste0("Initial budget represents ",
+      paste0(
+        "Initial budget represents ",
         n_plot, " phenotyping plots for ",
         n_year, " years ",
         sprintf("%+.0f%%", bonus), "."
@@ -189,7 +191,7 @@ gameInit_costs_server <- function(id, iv) {
     iv$add_validator(cost_validator)
 
     observe({
-      id = session$ns('cost_budget_title')
+      id <- session$ns("cost_budget_title")
       if (cost_validator$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
@@ -221,7 +223,6 @@ gameInit_costs_server <- function(id, iv) {
         iv = iv
       )
     )
-
   })
 }
 
@@ -233,48 +234,51 @@ gameInit_traits_ui <- function(id) {
 
   width_numInput <- "90%"
 
-  tooltip_label_min <- function(t){
+  tooltip_label_min <- function(t) {
     # t is either 1 or 2
     tooltip_label(
       paste0("Min T", t),
       div(
         p(paste("Minimum value for Trait", t)),
-        p(HTML("Approximately 99% of the phenotypes of the initial population",
+        p(HTML(
+          "Approximately 99% of the phenotypes of the initial population",
           "will be above this value.",
           "<br/>It will be used to calculate the variance of the phenotypes:",
-          "\\({\\sigma_p}^2 = ((\\mu - {Min_T}) / 3)^2\\)")
-        )
+          "\\({\\sigma_p}^2 = ((\\mu - {Min_T}) / 3)^2\\)"
+        ))
       )
     )
   }
-  tooltip_label_mu <- function(t){
+  tooltip_label_mu <- function(t) {
     # t is either 1 or 2
     tooltip_label(
       paste0("μ T", t),
       paste("Intercept for trait", t)
     )
   }
-  tooltip_label_gCV <- function(t){
+  tooltip_label_gCV <- function(t) {
     # t is either 1 or 2
     tooltip_label(
       paste0("gCV T", t),
       div(
         p(paste("Genotypic coefficient of variation for trait", t)),
-        p(HTML("This value is used to calculate the genetic variance:",
-          "<br/>\\({\\sigma_a}^2 = (gCV * \\mu )^2\\)")
-        )
+        p(HTML(
+          "This value is used to calculate the genetic variance:",
+          "<br/>\\({\\sigma_a}^2 = (gCV * \\mu )^2\\)"
+        ))
       )
     )
   }
-  tooltip_label_h2 <- function(t){
+  tooltip_label_h2 <- function(t) {
     # t is either 1 or 2
     tooltip_label(
       paste0("Heritability T", t),
       div(
         p("Intra-annual heritability"),
-        p(HTML("This value is used to calculate the variance of the errors \\(\\epsilon\\):",
-          "<br/>\\(\\sigma = \\frac{1-h^2}{h^2} {\\sigma_a}^2\\)")
-        )
+        p(HTML(
+          "This value is used to calculate the variance of the errors \\(\\epsilon\\):",
+          "<br/>\\(\\sigma = \\frac{1-h^2}{h^2} {\\sigma_a}^2\\)"
+        ))
       )
     )
   }
@@ -284,94 +288,105 @@ gameInit_traits_ui <- function(id) {
       title = "Phenotype simulation:",
       title_id = ns("pheno_simul_title"),
       div(
-        tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
-        div(
-          h4("Quantitative traits simulation (T1 and T2)"),
-          p("The general model for simulating the phenotypes of quantitative traits (T1 and T2) is as follow:"),
-          p(withMathJax("$$y_{i,y,r} = \\mu + g_i + y_y + \\epsilon_{i,y,r}$$")),
-          p("Where:",
-            tags$ul(
-              tags$li(
-                "\\(y_{i,y,r}\\) is the phenotype value of the individual \\(i\\) at",
-                "year \\(y\\) for repetition \\(r\\)"
-              ),
-              tags$li(
-                "\\(\\mu\\) is the intercept values of the phenotype"
-              ),
-              tags$li(HTML(
-                "\\(g_i\\) is the genotypic value of the individual \\(i\\).",
-                "<br/>",
-                "This value is calculated based on the individual's genotypes",
-                "\\(x_{i,snp}\\) and the markers effects",
-                "\\(\\beta_{snp}\\): \\(g_i = \\sum_{snp} x_{i,snp}\\times\\beta_{snp}\\).",
-                "<br/> These markers effects \\(\\beta\\) are generated such as",
-                "the \\(g_i\\) of the initial population seems to be drawn from a normal distribution",
-                "\\(\\mathcal{N}(0, {\\sigma_{a}}^2)\\)"
-              )),
-              tags$li(
-                "\\(y_y\\) is the effect of the year \\(y\\) drawn from a normal distribution ",
-                "\\(\\mathcal{N}(0, {\\sigma_y}^2)\\)"
-              ),
-              tags$li(
-                "\\(\\epsilon_{i,y,r}\\) is a random noise drawn from a normal distribution ",
-                "\\(\\mathcal{N}(0, \\sigma^2)\\)"
+        tags$blockquote(
+          style = "font-weight: normal; font-size: inherit; font-style: italic;",
+          div(
+            h4("Quantitative traits simulation (T1 and T2)"),
+            p("The general model for simulating the phenotypes of quantitative traits (T1 and T2) is as follow:"),
+            p(withMathJax("$$y_{i,y,r} = \\mu + g_i + y_y + \\epsilon_{i,y,r}$$")),
+            p(
+              "Where:",
+              tags$ul(
+                tags$li(
+                  "\\(y_{i,y,r}\\) is the phenotype value of the individual \\(i\\) at",
+                  "year \\(y\\) for repetition \\(r\\)"
+                ),
+                tags$li(
+                  "\\(\\mu\\) is the intercept values of the phenotype"
+                ),
+                tags$li(HTML(
+                  "\\(g_i\\) is the genotypic value of the individual \\(i\\).",
+                  "<br/>",
+                  "This value is calculated based on the individual's genotypes",
+                  "\\(x_{i,snp}\\) and the markers effects",
+                  "\\(\\beta_{snp}\\): \\(g_i = \\sum_{snp} x_{i,snp}\\times\\beta_{snp}\\).",
+                  "<br/> These markers effects \\(\\beta\\) are generated such as",
+                  "the \\(g_i\\) of the initial population seems to be drawn from a normal distribution",
+                  "\\(\\mathcal{N}(0, {\\sigma_{a}}^2)\\)"
+                )),
+                tags$li(
+                  "\\(y_y\\) is the effect of the year \\(y\\) drawn from a normal distribution ",
+                  "\\(\\mathcal{N}(0, {\\sigma_y}^2)\\)"
+                ),
+                tags$li(
+                  "\\(\\epsilon_{i,y,r}\\) is a random noise drawn from a normal distribution ",
+                  "\\(\\mathcal{N}(0, \\sigma^2)\\)"
+                )
               )
-            )
-          ),
-          p("Some remarks:",
-            tags$ul(
-              tags$li(
+            ),
+            p(
+              "Some remarks:",
+              tags$ul(
+                tags$li(
                   "T1 and T2 have pure additive infinitesimal genetic architecture",
                   "and all SNPs (even the rarest) have a non-zero effect"
                 ),
-              tags$li(
+                tags$li(
                   "There is no year/genotype interaction"
                 ),
-              tags$li(
+                tags$li(
                   'There is no "plot" effect nor spatial heterogeneity',
                   '(even if the phenotype data have a "plot" column)'
                 ),
-              tags$li(HTML(
+                tags$li(HTML(
                   "The phenotypic variance of the initial population is:",
-                  "<br/>\\({\\sigma_p}^2 = {\\sigma_a}^2 + {\\sigma_y}^2 + \\sigma^2\\)")
-                )
+                  "<br/>\\({\\sigma_p}^2 = {\\sigma_a}^2 + {\\sigma_y}^2 + \\sigma^2\\)"
+                ))
+              )
             )
           )
-        )
         ),
-
-        div(style = "display: flex;",
-          div(style = "flex: 1;",
+        div(
+          style = "display: flex;",
+          div(
+            style = "flex: 1;",
             h4("Trait 1 (Yield):", style = "margin-top: 20px;", id = ns("inputs_T1")),
-            shiny::numericInput(ns("t1_mu"), value = 100, step = 0.5, width = width_numInput,
+            shiny::numericInput(ns("t1_mu"),
+              value = 100, step = 0.5, width = width_numInput,
               label = tooltip_label_mu(1)
             ),
-            shiny::numericInput(ns("t1_min"), value = 20, step = 0.5, width = width_numInput,
+            shiny::numericInput(ns("t1_min"),
+              value = 20, step = 0.5, width = width_numInput,
               label = tooltip_label_min(1)
             ),
-            shiny::numericInput(ns("t1_cv_g"), value = 0.10, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("t1_cv_g"),
+              value = 0.10, step = 0.01, width = width_numInput,
               label = tooltip_label_gCV(1)
             ),
-            shiny::numericInput(ns("t1_h2"), value = 0.30, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("t1_h2"),
+              value = 0.30, step = 0.01, width = width_numInput,
               label = tooltip_label_h2(1)
             ),
-
             h4("Trait 2 (Quality):", style = "margin-top: 20px;", id = ns("inputs_T2")),
-            shiny::numericInput(ns("t2_mu"), value = 15, step = 0.5, width = width_numInput,
+            shiny::numericInput(ns("t2_mu"),
+              value = 15, step = 0.5, width = width_numInput,
               label = tooltip_label_mu(2)
             ),
-            shiny::numericInput(ns("t2_min"), value = 5, step = 0.5, width = width_numInput,
+            shiny::numericInput(ns("t2_min"),
+              value = 5, step = 0.5, width = width_numInput,
               label = tooltip_label_min(2)
             ),
-            shiny::numericInput(ns("t2_cv_g"), value = 0.06, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("t2_cv_g"),
+              value = 0.06, step = 0.01, width = width_numInput,
               label = tooltip_label_gCV(2)
             ),
-            shiny::numericInput(ns("t2_h2"), value = 0.60, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("t2_h2"),
+              value = 0.60, step = 0.01, width = width_numInput,
               label = tooltip_label_h2(2)
             ),
-
             h4("Trait 1/2 pleiotropy:", style = "margin-top: 20px;", id = ns("inputs_pleio")),
-            shiny::numericInput(ns("prop_pleio"), value = 0.4, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("prop_pleio"),
+              value = 0.4, step = 0.01, width = width_numInput,
               label = tooltip_label(
                 "Proportion of pleiotropy",
                 div(
@@ -380,23 +395,29 @@ gameInit_traits_ui <- function(id) {
                 )
               )
             ),
-            shiny::numericInput(ns("cor_pleio"), value = -0.7, step = 0.01, width = width_numInput,
+            shiny::numericInput(ns("cor_pleio"),
+              value = -0.7, step = 0.01, width = width_numInput,
               label = tooltip_label(
                 "Pleiotropy correlation",
                 div(
-                  p("Correlation between the markers effects's on trait 1 and",
-                    "trait 2 for the pleiotropic markers.")
+                  p(
+                    "Correlation between the markers effects's on trait 1 and",
+                    "trait 2 for the pleiotropic markers."
+                  )
                 )
               )
             ),
           ),
-
-          div(style = "flex: 1;",
+          div(
+            style = "flex: 1;",
             h4("Informations", style = "margin-top: 20px;"),
-            tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+            tags$blockquote(
+              style = "font-weight: normal; font-size: inherit; font-style: italic;",
               h4("Models parameters:"),
-              div(style = "display: flex;",
-                div(style = "flex: 1;",
+              div(
+                style = "display: flex;",
+                div(
+                  style = "flex: 1;",
                   h5("Trait 1:"),
                   tags$ul(
                     tags$li(id = ns("prev_t1_mu"), "\\(\\mu =\\)", textOutput(ns("T1_mu"), inline = T)),
@@ -406,7 +427,8 @@ gameInit_traits_ui <- function(id) {
                     tags$li(id = ns("prev_t1_sy2"), "\\({\\sigma_y}^2 =\\)", textOutput(ns("T1_sig_y2"), inline = T))
                   )
                 ),
-                div(style = "flex: 1;",
+                div(
+                  style = "flex: 1;",
                   h5("Trait 2:"),
                   tags$ul(
                     tags$li(id = ns("prev_t2_mu"), "\\(\\mu =\\)", textOutput(ns("T2_mu"), inline = T)),
@@ -420,7 +442,8 @@ gameInit_traits_ui <- function(id) {
             ),
             plotlyOutput(ns("pheno_plot"), width = "100%"),
             plotlyOutput(ns("genetic_values_plot"), width = "100%"),
-            tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+            tags$blockquote(
+              style = "font-weight: normal; font-size: inherit; font-style: italic;",
               "Note: The graphs above show an examples of what the phenotypic/genetic values of",
               "the initial population will look like. The actual values",
               "generated durring the game initialisation will have a similar",
@@ -434,7 +457,6 @@ gameInit_traits_ui <- function(id) {
 }
 
 quick_pheno_simul <- function(mu, sig_p, sig, sig_y, g0, seed = 1993) {
-
   saved_seed <- .GlobalEnv$.Random.seed
   set.seed(seed)
   n_inds <- length(g0)
@@ -488,9 +510,8 @@ quick_g0_simul <- function(T1_sig_a2,
                            cor_pleio,
                            geno,
                            seed = 44) {
-
-  if (!is.null(valid_variance(T1_sig_a2))
-  || !is.null(valid_variance(T2_sig_a2))) {
+  if (!is.null(valid_variance(T1_sig_a2)) ||
+    !is.null(valid_variance(T2_sig_a2))) {
     return(NULL)
   }
   saved_seed <- .GlobalEnv$.Random.seed
@@ -501,13 +522,21 @@ quick_g0_simul <- function(T1_sig_a2,
   n_pleio <- round(n_snp * prop_pleio)
   n_non_pleio <- n_snp - n_pleio
 
-  Sigma.beta.nopleio <- matrix(c(sigma.beta2[1], 0,
-    0, sigma.beta2[2]),
-    nrow = 2, ncol = 2)
+  Sigma.beta.nopleio <- matrix(
+    c(
+      sigma.beta2[1], 0,
+      0, sigma.beta2[2]
+    ),
+    nrow = 2, ncol = 2
+  )
   cov.pleio <- cor_pleio * sqrt(sigma.beta2[1] * sigma.beta2[2])
-  Sigma.beta.pleio <- matrix(c(sigma.beta2[1], cov.pleio,
-    cov.pleio, sigma.beta2[2]),
-    nrow = 2, ncol = 2)
+  Sigma.beta.pleio <- matrix(
+    c(
+      sigma.beta2[1], cov.pleio,
+      cov.pleio, sigma.beta2[2]
+    ),
+    nrow = 2, ncol = 2
+  )
 
   # I don't use MASS::mvrnorm and use a "manual approach" here so that the
   # generated values remain the same more or less the covariance structure
@@ -524,7 +553,7 @@ quick_g0_simul <- function(T1_sig_a2,
 
   if (n_pleio != 0) {
     R_pleio <- chol(Sigma.beta.pleio)
-    beta_pleio <- t(R_pleio) %*% base_random_values[, (n_non_pleio+1):n_snp]
+    beta_pleio <- t(R_pleio) %*% base_random_values[, (n_non_pleio + 1):n_snp]
   } else {
     beta_pleio <- c()
   }
@@ -539,19 +568,25 @@ quick_g0_simul <- function(T1_sig_a2,
 
 gameInit_traits_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
-
-
     pheno_params_validator <- InputValidator$new()
     pheno_params_validator_T1 <- InputValidator$new()
     pheno_params_validator_T1$add_rule("t1_mu", valid_mu)
-    pheno_params_validator_T1$add_rule("t1_min", function(x){valid_Tmin(x, input$t1_mu)})
+    pheno_params_validator_T1$add_rule("t1_min", function(x) {
+      valid_Tmin(x, input$t1_mu)
+    })
     pheno_params_validator_T1$add_rule("t1_cv_g", valid_cv_g)
     pheno_params_validator_T1$add_rule("t1_h2", valid_h2)
     valid_T1_sigma_y2 <- function(x) {
       # do not trigger if inputs are invalid
-      if (!is.null(valid_Tmin(input$t1_min, input$t1_mu))) { return(NULL) }
-      if (!is.null(valid_cv_g(input$t1_cv_g))) { return(NULL) }
-      if (!is.null(valid_h2(input$t1_h2))) { return(NULL) }
+      if (!is.null(valid_Tmin(input$t1_min, input$t1_mu))) {
+        return(NULL)
+      }
+      if (!is.null(valid_cv_g(input$t1_cv_g))) {
+        return(NULL)
+      }
+      if (!is.null(valid_h2(input$t1_h2))) {
+        return(NULL)
+      }
 
       valid_variance(T1_sig_y2(), "year effects", accept_na = TRUE)
     }
@@ -561,14 +596,22 @@ gameInit_traits_server <- function(id, iv) {
 
     pheno_params_validator_T2 <- InputValidator$new()
     pheno_params_validator_T2$add_rule("t2_mu", valid_mu)
-    pheno_params_validator_T2$add_rule("t2_min", function(x){valid_Tmin(x, input$t2_mu)})
+    pheno_params_validator_T2$add_rule("t2_min", function(x) {
+      valid_Tmin(x, input$t2_mu)
+    })
     pheno_params_validator_T2$add_rule("t2_cv_g", valid_cv_g)
     pheno_params_validator_T2$add_rule("t2_h2", valid_h2)
     valid_T2_sigma_y2 <- function(x) {
       # do not trigger if inputs are invalid
-      if (!is.null(valid_Tmin(input$t2_min, input$t2_mu))) { return(NULL) }
-      if (!is.null(valid_cv_g(input$t2_cv_g))) { return(NULL) }
-      if (!is.null(valid_h2(input$t2_h2))) { return(NULL) }
+      if (!is.null(valid_Tmin(input$t2_min, input$t2_mu))) {
+        return(NULL)
+      }
+      if (!is.null(valid_cv_g(input$t2_cv_g))) {
+        return(NULL)
+      }
+      if (!is.null(valid_h2(input$t2_h2))) {
+        return(NULL)
+      }
 
       valid_variance(T2_sig_y2(), "year effects", accept_na = TRUE)
     }
@@ -587,7 +630,7 @@ gameInit_traits_server <- function(id, iv) {
 
 
     observe({
-      id_t1 = session$ns("inputs_T1")
+      id_t1 <- session$ns("inputs_T1")
       if (pheno_params_validator_T1$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id_t1, '").removeClass("has-error");'))
@@ -596,7 +639,7 @@ gameInit_traits_server <- function(id, iv) {
         shinyjs::runjs(code = paste0('$("#', id_t1, '").addClass("has-error");'))
       }
 
-      id_t2 = session$ns("inputs_T2")
+      id_t2 <- session$ns("inputs_T2")
       if (pheno_params_validator_T2$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id_t2, '").removeClass("has-error");'))
@@ -605,7 +648,7 @@ gameInit_traits_server <- function(id, iv) {
         shinyjs::runjs(code = paste0('$("#', id_t2, '").addClass("has-error");'))
       }
 
-      id_pleio = session$ns("inputs_pleio")
+      id_pleio <- session$ns("inputs_pleio")
       if (pheno_params_validator_pleio$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id_pleio, '").removeClass("has-error");'))
@@ -614,7 +657,7 @@ gameInit_traits_server <- function(id, iv) {
         shinyjs::runjs(code = paste0('$("#', id_pleio, '").addClass("has-error");'))
       }
 
-      id_mainTitle = session$ns("pheno_simul_title")
+      id_mainTitle <- session$ns("pheno_simul_title")
       if (pheno_params_validator$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id_mainTitle, '").removeClass("has-error");'))
@@ -626,8 +669,8 @@ gameInit_traits_server <- function(id, iv) {
 
 
     T1_sig_p2 <- reactive({
-      T1_sig_p2<- calc_sigma_p2(input$t1_mu, input$t1_min)
-      id = session$ns("prev_t1_sp2")
+      T1_sig_p2 <- calc_sigma_p2(input$t1_mu, input$t1_min)
+      id <- session$ns("prev_t1_sp2")
       if (is.null(valid_variance(T1_sig_p2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -637,7 +680,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T1_sig_a2 <- reactive({
       T1_sig_a2 <- calc_sigma_a2(input$t1_cv_g, input$t1_mu)
-      id = session$ns("prev_t1_sa2")
+      id <- session$ns("prev_t1_sa2")
       if (is.null(valid_variance(T1_sig_a2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -647,7 +690,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T1_sig2 <- reactive({
       T1_sig2 <- calc_sigma2(input$t1_h2, T1_sig_a2())
-      id = session$ns("prev_t1_s2")
+      id <- session$ns("prev_t1_s2")
       if (is.null(valid_variance(T1_sig2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -657,7 +700,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T1_sig_y2 <- reactive({
       T1_sig_y2 <- calc_sigma_y2(T1_sig_p2(), T1_sig_a2(), T1_sig2())
-      id = session$ns("prev_t1_sy2")
+      id <- session$ns("prev_t1_sy2")
       if (is.null(valid_variance(T1_sig_y2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -667,8 +710,8 @@ gameInit_traits_server <- function(id, iv) {
     })
 
     T2_sig_p2 <- reactive({
-      T2_sig_p2<- calc_sigma_p2(input$t2_mu, input$t2_min)
-      id = session$ns("prev_t2_sp2")
+      T2_sig_p2 <- calc_sigma_p2(input$t2_mu, input$t2_min)
+      id <- session$ns("prev_t2_sp2")
       if (is.null(valid_variance(T2_sig_p2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -678,7 +721,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T2_sig_a2 <- reactive({
       T2_sig_a2 <- calc_sigma_a2(input$t2_cv_g, input$t2_mu)
-      id = session$ns("prev_t2_sa2")
+      id <- session$ns("prev_t2_sa2")
       if (is.null(valid_variance(T2_sig_a2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -688,7 +731,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T2_sig2 <- reactive({
       T2_sig2 <- calc_sigma2(input$t2_h2, T2_sig_a2())
-      id = session$ns("prev_t2_s2")
+      id <- session$ns("prev_t2_s2")
       if (is.null(valid_variance(T2_sig2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -698,7 +741,7 @@ gameInit_traits_server <- function(id, iv) {
     })
     T2_sig_y2 <- reactive({
       T2_sig_y2 <- calc_sigma_y2(T2_sig_p2(), T2_sig_a2(), T2_sig2())
-      id = session$ns("prev_t2_sy2")
+      id <- session$ns("prev_t2_sy2")
       if (is.null(valid_variance(T2_sig_y2))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -709,7 +752,7 @@ gameInit_traits_server <- function(id, iv) {
 
 
     output$T1_mu <- renderText({
-      id = session$ns("prev_t1_mu")
+      id <- session$ns("prev_t1_mu")
       if (is.null(valid_mu(input$t1_mu))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -717,13 +760,21 @@ gameInit_traits_server <- function(id, iv) {
       }
       input$t1_mu
     })
-    output$T1_sig_p2 <- renderText({signif(T1_sig_p2(), 6)})
-    output$T1_sig_a2 <- renderText({signif(T1_sig_a2(), 6)})
-    output$T1_sig2 <- renderText({signif(T1_sig2(), 6)})
-    output$T1_sig_y2 <- renderText({signif(T1_sig_y2(), 6)})
+    output$T1_sig_p2 <- renderText({
+      signif(T1_sig_p2(), 6)
+    })
+    output$T1_sig_a2 <- renderText({
+      signif(T1_sig_a2(), 6)
+    })
+    output$T1_sig2 <- renderText({
+      signif(T1_sig2(), 6)
+    })
+    output$T1_sig_y2 <- renderText({
+      signif(T1_sig_y2(), 6)
+    })
 
     output$T2_mu <- renderText({
-      id = session$ns("prev_t2_mu")
+      id <- session$ns("prev_t2_mu")
       if (is.null(valid_mu(input$t2_mu))) {
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))
       } else {
@@ -731,10 +782,18 @@ gameInit_traits_server <- function(id, iv) {
       }
       input$t2_mu
     })
-    output$T2_sig_p2 <- renderText({signif(T2_sig_p2(), 6)})
-    output$T2_sig_a2 <- renderText({signif(T2_sig_a2(), 6)})
-    output$T2_sig2 <- renderText({signif(T2_sig2(), 6)})
-    output$T2_sig_y2 <- renderText({signif(T2_sig_y2(), 6)})
+    output$T2_sig_p2 <- renderText({
+      signif(T2_sig_p2(), 6)
+    })
+    output$T2_sig_a2 <- renderText({
+      signif(T2_sig_a2(), 6)
+    })
+    output$T2_sig2 <- renderText({
+      signif(T2_sig2(), 6)
+    })
+    output$T2_sig_y2 <- renderText({
+      signif(T2_sig_y2(), 6)
+    })
 
 
     afs_sim <- reactive({
@@ -760,16 +819,16 @@ gameInit_traits_server <- function(id, iv) {
     output$pheno_plot <- renderPlotly({
       colors_T1 <- c("#1f77b4", "#ff7f0e")
       colors_T2 <- c("#2ca02c", "#e12a2a")
-      if (!pheno_params_validator_T1$is_valid()
-          || !pheno_params_validator_pleio$is_valid()
-          || !is.null(valid_variance(T1_sig_a2()))
-          || !is.null(valid_variance(T2_sig_a2()))
+      if (!pheno_params_validator_T1$is_valid() ||
+        !pheno_params_validator_pleio$is_valid() ||
+        !is.null(valid_variance(T1_sig_a2())) ||
+        !is.null(valid_variance(T2_sig_a2()))
       ) {
         fig_T1 <- plot_ly(type = "box") %>%
           add_annotations(
-            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
             text = "Error with trait 1",
-            xanchor = 'center',
+            xanchor = "center",
             showarrow = FALSE
           )
       } else {
@@ -779,42 +838,45 @@ gameInit_traits_server <- function(id, iv) {
         T1_h2 <- input$t1_h2
 
         data_t1 <- quick_pheno_simul(T1_mu,
-                                     sig_p = T1_sig_p2(),
-                                     sig = T1_sig2(),
-                                     sig_y = T1_sig_y2(),
-                                     g0 = g0_sim()[,1],
-                                     seed = 1993)
+          sig_p = T1_sig_p2(),
+          sig = T1_sig2(),
+          sig_y = T1_sig_y2(),
+          g0 = g0_sim()[, 1],
+          seed = 1993
+        )
 
         fig_T1 <- plot_ly(
           data_t1,
           x = ~year,
           y = ~pheno,
-          type = 'box',
+          type = "box",
           name = "Trait 1",
           color = "a",
-          colors = colors_T1) %>% add_lines(
-            data = NULL,
-            type = "scatter",
-            y = T1_mu,
-            mode = "lines",
-            name = "μ T1",
-            color = "b")
+          colors = colors_T1
+        ) %>% add_lines(
+          data = NULL,
+          type = "scatter",
+          y = T1_mu,
+          mode = "lines",
+          name = "μ T1",
+          color = "b"
+        )
       }
       fig_T1 <- fig_T1 %>% layout(
         xaxis = list(title = "Year"),
         yaxis = list(title = "Phenotypes Trait 1")
       )
 
-      if (!pheno_params_validator_T2$is_valid()
-          || !pheno_params_validator_pleio$is_valid()
-          || !is.null(valid_variance(T1_sig_a2()))
-          || !is.null(valid_variance(T2_sig_a2()))
+      if (!pheno_params_validator_T2$is_valid() ||
+        !pheno_params_validator_pleio$is_valid() ||
+        !is.null(valid_variance(T1_sig_a2())) ||
+        !is.null(valid_variance(T2_sig_a2()))
       ) {
         fig_T2 <- plot_ly(type = "box") %>%
           add_annotations(
-            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
             text = "Error with trait 2",
-            xanchor = 'center',
+            xanchor = "center",
             showarrow = F
           )
       } else {
@@ -824,27 +886,30 @@ gameInit_traits_server <- function(id, iv) {
         T2_h2 <- input$t2_h2
 
         data_t2 <- quick_pheno_simul(T2_mu,
-                                     sig_p = T2_sig_p2(),
-                                     sig = T2_sig2(),
-                                     sig_y = T2_sig_y2(),
-                                     g0 = g0_sim()[,2],
-                                     seed = 42)
+          sig_p = T2_sig_p2(),
+          sig = T2_sig2(),
+          sig_y = T2_sig_y2(),
+          g0 = g0_sim()[, 2],
+          seed = 42
+        )
 
 
         fig_T2 <- plot_ly(
           data_t2,
           x = ~year,
           y = ~pheno,
-          type = 'box',
+          type = "box",
           name = "Trait 2",
           color = "a",
-          colors = colors_T2) %>% add_lines(
-            data = NULL,
-            type = "scatter",
-            y = T2_mu,
-            mode = "lines",
-            name = "μ T2",
-            color = "b")
+          colors = colors_T2
+        ) %>% add_lines(
+          data = NULL,
+          type = "scatter",
+          y = T2_mu,
+          mode = "lines",
+          name = "μ T2",
+          color = "b"
+        )
       }
 
       fig_T2 <- fig_T2 %>% layout(
@@ -860,19 +925,18 @@ gameInit_traits_server <- function(id, iv) {
     })
 
     output$genetic_values_plot <- renderPlotly({
-
       valid <- (
-        pheno_params_validator_pleio$is_valid()
-        && is.null(valid_variance(T1_sig_a2()))
-        && is.null(valid_variance(T2_sig_a2()))
+        pheno_params_validator_pleio$is_valid() &&
+          is.null(valid_variance(T1_sig_a2())) &&
+          is.null(valid_variance(T2_sig_a2()))
       )
 
       if (!valid) {
         return(plot_ly(type = "scatter", mode = "markers") %>%
           add_annotations(
-            x=0.5, y=0.5, xref = "paper", yref = "paper",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
             text = "Error with provided parameters",
-            xanchor = 'center',
+            xanchor = "center",
             showarrow = FALSE
           ))
       }
@@ -884,44 +948,51 @@ gameInit_traits_server <- function(id, iv) {
       cor_pearson <- signif(cor(dta$G_T1, dta$G_T2, method = "pearson"), 3)
       cor_spearman <- signif(cor(dta$G_T1, dta$G_T2, method = "spearman"), 3)
 
-      plot_ly(type = "scatter",
-              mode = "markers",
-              data = dta,
-              x = ~G_T1,
-              y = ~G_T2,
-              showlegend = FALSE,
-              hoverinfo = "text",
-              text = apply(dta, 1, function(l) {
-                paste(names(l), ":", l, collapse = "\n")
-              })
-      ) %>% add_lines(
+      plot_ly(
+        type = "scatter",
+        mode = "markers",
+        data = dta,
+        x = ~G_T1,
+        y = ~G_T2,
+        showlegend = FALSE,
+        hoverinfo = "text",
+        text = apply(dta, 1, function(l) {
+          paste(names(l), ":", l, collapse = "\n")
+        })
+      ) %>%
+        add_lines(
           inherit = FALSE,
           x = ~G_T1,
           y = fitted(lin_mod),
           showlegend = FALSE,
           name = paste("linear reggression",
-            paste0("y = ",
+            paste0(
+              "y = ",
               signif(lin_mod$coefficients[1], 3),
               " + ",
               signif(lin_mod$coefficients[2], 3),
-              "x"),
+              "x"
+            ),
             paste0("r^2 = ", signif(summary(lin_mod)$r.squared, 3)),
-            sep = "\n")
-        ) %>% add_annotations(
+            sep = "\n"
+          )
+        ) %>%
+        add_annotations(
           x = 0.1, y = 0.9, xref = "paper", yref = "paper",
-          textposition = 'top left',
-          text = paste0("Correlation pearson = ", cor_pearson,
-            "\nCorrelation spearman = ", cor_spearman),
-          xanchor = 'center',
+          textposition = "top left",
+          text = paste0(
+            "Correlation pearson = ", cor_pearson,
+            "\nCorrelation spearman = ", cor_spearman
+          ),
+          xanchor = "center",
           showarrow = FALSE
-        ) %>% layout(
-        xaxis = list(title = "Trait 1"),
-        yaxis = list(title = "Trait 2"),
+        ) %>%
+        layout(
+          xaxis = list(title = "Trait 1"),
+          yaxis = list(title = "Trait 2"),
           legend = list(x = 0.9, y = 0.9),
-        title = "Example of genetic values\nfor the initial population"
-      )
-
-
+          title = "Example of genetic values\nfor the initial population"
+        )
     })
 
 
@@ -935,12 +1006,10 @@ gameInit_traits_server <- function(id, iv) {
               t1_min = input$t1_min,
               t1_cv_g = input$t1_cv_g,
               t1_h2 = input$t1_h2,
-
               t2_mu = input$t2_mu,
               t2_min = input$t2_min,
               t2_cv_g = input$t2_cv_g,
               t2_h2 = input$t2_h2,
-
               prop_pleio = input$prop_pleio,
               cor_pleio = input$cor_pleio
             ))
@@ -950,7 +1019,6 @@ gameInit_traits_server <- function(id, iv) {
         iv = iv
       )
     )
-
   })
 }
 
@@ -964,23 +1032,29 @@ gameInit_request_constraints_ui <- function(id) {
   n_pheno_plots_label <- tooltip_label(
     "Available plots",
     div(
-      p("Number of phenotyping plots available for the experimental site.",
-      'The amount of "resistance phenotyping" done in greedhouse remains unlimited.'),
-      p('Note: Players with the "tester" or "game-master" status are not',
-        'constrained by this limitation.')
+      p(
+        "Number of phenotyping plots available for the experimental site.",
+        'The amount of "resistance phenotyping" done in greedhouse remains unlimited.'
+      ),
+      p(
+        'Note: Players with the "tester" or "game-master" status are not',
+        "constrained by this limitation."
+      )
     )
   )
   n_max_cross_label <- tooltip_label(
     "Maximum number of crosses per request",
     div(
       p('Maximum number of crosses that can be performed in one "plant material" request.'),
-      p('Notes:'),
+      p("Notes:"),
       tags$ul(
-        tags$li('This limitation apply on one request, players remain able to',
-          'make several requests one after the other to bypass this limitation.'
+        tags$li(
+          "This limitation apply on one request, players remain able to",
+          "make several requests one after the other to bypass this limitation."
         ),
-        tags$li('Players with the "tester" or "game-master" status are not',
-          'constrained by this limitation.'
+        tags$li(
+          'Players with the "tester" or "game-master" status are not',
+          "constrained by this limitation."
         )
       )
     )
@@ -990,12 +1064,12 @@ gameInit_request_constraints_ui <- function(id) {
     "Maximum number of haplodiploidisation per request",
     div(
       p('Maximum number of haplodiploidisation that can be performed in one "plant material" request.'),
-      p('Notes:'),
+      p("Notes:"),
       tags$ul(
-        tags$li('This number will remains limited by "Maximum number of crosses per request" parameter.'
-        ),
-        tags$li('Players with the "tester" or "game-master" status are not',
-          'constrained by this limitation.'
+        tags$li('This number will remains limited by "Maximum number of crosses per request" parameter.'),
+        tags$li(
+          'Players with the "tester" or "game-master" status are not',
+          "constrained by this limitation."
         )
       )
     )
@@ -1003,7 +1077,7 @@ gameInit_request_constraints_ui <- function(id) {
   n_max_registration_label <- tooltip_label(
     "Maximum number of registrations",
     div(
-      p('Maximum number of individuals that can be submitted for final evaluation.')
+      p("Maximum number of individuals that can be submitted for final evaluation.")
     )
   )
 
@@ -1012,21 +1086,21 @@ gameInit_request_constraints_ui <- function(id) {
       title = "Game requests constraints",
       title_id = ns("constraints_title"),
       div(
-        tags$blockquote(style = "font-weight: normal; font-size: inherit; font-style: italic;",
+        tags$blockquote(
+          style = "font-weight: normal; font-size: inherit; font-style: italic;",
           div(
-            p("This section presents parameters that apply some constraints on",
-              "the phenotyping, genotyping, plant material and final registration requests.")
+            p(
+              "This section presents parameters that apply some constraints on",
+              "the phenotyping, genotyping, plant material and final registration requests."
+            )
           )
         ),
         div(
-
           h4("Phenotyping:", style = "margin-top: 20px;", id = ns("constraints_pheno")),
           shiny::numericInput(ns("n_pheno_plot"), label = n_pheno_plots_label, value = 300, step = 1, width = width_numInput),
-
           h4("Plant material:", style = "margin-top: 20px;", id = ns("constraints_pltmat")),
           shiny::numericInput(ns("n_max_cross"), label = n_max_cross_label, value = 300, step = 1, width = width_numInput),
           shiny::numericInput(ns("n_max_hd"), label = n_max_hd_label, value = 300, step = 1, width = width_numInput),
-
           h4("Final evaluation:", style = "margin-top: 20px;", id = ns("constraints_eval")),
           shiny::numericInput(ns("n_max_registration"), label = n_max_registration_label, value = 5, step = 1, width = width_numInput)
         )
@@ -1037,16 +1111,23 @@ gameInit_request_constraints_ui <- function(id) {
 
 gameInit_request_constraints_server <- function(id, iv) {
   moduleServer(id, function(input, output, session) {
-
     constraints_validator <- InputValidator$new()
-    constraints_validator$add_rule("n_pheno_plot", function(x){valid_positive_integer(x, strict = TRUE)})
-    constraints_validator$add_rule("n_max_cross", function(x){valid_positive_integer(x, strict = TRUE)})
-    constraints_validator$add_rule("n_max_hd", function(x){valid_positive_integer(x, strict = TRUE)})
-    constraints_validator$add_rule("n_max_registration", function(x){valid_positive_integer(x, strict = TRUE)})
+    constraints_validator$add_rule("n_pheno_plot", function(x) {
+      valid_positive_integer(x, strict = TRUE)
+    })
+    constraints_validator$add_rule("n_max_cross", function(x) {
+      valid_positive_integer(x, strict = TRUE)
+    })
+    constraints_validator$add_rule("n_max_hd", function(x) {
+      valid_positive_integer(x, strict = TRUE)
+    })
+    constraints_validator$add_rule("n_max_registration", function(x) {
+      valid_positive_integer(x, strict = TRUE)
+    })
     iv$add_validator(constraints_validator)
 
     observe({
-      id = session$ns('constraints_title')
+      id <- session$ns("constraints_title")
       if (constraints_validator$is_valid()) {
         # shinyjs::removeClass(id, "has-error") # not working in modules
         shinyjs::runjs(code = paste0('$("#', id, '").removeClass("has-error");'))

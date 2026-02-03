@@ -19,11 +19,32 @@
 library(shiny)
 
 list(
+  breeder_info_UI("breederInfoDtaViz"),
   shinydashboard::tabBox(
-    width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "From file",
+    width = 12, title = "Data Visualisation", id = "data-viz", side = "left", selected = "Phenotypes data",
+
+    # Phenotypes data ----
+    tabPanel(
+      "Phenotypes data",
+      div(
+        id = "data_viz_pheno_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("pheno_data_viz_ind_filter", breeder = breeder()),
+        phenotype_filtering_ui("pheno_data_viz_pheno_filter", breeder = breeder()),
+        actionButton("refresh_pheno_dta_viz", label = "Refresh", icon = icon("rotate")),
+        hr()
+      ),
+      div(
+        data_viz_ui("data-viz_pheno")
+      )
+    ),
+
+    # From file ----
     tabPanel(
       "From file",
-      div(style = "",
+      div(
+        style = "",
         h4("Import file"),
         fileInput(
           inputId = "file_data_viz",
@@ -42,7 +63,8 @@ list(
           accept = c(".txt", ".tsv", ".txt.gz", ".tsv.gz"),
           width = "100%"
         ),
-        div(style = "display: inline-block; vertical-align: top; margin-right: 10px;",
+        div(
+          style = "display: inline-block; vertical-align: top; margin-right: 10px;",
           selectInput("categ_variables",
             label = tooltip_label(
               "Categorical variables",
@@ -54,15 +76,18 @@ list(
             multiple = TRUE
           )
         ),
-        div(style = "display: inline-block; vertical-align: top;",
+        div(
+          style = "display: inline-block; vertical-align: top;",
           selectInput("quant_variables",
             label = tooltip_label(
               "Quantitative variables",
               div(
-                p("This input is disable, any variable that is not",
+                p(
+                  "This input is disable, any variable that is not",
                   "categorical is considered quantitative.",
                   "Please remove categorical variables to mark them as",
-                  "quantitative.")
+                  "quantitative."
+                )
               )
             ),
             choices = list(),

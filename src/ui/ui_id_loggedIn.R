@@ -23,51 +23,124 @@
 ## this file is sourced in "server_id.R" in a renderUI() function
 ############################
 div(
-  uiOutput("UIbreederInfoID"),
+  breeder_info_UI("breederInfoID"),
   shinydashboard::tabBox(
     width = 12, title = paste0("My account"),
+
+    # Request history ----
     tabPanel(
-      "My files",
+      "Requests Progress/History",
+      h2("Requests history"),
       div(
-        style = "display: inline-block; vertical-align:top; width: 50%;",
-        div(
-          h3("Phenotyping data:"),
-          selectInput("phenoFile", "", choices = phenoFiles(), width = "75%"),
-          uiOutput("UIdwnlPheno")
-        ),
-        div(
-          h3("Genotyping data:"),
-          selectInput("genoFile", "", choices = genoFiles(), width = "75%"),
-          uiOutput("UIdwnlGeno")
-        )
+        id = "request_progress_bars_div",
+        uiOutput(outputId = "request_progress_bars_UI")
       ),
       div(
-        style = "display: inline-block; vertical-align:top; width: 49%;",
-        div(
-          h3("Plant material data:"),
-          selectInput("pltMatFile", "", choices = pltMatFiles(), width = "75%"),
-          uiOutput("UIdwnlPltMat")
-        ),
-        div(
-          h3("Other:"),
-          p(
-            "You can download here:",
-            tags$ul(
-              tags$li("SNP coordinates of the HD and LD chips"),
-              tags$li("List of controls"),
-              tags$li("Examples of requests files"),
-              tags$li("List of your requests")
-            )
-          ),
-          selectInput("requestFile", "", choices = requestFiles(), width = "75%"),
-          uiOutput("UIdwnlRequest")
-        )
+        id = "requests_history_div",
+        # actionButton("request_update", label = "update"),
+        dataTableOutput("requests_history_DT"),
+        uiOutput("dwnl_request_ui"),
       )
     ),
+
+    # Genotype data ----
+    tabPanel(
+      "Genotype data",
+      h2("SNP coordinates"),
+      div(
+        p(
+          "With the buttons below, you can download the SNP coordinates of the",
+          "HD and LD genotyping chips. Those SNP coordinates contains the",
+          "chromosomes and physical position of each markers as a", code("tsv"),
+          "compressed file."
+        ),
+        downloadButton("dwnld_snp_coord_hd", label = "Download HD SNP coordinates"),
+        downloadButton("dwnld_snp_coord_ld", label = "Download LD SNP coordinates")
+      ),
+      h2("Genotype data"),
+      div(
+        selectInput("geno_requests", "Genotype requests",
+          choices = genoRequests_list(), width = "75%"
+        ),
+      ),
+      div(
+        id = "geno_data_info",
+        uiOutput("selected_geno_data_UI_info")
+      ),
+    ),
+
+    # Phenotype data ----
+    tabPanel(
+      "Phenotype data",
+      h2("Phenotype data"),
+      div(
+        id = "pheno_info",
+        p("Three phenotypic traits are investigated:"),
+        tags$ul(
+          tags$li(code("trait1"), ": flower production in kg/ha"),
+          tags$li(code("trait2"), ": sepmetin content in g/kg"),
+          tags$li(
+            code("trait3"), ": presence of symptoms caused by P. psychedelica",
+            tags$ul(
+              tags$li(code("1"), "indicates the individual showed symptoms"),
+              tags$li(code("0"), "indicates the individual did not show symptoms.")
+            ),
+            "Note: If", code("pathogen"), "is", code("FALSE"),
+            ", the pathogen was not observed and therefore not any individuals will show  symptoms."
+          )
+        ),
+        p("Additionally, the phenotypic data provides the following variables:"),
+        tags$ul(
+          tags$li(code("ind"), ": the individual name"),
+          tags$li(code("control_ind"), ": boolean indicating if the individual will be used as control for the final evaluation"),
+          tags$li(code("year"), ": the year when this phenotyping happens."),
+          tags$li(code("plot"), ": the plot id of the phenotyping observation"),
+          tags$li(code("pathogen"), ": boolean value indicating if the pathogen have been observed during the phenotyping."),
+        )
+      ),
+
+      # h3("Summary"),
+      div(
+        id = "pheno_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("pheno_download_ind_filter", breeder = breeder()),
+        phenotype_filtering_ui("pheno_download_pheno_filter", breeder = breeder()),
+        downloadButton("dwnlPheno_1", "Download")
+      ),
+      div(
+        id = "pheno_preview_div",
+        h3("Preview"),
+        actionButton("refresh_pheno_preview", label = "Refresh", icon = icon("rotate")),
+        dataTableOutput("pheno_preview_DT")
+      ),
+      downloadButton("dwnlPheno_2", "Download"),
+    ),
+
+    # My plant material ----
     tabPanel(
       "My plant material",
-      dataTableOutput("myPltMatDT")
+      h2("Plant material"),
+      div(
+        id = "inds_filters",
+        h3("Filters"),
+        p("Records matching", strong("all conditions"), "are shown."),
+        individual_filtering_ui("inds_download_ind_filter", breeder = breeder()),
+        downloadButton("dwnlInds_1", "Download")
+      ),
+      div(
+        id = "inds_preview",
+        h3("Preview"),
+        dataTableOutput("plant_mat_preview")
+      ),
+      downloadButton("dwnlInds_2", "Download"),
+      div(
+        id = "inds_ind_info",
+        uiOutput("selected_ind_info")
+      ),
     ),
+
+    # Change my password ----
     tabPanel(
       "Change my password",
       div(
@@ -94,6 +167,8 @@ div(
         uiOutput("UIpswChanged")
       )
     ),
+
+    # Register final individuals ----
     tabPanel(
       "Register final individuals",
       div(
@@ -111,7 +186,7 @@ div(
         div(
           selectInput("id_evalInds",
             HTML("Select your best individuals<sup>*</sup>:"),
-            choices = myPltMat()$child,
+            choices = db_get_individual(breeder = breeder(), exclude_initial_coll = TRUE)$name,
             multiple = TRUE
           ),
           actionButton("id_submitInds", "Submit"),

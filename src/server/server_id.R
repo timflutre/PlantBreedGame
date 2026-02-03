@@ -39,7 +39,7 @@ output$id_main_UI <- renderUI({
 ## get breeder list and create select input ----
 breederList <- reactive({
   values$lastDBupdate # add a dependency to the db updates
-  getBreederList(dbname = DATA_DB)
+  getBreederList()
 })
 breeder_list_server("login_breeder_list", "breederName", breederList)
 
@@ -69,11 +69,10 @@ accessGranted <- eventReactive(input$submitPSW,
     }
 
     # 1. get breeder status
-    status <- getBreederStatus(input$breederName)
+    breeder <- db_get_breeder(input$breederName)
 
     # 2. check given password
-    query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
-    hashPsw <- db_get_request(query)
+    hashPsw <- breeder$h_psw
 
     if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
       goodPswd <- TRUE
@@ -84,7 +83,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
     # 3. check disk usage
     goodDiskUsage <- FALSE
-    if (goodPswd && status != "game master") {
+    if (goodPswd && breeder$status != "game master") {
       withProgress(
         {
           maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
@@ -94,7 +93,7 @@ accessGranted <- eventReactive(input$submitPSW,
 
           if (currentSize < maxDiskUsage) {
             goodDiskUsage <- TRUE
-          } else if (status != "game master") {
+          } else if (breeder$status != "game master") {
             goodDiskUsage <- FALSE
             alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
           } else {
@@ -110,35 +109,22 @@ accessGranted <- eventReactive(input$submitPSW,
         },
         message = "Connecting..."
       )
-    } else if (goodPswd && status == "game master") {
+    } else if (goodPswd && breeder$status == "game master") {
       # the game master can always log in
       goodDiskUsage <- TRUE
     }
 
-    # 4. check db (in case of "corrupted" data-base)
-    if (goodPswd) {
-      allTbls <- db_list_tables()
-      tbl_pltMat <- paste0("plant_material_", input$breederName)
-      if (!tbl_pltMat %in% allTbls) {
-        alert(paste(
-          "Sorry, our data-base have corrupted information",
-          "regarding your account, and you will not be able to play",
-          "the game anymore. Please ask a game master to delete your",
-          "account, and create a new one for you.\n",
-          "If you are a game master, you can connect, but please",
-          "be aware that some game features will not work."
-        ))
-        if (status != "game master") {
-          # do not allow access if user is not "game master"
-          return(FALSE)
-        }
-      }
-    }
-
-
     # 5. output
     if (goodPswd && goodDiskUsage) {
       removeUI("#logInDiv")
+
+      submitted_inds <- db_get_individual(
+        breeder = breeder$name,
+        selected_for_eval = 1,
+        public_columns = TRUE
+      )
+      submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
+
       return(TRUE)
     } else {
       return(FALSE)
@@ -157,7 +143,7 @@ breeder <- reactive({
 
 breederStatus <- reactive({
   if (accessGranted()) {
-    return(getBreederStatus(input$breederName))
+    return(db_get_breeder(input$breederName)$status)
   } else {
     return("No Identification")
   }
@@ -168,215 +154,512 @@ budget <- reactive({
   input$requestGeno
   input$id_submitInds
   if (breeder() != "No Identification") {
-    query <- paste0("SELECT * FROM log WHERE breeder='", breeder(), "'")
-    res <- db_get_request(query)
-
-
-    constants <- getBreedingGameConstants()
-    prices <- list(
-      "allofecundation" = constants$cost.allof * constants$cost.pheno.field,
-      "autofecundation" = constants$cost.autof * constants$cost.pheno.field,
-      "haplodiploidization" = constants$cost.haplodiplo * constants$cost.pheno.field,
-      "pheno-field" = constants$cost.pheno.field,
-      "pheno-patho" = constants$cost.pheno.patho * constants$cost.pheno.field,
-      "geno-hd" = constants$cost.geno.hd * constants$cost.pheno.field,
-      "geno-ld" = round(constants$cost.geno.ld * constants$cost.pheno.field, 2),
-      "geno-single-snp" = constants$cost.geno.single * constants$cost.pheno.field,
-      "register" = constants$cost.register * constants$cost.pheno.field
-    )
-
-    if (nrow(res) > 0) {
-      funApply <- function(x) {
-        prices[x[3]][[1]] * as.integer(x[4])
-      }
-      expenses <- sum(apply(res, MARGIN = 1, FUN = funApply))
-    } else {
-      expenses <- 0
-    }
-
-    initialBuget <- constants$initialBudget
-    return(round(initialBuget - expenses, 2))
+    budget <- db_get_budget(breeder = breeder())
+    return(round(budget$remaining_budget[1], 2))
   }
 })
 
 
+## Requests history ----
 
+requests_ongoing <- reactive({
+  invalidateLater(500)
+  if (breeder() == "No Identification") {
+    return(NULL)
+  }
+  dta <- db_get_game_requests_history(breeder = breeder())
+  if (nrow(dta) == 0) {
+    dta$status <- character(0)
+    return(dta)
+  }
+  dta$status <- "Error"
+  dta$status[dta$progress == 0] <- "Pending"
+  dta$status[dta$progress > 0] <- "Processing"
 
-
-
-
-## download files ----
-# list of avaiable files (this must be reactive value to be refresh)
-phenoFiles <- reactive({
-  input$leftMenu
-  getDataFileList(type = "pheno", breeder = breeder())
+  if (breederStatus() %in% c("game master", "tester")) {
+    dta$status[dta$progress == 1] <- "Completed"
+  } else {
+    dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
+    dta$status[dta$progress == 1 & !dta$available] <- "In progress"
+    dta$status[dta$progress == 1 & dta$available] <- "Completed"
+  }
+  dta <- dta[dta$status != "Completed" & dta$status != "Error", ]
+  dta
 })
-genoFiles <- reactive({
-  input$leftMenu
-  choices <- tools::file_path_sans_ext(
-    getDataFileList(type = "geno", breeder = breeder()),
-    compression = TRUE
+
+requests_history <- reactivePoll(1000, session, checkFunc = requests_ongoing, function() {
+  dta <- db_get_game_requests_history(breeder = breeder())
+  if (nrow(dta) == 0) {
+    dta$status <- character(0)
+    dta <- dta[, c(
+      "status",
+      "name",
+      "request_type",
+      "detail",
+      "quantity",
+      "cost",
+      "game_date",
+      "avail_from"
+    )]
+    return(dta)
+  }
+  dta$status <- NA
+  dta$status[dta$progress < 0] <- "Error"
+  dta$status[dta$progress == 0] <- "Pending"
+  dta$status[dta$progress > 0] <- "Processing"
+
+  if (breederStatus() %in% c("game master", "tester")) {
+    dta$status[dta$progress == 1] <- "Completed"
+  } else {
+    dta$available <- difftime(getGameTime(), strptime(dta$avail_from, format = "%Y-%m-%d")) >= 0
+    dta$status[dta$progress == 1 & !dta$available] <- "In progress"
+    dta$status[dta$progress == 1 & dta$available] <- "Completed"
+  }
+
+  dta <- dta[, c(
+    "status",
+    "name",
+    "request_type",
+    "detail",
+    "quantity",
+    "cost",
+    "game_date",
+    "avail_from"
+  )]
+  dta <- dta[order(dta$game_date, decreasing = TRUE), ]
+  dta
+})
+
+requests_progress_bars <- reactive({
+  requests <- requests_ongoing()
+  if (nrow(requests) == 0) {
+    return(NULL)
+  }
+  requests <- requests[order(requests$avail_from), ]
+  if (breederStatus() %in% c("game master", "tester")) {
+    requests$progress <- requests$progress
+    requests$total_time <- 100
+    requests$elapse_time <- as.numeric(requests$progress) * requests$total_time
+  } else {
+    requests$game_date <- strptime(requests$game_date, format = "%Y-%m-%d")
+    requests$avail_from <- strptime(requests$avail_from, format = "%Y-%m-%d")
+    requests$total_time <- as.numeric(difftime(requests$avail_from, requests$game_date, units = "days"))
+    requests$elapse_time <- ifelse(
+      requests$status == "In progress",
+      as.numeric(difftime(getGameTime(), requests$game_date, units = "days")),
+      0
+    )
+    requests$progress <- requests$elapse_time / requests$total_time
+  }
+
+  prog_bars <- apply(requests, MARGIN = 1, function(r) {
+    title <- paste0(
+      r["request_type"], " - ",
+      r["detail"], " - ",
+      r["name"], " - ",
+      r["status"]
+    )
+    shinyWidgets::progressBar(
+      id = paste0("progress-", r["name"]),
+      title = title,
+      value = round(as.numeric(r["elapse_time"])),
+      status = switch(r["status"],
+        "In progress" = "success",
+        "Pending" = "secondary",
+        "warning"
+      ),
+      total = round(as.numeric(r["total_time"])),
+      display_pct = TRUE,
+      striped = TRUE
+    )
+  })
+
+  return(prog_bars)
+})
+
+output$request_progress_bars_UI <- renderUI({
+  prog_bars <- requests_progress_bars()
+  if (length(prog_bars) == 0) {
+    return(NULL)
+  }
+  return(
+    htmltools::tagList(
+      h4("Ongoing requests:"),
+      do.call(htmltools::tagList, prog_bars)
+    )
   )
 })
-pltMatFiles <- reactive({
-  input$leftMenu
-  choices <- getDataFileList(type = "pltMat", breeder = breeder())
-})
-requestFiles <- reactive({
-  input$leftMenu
-  choices <- getDataFileList(type = "request", breeder = breeder())
-})
 
+output$requests_history_DT <- DT::renderDataTable(
+  {
+    dta <- requests_history()
 
-# dwnl buttons ----
-output$dwnlPheno <- downloadHandler(
-  filename = function() input$phenoFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$phenoFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$phenoFile)
-    file.copy(filePath, file)
-  }
-)
+    dta$status[dta$status == "Error"] <- "❌ Error"
+    dta$status[dta$status == "Pending"] <- "⏰ Pending"
+    dta$status[dta$status == "Processing"] <- "⚙️ Processing"
+    dta$status[dta$status == "In progress"] <- "⏳ In progress"
+    dta$status[dta$status == "Completed"] <- "✅ Completed"
 
-output$dwnlGeno <- downloadHandler(
-  filename = function() paste0(input$genoFile, ".txt.gz"), # lambda function
-  content = function(file) {
-    gFile <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (gFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, gFile)
-    file.copy(filePath, file)
-  }
-)
-
-output$dwnlGeno_vcf <- downloadHandler(
-  filename = function() paste0(input$genoFile, ".vcf.gz"), # lambda function
-  content = function(file) {
-    gFile_txt <- paste0(input$genoFile, ".txt.gz")
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (gFile_txt %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    gFile_txt <- file.path(folder, gFile_txt)
-    progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
-    progressVcf$set(
-      value = 0,
-      message = "Create VCF File:",
-      detail = "Initialisation..."
+    colnames(dta) <- c(
+      "Status",
+      "Name",
+      "Request Type",
+      "Detail",
+      "Quantity",
+      "Cost",
+      "Request Date",
+      "Availability Date"
     )
-    txt2Vcf(gFile_txt, file, progressVcf)
-    progressVcf$set(
-      value = 5,
-      detail = "DONE!"
+    DT::datatable(
+      dta,
+      selection = "single",
+      rownames = FALSE,
+      options = list(
+        lengthMenu = c(10, 20, 50),
+        pageLength = 10,
+        searchDelay = 500
+      )
     )
-  }
+  },
+  # server = TRUE
+  server = FALSE
 )
 
-output$dwnlPltMat <- downloadHandler(
-  filename = function() input$pltMatFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$pltMatFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$pltMatFile)
-    file.copy(filePath, file)
+output$dwnl_request_ui <- renderUI({
+  selected_line <- input$requests_history_DT_rows_selected
+  if (is.null(selected_line)) {
+    return(div())
   }
-)
-
-
-output$dwnlRequest <- downloadHandler(
-  filename = function() input$requestFile, # lambda function
-  content = function(file) {
-    initFiles <- list.files(DATA_INITIAL_DATA)
-    if (input$requestFile %in% initFiles) {
-      folder <- DATA_INITIAL_DATA
-    } else {
-      folder <- file.path(DATA_SHARED, breeder())
-    }
-    filePath <- file.path(folder, input$requestFile)
-    file.copy(filePath, file)
-  }
-)
-
-# UI of dwnl buttons ----
-output$UIdwnlPheno <- renderUI({
-  if (input$phenoFile != "") {
-    if (breederStatus() == "player" && !availToDwnld(input$phenoFile, currentGTime())$isAvailable) {
-      p(paste0(
-        "Sorry, your data are not available yet. Delivery date: ",
-        availToDwnld(input$phenoFile, currentGTime())$availDate
-      ))
-    } else {
-      downloadButton("dwnlPheno", "Download your file")
-    }
-  } else {
-    p("No file selected.")
-  }
+  selected_request <- requests_history()[selected_line, ]
+  downloadButton("dwnl_request", paste0(
+    "Download request: ",
+    selected_request$name
+  ))
 })
 
-output$UIdwnlGeno <- renderUI({
-  if (input$genoFile != "") {
-    genoFile <- paste0(input$genoFile, ".txt.gz")
-    if (breederStatus() == "player" && !availToDwnld(genoFile, currentGTime())$isAvailable) {
-      p(paste0(
-        "Sorry, your data are not available yet. Delivery date: ",
-        availToDwnld(genoFile, currentGTime())$availDate
-      ))
-    } else {
-      div(
-        downloadButton("dwnlGeno", "Download as `txt.gz`"),
-        downloadButton("dwnlGeno_vcf", "Download as `vcf.gz`")
+
+output$dwnl_request <- downloadHandler(
+  filename = function() {
+    selected_line <- input$requests_history_DT_rows_selected
+    selected_request <- requests_history()[selected_line, ]
+    paste0(selected_request$name, ".txt")
+  },
+  content = function(file) {
+    selected_line <- input$requests_history_DT_rows_selected
+    selected_request <- requests_history()[selected_line, ]
+    request_dta <- db_get_game_requests_data(
+      breeder = breeder(),
+      name = selected_request$name
+    )
+
+    if (selected_request$request_type == "pltmat") {
+      request_dta <- request_dta[, c(
+        "parent1_request_name",
+        "parent2_request_name",
+        "child_name",
+        "cross_type"
+      )]
+      colnames(request_dta) <- c(
+        "parent1",
+        "parent2",
+        "child",
+        "explanations"
       )
     }
-  } else {
-    p("No file selected.")
+
+    if (selected_request$request_type == "pheno") {
+      request_dta <- request_dta[, c(
+        "ind_request_name",
+        "type",
+        "n_pheno"
+      )]
+      colnames(request_dta) <- c(
+        "ind",
+        "task",
+        "details"
+      )
+    }
+
+    if (selected_request$request_type == "geno") {
+      request_dta <- request_dta[, c(
+        "ind_request_name",
+        "request_type",
+        "type"
+      )]
+      colnames(request_dta) <- c(
+        "ind",
+        "task",
+        "details"
+      )
+    }
+
+    write.table(request_dta,
+      file = file,
+      sep = "\t",
+      row.names = FALSE
+    )
   }
+)
+
+
+
+
+
+## Genotype data ----
+
+output$dwnld_snp_coord_hd <- downloadHandler(
+  filename = "snp_coords_hd.txt.gz",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "snp_coords_hd.txt.gz")
+    file.copy(filePath, file)
+  }
+)
+
+output$dwnld_snp_coord_ld <- downloadHandler(
+  filename = "snp_coords_ld.txt.gz",
+  content = function(file) {
+    filePath <- file.path(DATA_INITIAL_DATA, "snp_coords_ld.txt.gz")
+    file.copy(filePath, file)
+  }
+)
+
+
+
+genoRequests_list <- reactive({
+  input$leftMenu
+  requests <- db_get_game_requests(
+    breeder = breeder(),
+    type = "geno"
+  )
+  return(requests$name)
 })
 
-output$UIdwnlPltMat <- renderUI({
-  if (input$pltMatFile != "") {
-    downloadButton("dwnlPltMat", "Download your file")
-  } else {
-    p("No file selected.")
-  }
+selected_geno_request_id <- reactive({
+  req <- db_get_game_requests(
+    breeder = breeder(),
+    type = "geno",
+    name = input$geno_requests
+  )
+  return(req$id)
 })
 
-output$UIdwnlRequest <- renderUI({
-  if (input$requestFile != "") {
-    downloadButton("dwnlRequest", "Download your file")
-  } else {
-    p("No file selected.")
-  }
+selected_geno_request_info <- reactive({
+  main_request <- db_get_game_requests(
+    breeder = breeder(),
+    name = input$geno_requests
+  )
+  out <- list()
+  out$main_request_name <- main_request$name
+  out$main_request_date <- main_request$game_date
+
+  genotypes <- db_get_genotypes(
+    breeder = breeder(),
+    request_name = input$geno_requests
+  )
+
+  out$hd <- list(
+    n_geno = sum(genotypes$type == "hd"),
+    avail_date = unique(genotypes$avail_from[genotypes$type == "hd"]),
+    inds = genotypes$ind[genotypes$type == "hd"],
+    file_path = unique(genotypes$result_file[genotypes$type == "hd"])
+  )
+  out$hd$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$hd$file_path)
+  ))
+
+  out$ld <- list(
+    n_geno = sum(genotypes$type == "ld"),
+    avail_date = unique(genotypes$avail_from[genotypes$type == "ld"]),
+    inds = genotypes$ind[genotypes$type == "ld"],
+    file_path = unique(genotypes$result_file[genotypes$type == "ld"])
+  )
+  out$ld$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$ld$file_path)
+  ))
+
+  is_snp <- (genotypes$type != "ld" & genotypes$type != "hd")
+  out$snp <- list(
+    n_geno = length(unique(genotypes$ind[is_snp])),
+    n_snp = length(unique(genotypes$type[is_snp])),
+    n_record = sum(is_snp),
+    avail_date = unique(genotypes$avail_from[is_snp]),
+    inds = unique(genotypes$ind[is_snp]),
+    file_path = unique(genotypes$result_file[is_snp])
+  )
+  out$snp$dwnld_file_default_base_name <- basename(tools::file_path_sans_ext(
+    tools::file_path_sans_ext(out$snp$file_path)
+  ))
+  return(out)
 })
+
+
+output$selected_geno_data_UI_info <- renderUI({
+  invalidateLater(10000) # to automatically update when the data becomes available
+  n_samples <- 5
+  beautiful_names <- list(
+    hd = "High Density",
+    ld = "Low Density",
+    snp = "Single SNP"
+  )
+  geno_info <- selected_geno_request_info()
+
+  genotype_info_ui <- lapply(c("hd", "ld", "snp"), function(geno_type) {
+    info <- geno_info[[geno_type]]
+    if (info$n_geno <= 0) {
+      return(div())
+    }
+    inds_samples <- c(head(info$inds), "...")
+    if (info$n_geno < n_samples) {
+      inds_samples <- info$inds
+    }
+    inds_samples_str <- paste0("(", paste(inds_samples, collapse = ", "), ")")
+
+    is_available <- difftime(getGameTime(), strptime(info$avail_date, format = "%Y-%m-%d")) >= 0
+    if (breederStatus() %in% c("game master", "tester")) {
+      is_available <- TRUE
+    }
+
+    if (is_available) {
+      downloadButtons <- div(
+        p(paste0("Data are available from ", info$avail_date, ".")),
+        downloadButton(paste0("dwnlGeno_", geno_type), "Download as `txt.gz`"),
+        downloadButton(paste0("dwnlGeno_vcf_", geno_type), "Download as `vcf.gz`")
+      )
+    } else {
+      downloadButtons <- div(p("Data will be available on ", info$avail_date, "."))
+    }
+
+    return(
+      div(
+        h4(beautiful_names[[geno_type]]),
+        p(paste0(
+          info$n_geno, " individuals have been genotyped with the \"", beautiful_names[[geno_type]],
+          "\" chip", ifelse(geno_type == "snp", paste(" on", info$n_snp, "snp"), ""), ": ", inds_samples_str
+        )),
+        downloadButtons
+      )
+    )
+  })
+
+  div(
+    h3(geno_info$main_request_name),
+    p(
+      tags$ul(
+        tags$li(paste("Request date:", geno_info$main_request_date))
+      )
+    ),
+    genotype_info_ui[[1]],
+    genotype_info_ui[[2]],
+    genotype_info_ui[[3]]
+  )
+})
+
+.dwnlGeno_txt <- function(type) {
+  downloadHandler(
+    filename = function() {
+      geno_info <- selected_geno_request_info()[[type]]
+      paste0(geno_info$dwnld_file_default_base_name, ".txt.gz")
+    },
+    content = function(file) {
+      geno_info <- selected_geno_request_info()[[type]]
+      is_available <- difftime(
+        getGameTime(),
+        strptime(geno_info$avail_date, format = "%Y-%m-%d")
+      ) >= 0
+      if (breederStatus() %in% c("game master", "tester")) {
+        is_available <- TRUE
+      }
+      if (!is_available) {
+        alert("Data are not yet available.")
+        return(NULL)
+      }
+      file.copy(geno_info$file_path, file)
+    }
+  )
+}
+
+.dwnlGeno_vcf <- function(type) {
+  downloadHandler(
+    filename = function() {
+      geno_info <- selected_geno_request_info()
+      paste0(geno_info[[type]]$dwnld_file_default_base_name, ".vcf.gz")
+    },
+    content = function(file) {
+      geno_info <- selected_geno_request_info()[[type]]
+      is_available <- difftime(
+        getGameTime(),
+        strptime(geno_info$avail_date, format = "%Y-%m-%d")
+      ) >= 0
+      if (breederStatus() %in% c("game master", "tester")) {
+        is_available <- TRUE
+      }
+      if (!is_available) {
+        alert("Data are not yet available.")
+        return(NULL)
+      }
+      progressVcf <- shiny::Progress$new(session, min = 0, max = 5)
+      progressVcf$set(
+        value = 0,
+        message = "Create VCF File:",
+        detail = "Initialisation..."
+      )
+      txt2Vcf(geno_info$file_path, file, progressVcf)
+      progressVcf$set(
+        value = 5,
+        detail = "DONE!"
+      )
+    }
+  )
+}
+
+output$dwnlGeno_hd <- .dwnlGeno_txt("hd")
+output$dwnlGeno_ld <- .dwnlGeno_txt("ld")
+output$dwnlGeno_snp <- .dwnlGeno_txt("snp")
+
+output$dwnlGeno_vcf_hd <- .dwnlGeno_vcf("hd")
+output$dwnlGeno_vcf_ld <- .dwnlGeno_vcf("ld")
+output$dwnlGeno_vcf_snp <- .dwnlGeno_vcf("snp")
+
+
+
 
 
 ## My plant-material ----
-myPltMat <- reactive({
-  if (input$leftMenu == "id") {
-    tbl <- paste0("plant_material_", breeder())
-    query <- paste0("SELECT * FROM ", tbl)
-    res <- db_get_request(query)
-    res$avail_from <- strftime(res$avail_from, format = "%Y-%m-%d")
-    res
-  }
+pltmat_preview_filter <- individual_filtering_server("inds_download_ind_filter", breeder = breeder())
+
+plant_mat_preview_data <- reactive({
+  # input dependencies
+  input$leftMenu
+  input$id_submitInds
+  input$id_delSubmitInds
+
+  individuals <- db_get_individual(
+    breeder = breeder(),
+    ind_id = pltmat_preview_filter$inds_ids(),
+    public_columns = TRUE
+  )
+
+  # columns_to_keep_as <- c(
+  #   "name" = "Name",
+  #   "parent1_name" = "Parent 1",
+  #   "parent2_name" = "Parent 2",
+  #   "avail_from" = "Available date",
+  #   "cross_type" = "Crossing type",
+  #   "request_name" = "From plant material request",
+  #   "control" = "Is control"
+  # )
+  # individuals <- individuals[, c(
+  #   names(columns_to_keep_as)
+  # )]
+  # colnames(individuals) <- columns_to_keep_as
+  return(individuals)
 })
 
-output$myPltMatDT <- DT::renderDataTable({
-  DT::datatable(myPltMat(),
+output$plant_mat_preview <- DT::renderDataTable({
+  DT::datatable(
+    plant_mat_preview_data(),
+    selection = "single",
+    rownames = FALSE,
     options = list(
       lengthMenu = c(10, 20, 50),
       pageLength = 10,
@@ -385,7 +668,162 @@ output$myPltMatDT <- DT::renderDataTable({
   )
 })
 
+.download_inds <- function() {
+  downloadHandler(
+    filename = "plant-material.tsv",
+    content = function(file) {
+      write.table(
+        plant_mat_preview_data(),
+        file = file,
+        sep = "\t",
+        row.names = FALSE
+      )
+    }
+  )
+}
 
+output$dwnlInds_1 <- .download_inds()
+output$dwnlInds_2 <- .download_inds()
+
+output$selected_ind_info <- renderUI({
+  selected_row <- input$plant_mat_preview_rows_selected
+
+  if (is.null(selected_row)) {
+    return(
+      div(
+        h3("Selected individual information:"),
+        p("No individual selected. Click on an individual on the table to view more information.")
+      )
+    )
+  }
+  ind_name <- plant_mat_preview_data()[selected_row, "Name"]
+  ind_id <- db_get_individuals_ids(breeder = breeder(), name = ind_name)
+  ind_info <- db_get_individual(breeder = breeder(), ind_id = ind_id)
+  phenotypes <- db_get_phenotypes(breeder = breeder(), ind_id = ind_id, public_columns = TRUE)
+  genotypes <- db_get_genotypes(breeder = breeder(), ind_id = ind_id)
+  offsprings <- rbind(
+    db_get_individual(breeder = breeder(), parent1 = ind_info$name, public_columns = TRUE),
+    db_get_individual(breeder = breeder(), parent2 = ind_info$name, public_columns = TRUE)
+  )
+  offsprings <- offsprings[!duplicated(offsprings), ]
+
+  div(
+    h3(ind_info$name, ":"),
+    tags$ul(
+      tags$li("Requested on", ind_info$request_date, "with", code(ind_info$request_name)),
+      tags$li("Available on", ind_info$avail_from),
+      tags$li("Cross type:", ind_info$cross_type),
+      tags$li("Parent 1:", code(ind_info$parent1_name)),
+      tags$li("Parent 2:", code(ind_info$parent2_name)),
+      tags$li("Offsprings:", nrow(offsprings)),
+      tags$li("Phenotypic records:", nrow(phenotypes)),
+      tags$li(
+        "Genotypic records:", nrow(genotypes),
+        tags$ul(
+          lapply(seq_len(nrow(genotypes)), function(x) {
+            geno_res_file <- genotypes$result_file[x]
+            geno_res_file <- tools::file_path_sans_ext(
+              basename(geno_res_file),
+              compression = TRUE
+            )
+            tags$li(genotypes$type[x], ":", code(geno_res_file))
+          })
+        )
+      ),
+    ),
+    h4("Phenotypic records:"),
+    reactable::reactable(phenotypes),
+    h4("Offsprings records:"),
+    reactable::reactable(offsprings)
+  )
+})
+
+# phenotype data ----
+
+pheno_inds_filters <- individual_filtering_server("pheno_download_ind_filter", breeder = breeder())
+pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter", breeder = breeder())
+
+pheno_data_preview <- reactive({
+  download_pheno_button_clicks() # dependency on download buttons
+  input$refresh_pheno_preview # dependency on refresh buttons
+
+  breeder <- breeder()
+  pheno_data <- db_get_phenotypes(
+    breeder = breeder,
+    # ind_id = inds_ids,
+    ind_id = pheno_inds_filters$inds_ids(),
+    request_name = pheno_pheno_filters$pheno_request(),
+    pathogen = pheno_pheno_filters$pathogen(),
+    year = pheno_pheno_filters$years(),
+    public_columns = FALSE
+  )
+
+  # mask phenotype data that are not yet available for players
+  if (breederStatus() == "player") {
+    not_available <- pheno_data$avail_from > getGameTime()
+    pheno_data[not_available, c("pathogen", "trait1", "trait2", "trait3")] <- paste0("available on ", pheno_data$avail_from[not_available])
+  }
+  pheno_data <- pheno_data[, c(
+    "ind",
+    "control_ind",
+    "year",
+    "plot",
+    "pathogen",
+    "trait1",
+    "trait2",
+    "trait3"
+  )]
+  return(pheno_data)
+})
+
+
+output$pheno_preview_DT <- DT::renderDataTable(
+  {
+    DT::datatable(
+      isolate(pheno_data_preview()), # use isolate, the data refresh is done with the observer below
+      # filter = "top", # this can conflict with manual filters,
+      # add this only if this filtering is taken
+      # into account for data-download (and it is explained in the UI)
+      # style = "bootstrap4",
+      rownames = FALSE,
+      options = list(
+        language = list(emptyTable = "Empty"),
+        pageLength = 10,
+        lengthMenu = c(10, 25, 50, 100),
+        searchDelay = 500
+      )
+    )
+  },
+  server = TRUE
+)
+
+observe({
+  pheno_table_proxy <- DT::dataTableProxy("pheno_preview_DT", deferUntilFlush = FALSE)
+  DT::replaceData(pheno_table_proxy, pheno_data_preview(), resetPaging = TRUE, rownames = FALSE)
+  # we could use `resetPaging = FALSE` to keep the current page,
+  # but the table will be empty if the current page would not exist with
+  # the updated data
+})
+
+
+download_pheno_button_clicks <- reactiveVal(value = 0)
+.download_pheno <- function() {
+  downloadHandler(
+    filename = "phenotypes.tsv",
+    content = function(file) {
+      download_pheno_button_clicks(download_pheno_button_clicks() + 1)
+      write.table(
+        pheno_data_preview(),
+        file = file,
+        sep = "\t",
+        row.names = FALSE
+      )
+    }
+  )
+}
+
+output$dwnlPheno_1 <- .download_pheno()
+output$dwnlPheno_2 <- .download_pheno()
 
 
 
@@ -393,17 +831,13 @@ output$myPltMatDT <- DT::renderDataTable({
 
 ## Change Password ----
 pswChanged <- eventReactive(input$"changePsw", {
-  query <- paste0("SELECT h_psw FROM breeders WHERE name = '", input$breederName, "'")
-  hashPsw <- db_get_request(query)[, 1]
+  hashPsw <- db_get_breeder(breeder = breeder())$h_psw
   if (digest(input$prevPsw, "md5", serialize = FALSE) == hashPsw) {
     newHashed <- digest(input$newPsw, "md5", serialize = FALSE)
-
-    query <- paste0("UPDATE breeders SET h_psw = '", newHashed, "' WHERE name = '", breeder(), "'")
-    db_execute_request(query)
+    db_update_breeder(breeder = breeder(), new_h_psw = newHashed)
     return(TRUE)
-  } else {
-    return(FALSE)
   }
+  return(FALSE)
 })
 
 output$UIpswChanged <- renderUI({
@@ -416,135 +850,48 @@ output$UIpswChanged <- renderUI({
 
 
 
-## Breeder information ----
-output$breederBoxID <- renderValueBox({
-  valueBox(
-    value = breeder(),
-    subtitle = paste("Status:", breederStatus()),
-    icon = icon("user"),
-    color = "yellow"
-  )
-})
-
-output$dateBoxID <- renderValueBox({
-  valueBox(
-    subtitle = "Date",
-    value = strftime(currentGTime(), format = "%d %b %Y"),
-    icon = icon("calendar"),
-    color = "yellow"
-  )
-})
-
-
-
-output$budgetBoxID <- renderValueBox({
-  x <- input$id_submitInds
-  valueBox(
-    value = budget(),
-    subtitle = "Budget",
-    icon = icon("credit-card"),
-    color = "yellow"
-  )
-})
-outputOptions(output, "budgetBoxID", priority = 9)
-
-output$serverIndicID <- renderValueBox({
-  ## this bow will be modified by some javascript
-  valueBoxServer(
-    value = "",
-    subtitle = "Server load",
-    icon = icon("server"),
-    color = "yellow"
-  )
-})
-
-output$UIbreederInfoID <- renderUI({
-  if (breeder() != "No Identification") {
-    list(
-      infoBoxOutput("breederBoxID", width = 3),
-      infoBoxOutput("dateBoxID", width = 3),
-      infoBoxOutput("budgetBoxID", width = 3),
-      infoBoxOutput("serverIndicID", width = 3)
-    )
-  }
-})
-
-
-
 ## Final Individuals submission ----
 
 # add new inds for submission
 observeEvent(input$id_submitInds, priority = 10, {
-  # load data
-  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-    header = T, sep = "\t"
-  )
-  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-  subIndsDta
-
   if (is.null(input$id_evalInds)) {
-    return(subIndsDta)
+    return(NULL)
   }
 
-  # load input
-  inds <- input$id_evalInds
-  nSubmitted <- nrow(subIndsDta)
+  submitted_inds <- db_get_individual(breeder = breeder(), selected_for_eval = 1)
+  ind_ids <- db_get_individuals_ids(breeder = breeder(), names = input$id_evalInds)
+  ind_ids <- setdiff(ind_ids, submitted_inds$id)
 
-
-  # checks
-  if (any(inds %in% subIndsDta$Individual)) {
-    alert(paste(
-      "individuals:",
-      paste0(inds[inds %in% subIndsDta$Individual],
-        collapse = ", "
-      ),
-      "have already been submitted."
-    ))
-    inds <- inds[!inds %in% subIndsDta$Individual]
-
-    if (length(inds) == 0) {
-      return(subIndsDta)
-    }
+  if (any(db_get_individual(ind_id = ind_ids)$breeder == "@ALL")) {
+    alert("You can not submit individuals from the initial collection.")
+    return(NULL)
   }
 
   constants <- getBreedingGameConstants()
-  if (length(inds) > constants$maxEvalInds - nSubmitted) {
-    alert(paste("Sorry, you have already submitted", nSubmitted, "individuals, on a total of", constants$maxEvalInds, ". You can only submit", constants$maxEvalInds - nSubmitted, "more individuals."))
-    return(subIndsDta)
+  remaining_submission <- constants$maxEvalInds - nrow(submitted_inds)
+
+  if (length(ind_ids) > remaining_submission) {
+    alert(paste("Sorry, you have already submitted", nrow(submitted_inds), "individuals, on a total of", constants$maxEvalInds, ". You can only submit", remaining_submission, "more individuals."))
+    return(NULL)
   }
 
-  if (length(inds) > constants$maxEvalInds) {
-    alert(paste("Sorry, you can submit a maximum of ", constants$maxEvalInds, "individuals"))
-    return(subIndsDta)
-  }
-
-  # add submitted individuals
-  submitDta <- data.frame(
+  db_add_evaluation_inds(
     breeder = breeder(),
-    ind = inds
+    ind_ids = ind_ids,
+    game_date = getGameTime()
   )
-  query <- paste0(
-    "INSERT INTO log(breeder,request_date,task,quantity)",
-    " VALUES ('", breeder(),
-    "', '", strftime(getGameTime(), format = "%Y-%m-%d %H:%M:%S"),
-    "', 'register', '",
-    nrow(submitDta), "')"
-  )
-  res <- db_execute_request(query)
-  b <- budget()
 
-  write.table(submitDta,
-    file = file.path(DATA_SHARED, "Evaluation.txt"),
-    append = TRUE,
-    quote = FALSE, sep = "\t",
-    row.names = FALSE, col.names = FALSE
+  # update submittedInds table
+  submitted_inds <- db_get_individual(
+    breeder = breeder(),
+    selected_for_eval = 1,
+    public_columns = TRUE
   )
+  submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
 
   # reset input
   reset("id_evalInds", asis = FALSE)
+  return(TRUE)
 })
 
 
@@ -555,46 +902,32 @@ observeEvent(input$id_delSubmitInds, priority = 11, {
   if (is.null(input$submittedIndsDT_rows_selected)) {
     return(NULL)
   }
-
-  # load data
-  evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-    header = T, sep = "\t"
+  names_of_inds_to_delete <- submittedInds()[input$submittedIndsDT_rows_selected, "Name"]
+  ind_ids <- db_get_individuals_ids(breeder = breeder(), names = names_of_inds_to_delete)
+  db_remove_evaluation_inds(
+    breeder = breeder(),
+    ind_ids = ind_ids,
+    game_date = getGameTime()
   )
-  subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-  subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-  colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-  subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-  delInds <- subIndsDta[input$submittedIndsDT_rows_selected, "Individual"]
 
-  delLines <- which(evalDta$breeder == breeder() & evalDta$ind %in% delInds)
-  # delete lines
-  evalDta <- evalDta[-delLines, ]
 
-  write.table(evalDta,
-    file = file.path(DATA_SHARED, "Evaluation.txt"),
-    append = FALSE,
-    quote = FALSE, sep = "\t",
-    row.names = FALSE, col.names = TRUE
+  # update submittedInds table
+  submitted_inds <- db_get_individual(
+    breeder = breeder(),
+    selected_for_eval = 1,
+    public_columns = TRUE
   )
+  submittedInds(submitted_inds[, c("Name", "Parent 1", "Parent 2")])
+  return(TRUE)
 })
 
 
-submittedInds <- eventReactive(
-  (input$id_submitInds | input$id_delSubmitInds),
-  ignoreNULL = FALSE,
-  {
-    evalDta <- read.table(file.path(DATA_SHARED, "Evaluation.txt"),
-      header = T, sep = "\t"
-    )
-    subIndsNames <- evalDta[evalDta$breeder == breeder(), "ind"]
-    subIndsDta <- myPltMat()[myPltMat()$child %in% subIndsNames, 1:3]
-    colnames(subIndsDta) <- c("Parent1", "Parent2", "Individual")
-    subIndsDta <- subIndsDta[, c("Individual", "Parent1", "Parent2")]
-    subIndsDta
-  }
-)
-
-
+submittedInds <- reactiveVal(value = data.frame(
+  "Name" = character(),
+  `Parent 1` = character(),
+  `Parent 2` = character(),
+  check.names = FALSE
+))
 
 output$submittedIndsDT <- renderDataTable({
   DT::datatable(submittedInds(),
@@ -605,6 +938,14 @@ output$submittedIndsDT <- renderDataTable({
 })
 
 
+
+## Breeder information ----
+breeder_info_server("breederInfoID",
+  breeder = breeder,
+  breederStatus = breederStatus,
+  requests_progress_bars = requests_progress_bars,
+  currentGTime = currentGTime
+)
 
 
 # DEBUG ----

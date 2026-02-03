@@ -38,38 +38,175 @@ output$adminUI <- renderUI({
   }
 })
 
+## Request Worker ----
+output$request_worker_status <- renderUI({
+  invalidateLater(500)
+  worker_running <- WORKER_PROCESS$is_alive()
+  if (worker_running) {
+    worker_status_ui <- div(
+      h3(style = "color: green;", icon("thumbs-up"), "Request worker is running.")
+    )
+  } else {
+    worker_status_ui <- div(
+      h2(
+        style = "color: #ff3333;",
+        icon("skull-crossbones"),
+        "Request worker is not running."
+      ),
+      actionButton(
+        "restart_worker_btn",
+        "Restart Worker",
+        icon = icon("rotate-right")
+      )
+    )
+  }
+  return(worker_status_ui)
+})
+
+observeEvent(input$restart_worker_btn, {
+  start_worker()
+})
+
+
+all_game_requests <- reactivePoll(1000,
+  session = session,
+  checkFunc = function() {
+    if (breederStatus() != "game master") {
+      return(NULL)
+    }
+    return(db_get_game_requests())
+  },
+  valueFunc = function() {
+    dta <- db_get_game_requests()
+    if (is.null(dta)) {
+      return(NULL)
+    }
+    dta <- dta[dta$breeder != "@ALL", ]
+    dta$status <- rep(NA, nrow(dta))
+    if (nrow(dta) > 0) {
+      dta$status[dta$progress == 0] <- "⏰ Pending"
+      dta$status[dta$progress > 0] <- "⚙️ Processing"
+      dta$status[dta$progress >= 1] <- "✅ Success"
+      dta$status[dta$progress < 0] <- "❌ Error"
+    }
+    dta <- dta[, c(
+      "id",
+      "breeder",
+      "name",
+      "type",
+      "game_date",
+      "time",
+      "status",
+      "progress",
+      "n_retry",
+      "started_at",
+      "ended_at",
+      "process_info"
+    )]
+    return(dta)
+  }
+)
+queued_requests <- reactive({
+  dta <- all_game_requests()
+  if (is.null(dta)) {
+    return(NULL)
+  }
+  dta <- dta[dta$progress >= 0 & dta$progress < 1, ]
+  return(dta)
+})
+processed_requests <- reactive({
+  dta <- all_game_requests()
+  if (is.null(dta)) {
+    return(NULL)
+  }
+  dta <- dta[dta$progress < 0 | dta$progress >= 1, ]
+  dta <- dta[order(dta$time, decreasing = TRUE), ]
+  return(dta)
+})
+
+output$request_worker_queue <- DT::renderDataTable(
+  {
+    dta <- queued_requests()
+    DT::datatable(
+      dta,
+      selection = "single",
+      rownames = FALSE,
+      options = list(
+        lengthMenu = c(10, 20, 50),
+        pageLength = 10,
+        searchDelay = 500
+      )
+    )
+  },
+  server = FALSE
+)
+
+
+output$request_worker_processed_requests <- DT::renderDataTable({
+  dta <- isolate(processed_requests())
+  rownames(dta) <- dta$id
+  DT::datatable(
+    dta,
+    selection = "none",
+    # rownames = FALSE, not working with replaceData...
+    options = list(
+      lengthMenu = c(10, 20, 50),
+      pageLength = 10,
+      searchDelay = 500
+    )
+  )
+})
+
+request_worker_processed_requests_proxy <- dataTableProxy("request_worker_processed_requests")
+
+observe({
+  dta <- processed_requests()
+  if (!is.null(dta)) {
+    replaceData(request_worker_processed_requests_proxy,
+      dta,
+      resetPaging = FALSE
+    )
+  }
+})
+
+
+# Requests processed
+
+# worker logs
+worker_log_content <- reactiveFileReader(
+  intervalMillis = 1000,
+  session = session,
+  filePath = REQUEST_WORKER_LOG_FILE,
+  readFunc = function(filePath) {
+    if (file.exists(filePath)) {
+      return(readLines(filePath, warn = FALSE))
+    }
+    return(character(0))
+  }
+)
+
+output$request_worker_logs <- renderUI({
+  tags$div(
+    id = "log_container",
+    style = "overflow-y: scroll; max-height: 50lh",
+    tags$pre(paste(worker_log_content(), collapse = "\n"))
+  )
+})
+
+
+
 
 
 
 ## Breeders management ----
 # add new breeder:
 observeEvent(input$addNewBreeder, {
-  progressNewBreeder <- shiny::Progress$new(session, min = 0, max = 7)
-  progressNewBreeder$set(
-    value = 0,
-    message = "Adding breeder",
-    detail = "Initialisation..."
-  )
-
-  t <- try(addNewBreeder(
+  addNewBreeder(
     input$newBreederName,
     input$newBreederStatus,
     input$newBreederPsw,
-    progressNewBreeder
-  ))
-
-  if (class(t) != "try-error") {
-    progressNewBreeder$set(
-      value = 7,
-      detail = "Done!"
-    )
-  } else {
-    progressNewBreeder$set(
-      value = 1,
-      detail = t
-    )
-  }
-
+    shiny_notification = TRUE
+  )
   values$lastDBupdate <- Sys.time()
 })
 
@@ -77,31 +214,19 @@ observeEvent(input$addNewBreeder, {
 breeder_list_server("admin_breeder_list_for_deletion", "delBreederName", breederList)
 
 observeEvent(input$deleteBreeder, {
-  if (input$delBreederName != "") {
-    progressDelBreeder <- shiny::Progress$new(session, min = 0, max = 1)
-    progressDelBreeder$set(
-      value = 0,
-      message = "Deleting breeder"
-    )
+  if (input$delBreederName == breeder()) {
+    alert("You cannot delete your own account.")
+    return(NULL)
   }
 
-  if (input$delBreederName != "admin" & input$delBreederName != "test" & input$delBreederName != "") {
-    deleteBreeder(input$delBreederName)
-    progressDelBreeder$set(
-      value = 1,
-      message = "Deleting breeder",
-      detail = "Done!"
-    )
-  } else if (input$delBreederName == "admin" | input$delBreederName == "test") {
-    progressDelBreeder$set(
-      value = 0,
-      message = "Deleting breeder",
-      detail = paste(
-        "Sorry,",
-        input$delBreederName, "can't be deleted."
-      )
-    )
-  }
+  unlink(file.path(DATA_TRUTH, input$delBreederName), recursive = TRUE)
+  unlink(file.path(DATA_SHARED, input$delBreederName), recursive = TRUE)
+
+  db_delete_breeder(name = input$delBreederName)
+  showNotification(
+    paste("Breeder", input$delBreederName, " deleted."),
+    type = "message"
+  )
   values$lastDBupdate <- Sys.time()
 })
 
@@ -109,15 +234,16 @@ observeEvent(input$deleteBreeder, {
 
 ## Sessions managment ----
 output$sessionTimeZoneUI <- renderUI({
-  default = "UTC"
-  if (input$client_time_zone %in% OlsonNames())  {
-    default = input$client_time_zone
+  default <- "UTC"
+  if (input$client_time_zone %in% OlsonNames()) {
+    default <- input$client_time_zone
   }
   selectInput(
     "sessionTimeZone",
     "Time zone",
     choices = as.list(OlsonNames()),
-    selected = default)
+    selected = default
+  )
 })
 
 output$deleteSessionUI <- renderUI({
@@ -132,7 +258,7 @@ output$deleteSessionUI <- renderUI({
 sessionsList <- reactive({
   # get session table from the data base:
   values$lastDBupdate
-  getGameSessions()
+  db_get_game_sessions()
 })
 
 output$sessionsTable <- renderTable({
@@ -140,34 +266,34 @@ output$sessionsTable <- renderTable({
 
   if (nrow(data) == 0) {
     return(
-      structure(list(
-        "id" = character(0),
-        "Session start time" = character(0),
-        "Session end time" = character(0),
-        "Session time zone" = character(0),
-        "Year duration (mins)" = character(0),
-        "Game time start" = character(0),
-        "Game time end" = character(0),
-        "Session duration" = character(0)
-      ),
-      class = "data.frame")
+      structure(
+        list(
+          "id" = character(0),
+          "Session start time" = character(0),
+          "Session end time" = character(0),
+          "Session time zone" = character(0),
+          "Year duration (mins)" = character(0),
+          "Game time start" = character(0),
+          "Game time end" = character(0),
+          "Session duration" = character(0)
+        ),
+        class = "data.frame"
+      )
     )
   }
 
-  data$Game_Time_start <- sapply(seq(1, nrow(data)), function(line){
+  data$Game_Time_start <- sapply(seq(1, nrow(data)), function(line) {
     start <- getGameTime(time_irl = strptime(data[line, "start"],
-                                    format = "%Y-%m-%d %H:%M",
-                                    tz = data[line, "time_zone"])
-                )
-
+      format = "%Y-%m-%d %H:%M",
+      tz = data[line, "time_zone"]
+    ))
   })
 
-  data$Game_Time_end <- sapply(seq(1, nrow(data)), function(line){
+  data$Game_Time_end <- sapply(seq(1, nrow(data)), function(line) {
     end <- getGameTime(time_irl = strptime(data[line, "end"],
-                                    format = "%Y-%m-%d %H:%M",
-                                    tz = data[line, "time_zone"])
-                )
-
+      format = "%Y-%m-%d %H:%M",
+      tz = data[line, "time_zone"]
+    ))
   })
 
   game_duration_days <- difftime(data$Game_Time_end, data$Game_Time_start, units = "days")
@@ -187,7 +313,7 @@ output$sessionsTable <- renderTable({
     "Game time end",
     "Session duration"
   )
-  data <- data[,c(
+  data <- data[, c(
     "id",
     "Session start time",
     "Session end time",
@@ -219,12 +345,12 @@ observeEvent(input$addSession, {
   }
 
   # check overlaps
-  gameSessions <- getGameSessions()
+  gameSessions <- db_get_game_sessions()
 
   if (nrow(gameSessions) > 0) {
     overlapse <- apply(gameSessions, 1, function(session) {
-      (sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
-      (sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"] ))
+      (sessionStart <- strptime(session["start"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"]))
+      (sessionEnd <- strptime(session["end"], format = "%Y-%m-%d %H:%M", tz = session["time_zone"]))
       if ((startDate < sessionStart & endDate <= sessionStart) |
         (startDate >= sessionEnd & endDate > sessionEnd)) {
         return(FALSE)
@@ -239,16 +365,9 @@ observeEvent(input$addSession, {
     }
   }
 
-  # calculate id number:
-  id <- 1
-  if (nrow(sessionsList()) != 0) {
-    id <- max(sessionsList()$id) + 1
-  }
-
-
   # complete "sessions" table
-  addGameSession(
-    id = id,
+  db_add_game_session(
+    id = NA,
     startDate = as.character(startDate),
     endDate = as.character(endDate),
     yearTime = input$yearTime,
@@ -262,7 +381,7 @@ observeEvent(input$addSession, {
 observeEvent(input$deleteSession, {
   if (input$delSession != "") {
     # delete entry in sessions' table
-    delGameSession(input$delSession)
+    db_delete_game_session(input$delSession)
     values$lastDBupdate <- Sys.time()
     showNotification("Session removed", type = "message")
   }
@@ -289,11 +408,7 @@ observeEvent(input$admin_button_seedYearEfect, {
 
   error <- valid_positive_integer(newSeed)
   if (is.null(error)) {
-    query <- paste0(
-      "UPDATE constants SET value = ",
-      newSeed, " WHERE item=='seed.year.effect'"
-    )
-    db_execute_request(query)
+    db_update_constants(list(seed.year.effect = newSeed))
 
     notifMessage <- paste("Year effect seed updated.")
     showNotification(notifMessage,
@@ -304,25 +419,19 @@ observeEvent(input$admin_button_seedYearEfect, {
     return(NULL)
   }
 
-    notifMessage <- paste("ERROR:", error)
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-
+  notifMessage <- paste("ERROR:", error)
+  showNotification(notifMessage,
+    duration = 2, closeButton = TRUE,
+    type = "error"
+  )
 })
 
 observeEvent(input$admin_button_const_initialBudget, {
-
   new_initial_budget <- input$admin_const_initialBudget * getBreedingGameConstants()$cost.pheno.field
 
   error <- valid_positive_number(new_initial_budget)
   if (is.null(error)) {
-    query <- paste0(
-      "UPDATE constants SET value = ",
-      new_initial_budget, " WHERE item=='initialBudget'"
-    )
-    db_execute_request(query)
+    db_update_constants(list(initialBudget = new_initial_budget))
 
     notifMessage <- paste("Initial budget updated.")
     showNotification(notifMessage,
@@ -333,12 +442,11 @@ observeEvent(input$admin_button_const_initialBudget, {
     return(NULL)
   }
 
-    notifMessage <- paste("ERROR:", seed_error)
-    showNotification(notifMessage,
-      duration = 2, closeButton = TRUE,
-      type = "error"
-    )
-
+  notifMessage <- paste("ERROR:", seed_error)
+  showNotification(notifMessage,
+    duration = 2, closeButton = TRUE,
+    type = "error"
+  )
 })
 
 
@@ -354,22 +462,22 @@ output$currentDataUsage <- renderUI({
   current_size <- get_folder_size(DATA_ROOT)
   max_usage <- getBreedingGameConstants()$max.disk.usage
   current_usage <- round(current_size / (max_usage * 10^9) * 100, 0)
-  p(paste0("Current usage: ",
+  p(paste0(
+    "Current usage: ",
     prettyunits::pretty_bytes(current_size),
     " / ",
     max_usage,
     " GB (",
     current_usage,
-    "%)"))
+    "%)"
+  ))
 })
 
 observeEvent(input$updateMaxDiskUsage, {
   # save maximum disk usage value in the database
   # so that if the admin change the value, it will affect all connected users
   maxDiskUsage <- input$admin_maxDiskUsage
-
-  query <- paste0("UPDATE constants SET value = '", maxDiskUsage, "' WHERE item = 'max.disk.usage'")
-  db_execute_request(query)
+  db_update_constants(list(max.disk.usage = maxDiskUsage))
 })
 
 currentMaxDiskUsage <- reactive({
@@ -391,10 +499,8 @@ output$InfoCurrentMaxDiskUsage <- renderText({
 
 
 ## Game progress ----
-
 admin_gameProgressDta <- eventReactive(input$admin_progressButton, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 4)
-  calcGameProgress(progress_bar)
+  calcGameProgress()
 })
 
 
@@ -418,9 +524,9 @@ output$admin_plotAllIndGameProgress <- renderPlotly({
     opacity = 0.75,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -483,9 +589,9 @@ output$admin_plotMaxIndGameProgress <- renderPlotly({
     color = ~breeder,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -556,9 +662,9 @@ output$admin_T1T2GameProgress <- renderPlotly({
     opacity = 0.75,
     hoverinfo = "text",
     text = ~ paste0(
-      "<b>", ind, "</b>", # (in bold)
-      "\nparent1: ", parent1,
-      "\nparent2: ", parent2,
+      "<b>", name, "</b>", # (in bold)
+      "\nparent1: ", parent1_name,
+      "\nparent2: ", parent2_name,
       "\nBV trait1 = ", round(trait1, 2),
       "\nBV trait2 = ", round(trait2, 2),
       "\nBV trait1 x trait2 = ", round(t1t2, 2)
@@ -577,13 +683,13 @@ output$admin_T1T2GameProgress <- renderPlotly({
 
 
 output$download_game_init_report <- downloadHandler(
-  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(),format = "%Y-%m-%d"), ".html"), # lambda function
+  filename = paste0("plantBreedGame_initialisation_report_", strftime(Sys.time(), format = "%Y-%m-%d"), ".html"), # lambda function
   content = function(file) file.copy(GAME_INIT_REPORT, file),
   contentType = "text/html"
 )
 
 output$download_actual_marker_effects <- downloadHandler(
-  filename = paste0("plantBreedGame_actual_marker_effects_", strftime(Sys.time(),format = "%Y-%m-%d"), ".csv"), # lambda function
+  filename = paste0("plantBreedGame_actual_marker_effects_", strftime(Sys.time(), format = "%Y-%m-%d"), ".csv"), # lambda function
   content = function(file) {
     f <- paste0(DATA_TRUTH, "/p0.RData")
     load(f)
@@ -643,10 +749,13 @@ gameInit_traits <- gameInit_traits_server("gameInit_geno_pheno_simul", gameInit_
 
 
 gameInit_input_validator$add_rule("initialisation_security_text", function(x) {
-  if (is.null(x)) return(NULL)
-  if (x != "plantbreedgame") return("")
+  if (is.null(x)) {
+    return(NULL)
   }
-)
+  if (x != "plantbreedgame") {
+    return("")
+  }
+})
 
 gameInit_input_validator$enable()
 
@@ -661,25 +770,24 @@ observe({
 
 
 observeEvent(input$initialiseGame, {
-  progress_bar <- shiny::Progress$new(session, min = 0, max = 18)
+  progress_bar <- shiny::Progress$new(session, min = 0, max = 29)
 
-  progress_bar$set(
-    value = 1,
+  progress_bar$inc(
+    amount = 1,
     message = "Game Initialisation:",
     detail = "Initialisation..."
   )
 
   if (!gameInit_input_validator$is_valid()) {
     progress_bar$set(
-      value = 1,
       message = "Game Initialisation:",
       detail = "ERROR, invalid parameters"
     )
     return(NULL)
   }
 
-  progress_bar$set(
-    value = 2,
+  progress_bar$inc(
+    amount = 1,
     message = "Game Initialisation:",
     detail = "game setup..."
   )
@@ -687,7 +795,6 @@ observeEvent(input$initialiseGame, {
   params <- list(
     progressBar = progress_bar,
     rng_seed = gameInit_seed$value(),
-
     cost.pheno.field = gameInit_costs$value()$cost.pheno.field,
     cost.pheno.patho = gameInit_costs$value()$cost.pheno.patho,
     cost.allof = gameInit_costs$value()$cost.allof,
@@ -698,20 +805,16 @@ observeEvent(input$initialiseGame, {
     cost.geno.single = gameInit_costs$value()$cost.geno.single,
     cost.register = gameInit_costs$value()$cost.register,
     initialBudget = gameInit_costs$value()$initialBudget,
-
     t1_mu = gameInit_traits$value()$t1_mu,
     t1_min = gameInit_traits$value()$t1_min,
     t1_cv_g = gameInit_traits$value()$t1_cv_g,
     t1_h2 = gameInit_traits$value()$t1_h2,
-
     t2_mu = gameInit_traits$value()$t2_mu,
     t2_min = gameInit_traits$value()$t2_min,
     t2_cv_g = gameInit_traits$value()$t2_cv_g,
     t2_h2 = gameInit_traits$value()$t2_h2,
-
     prop_pleio = gameInit_traits$value()$prop_pleio,
     cor_pleio = gameInit_traits$value()$cor_pleio,
-
     max.nb.haplodiplos = gameInit_constraints$value()$n_pheno_plot,
     max.nb.pltmatReq = gameInit_constraints$value()$n_max_cross,
     nb.plots = gameInit_constraints$value()$n_max_hd,
@@ -720,16 +823,18 @@ observeEvent(input$initialiseGame, {
 
   rmd_env <- new.env(parent = globalenv())
   report_build_dir <- tempdir()
-  out_report <- tryCatch({
-    rmarkdown::render("src/plantbreedgame_setup.Rmd",
-      output_file = tempfile(tmpdir = report_build_dir),
-      intermediates_dir = report_build_dir, # important for nix pkg
-      encoding = "UTF-8",
-      params = params,
-      knit_root_dir = getwd(),
-      envir = rmd_env
-    )
-  }, error = function(err) {
+  out_report <- tryCatch(
+    {
+      rmarkdown::render("src/plantbreedgame_setup.Rmd",
+        output_file = tempfile(tmpdir = report_build_dir),
+        intermediates_dir = report_build_dir, # important for nix pkg
+        encoding = "UTF-8",
+        params = params,
+        knit_root_dir = getwd(),
+        envir = rmd_env
+      )
+    },
+    error = function(err) {
       progress_bar$close()
       showNotification("Game Initialisation Error.", type = "error")
       showModal(modalDialog(
@@ -738,7 +843,8 @@ observeEvent(input$initialiseGame, {
         p("The game initialisation script failed with the following error message:"),
         p(code(err$message)),
         p("after step: ", code(rmd_env$progress_detail)),
-        p("This problem will likely be fixed by using a",
+        p(
+          "This problem will likely be fixed by using a",
           strong("different RNG seed"),
           ". If the problem is recurrent, please ",
           a("click here to report this issue on GitHub.",
@@ -763,7 +869,8 @@ observeEvent(input$initialiseGame, {
         )
       ))
       return("error")
-  })
+    }
+  )
 
   if (identical(out_report, "error")) {
     return(NULL)
@@ -794,10 +901,8 @@ observeEvent(input$initialiseGame, {
     addResourcePath("reports", DATA_REPORTS)
   }
 
-
-
   progress_bar$set(
-    value = progress_bar$max,
+    value = progress_bar$getMax(),
     message = "Game Initialisation:",
     detail = "Done"
   )

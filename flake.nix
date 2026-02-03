@@ -1,26 +1,26 @@
 {
   description = "Flake for a R environment";
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
+    nixpkgs.url = "nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
 
     nix2container.url = "github:nlewo/nix2container";
-    nix2container.inputs.nixpkgs.follows = "nixpkgs";
+    # nix2container.inputs.nixpkgs.follows = "nixpkgs"; # TODO: problem building skopeo
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-    nix2container,
-  }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      nix2container,
+    }:
     flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = import nixpkgs {inherit system;};
+      system:
+      let
+        pkgs = import nixpkgs { inherit system; };
         nix2containerPkgs = nix2container.packages.${system};
-        imageBuilder =
-          (import ./nix_package/image.nix {inherit nix2containerPkgs pkgs;})
-          .builder;
+        imageBuilder = (import ./nix_package/image.nix { inherit nix2containerPkgs pkgs; }).builder;
 
         Rpkgs = pkgs;
         R-packages = with Rpkgs.rPackages; [
@@ -43,6 +43,10 @@
           uuid
           shinyTree
           prettyunits
+          reactable
+          shinyWidgets
+          logger
+          callr
 
           (pkgs.rPackages.buildRPackage {
             name = "rutilstimflutre";
@@ -52,93 +56,99 @@
               rev = "42660be440687c50169acae592cc32e1a11e4255";
               sha256 = "sha256-Au1Izpuht83S4oEhq+1fq4cIrOt+48DbsCoxNvdndi4=";
             };
-            propagatedBuildInputs = with pkgs.rPackages; [data_table lme4 Matrix Rcpp];
+            propagatedBuildInputs = with pkgs.rPackages; [
+              data_table
+              lme4
+              Matrix
+              Rcpp
+            ];
           })
         ];
-        R-test-packages = with Rpkgs.rPackages; [
-          testthat
-        ];
+        R-test-packages = with Rpkgs.rPackages; [ testthat ];
         R-dev-packages = with Rpkgs.rPackages; [
+          devtools
           languageserver
           styler
+          profvis
+          microbenchmark
         ];
-      in rec {
+      in
+      rec {
         devShells.default = pkgs.mkShell {
           LOCALE_ARCHIVE =
-            if "${system}" == "x86_64-linux"
-            then "${pkgs.glibcLocalesUtf8}/lib/locale/locale-archive"
-            else "";
+            if "${system}" == "x86_64-linux" then "${pkgs.glibcLocalesUtf8}/lib/locale/locale-archive" else "";
           LANG = "en_US.UTF-8";
           LC_ALL = "en_US.UTF-8";
           R_LIBS_USER = "''"; # to not use users' installed R packages
           R_ZIPCMD = "${pkgs.zip}/bin/zip";
           TEST_PORT = 3000;
-          PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
+          PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright.browsers;
           PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = true;
-          PLANTBREEDGAME_DATA_ROOT = "./data";
-          nativeBuildInputs = [pkgs.bashInteractive];
+          nativeBuildInputs = [ pkgs.bashInteractive ];
           shellHook = ''
             npm install --ignore-scripts
+            export PLANTBREEDGAME_DATA_ROOT=$(realpath ./data);
           '';
 
           buildInputs = [
-            (Rpkgs.rWrapper.override {packages = R-packages ++ R-test-packages ++ R-dev-packages;})
-            (Rpkgs.rstudioWrapper.override {packages = R-packages ++ R-test-packages ++ R-dev-packages;})
+            (Rpkgs.rWrapper.override { packages = R-packages ++ R-test-packages ++ R-dev-packages; })
+            (Rpkgs.rstudioWrapper.override { packages = R-packages ++ R-test-packages ++ R-dev-packages; })
             pkgs.pandoc
             pkgs.zip
-            pkgs.nodejs_20
-            (pkgs.playwright-driver.override {nodejs = pkgs.nodejs_20;})
+            pkgs.nodejs
+            pkgs.playwright
             pkgs.skopeo
+            pkgs.chromium
           ];
         };
 
         apps = {
-          default = let
-            PlantBreedGame = pkgs.writeShellApplication {
-              name = "PlantBreedGame";
-              text = ''
-                Rscript --vanilla -e "shiny::runApp(port = as.numeric(Sys.getenv('TEST_PORT')))"
-              '';
-            };
-          in {
+          default = {
             type = "app";
-            program = "${PlantBreedGame}/bin/PlantBreedGame";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame";
+                text = ''
+                  ${nixpkgs.lib.getExe (packages.plantBreedGame-dev)} --port 3000
+                '';
+              }
+            );
           };
 
-          test_ui = let
-            test_ui = pkgs.writeShellApplication {
-              name = "test_ui";
-              text = ''
-                npx playwright test "$@"
-              '';
-            };
-          in {
+          ui_tests = {
             type = "app";
-            program = "${test_ui}/bin/test_ui";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-test_ui";
+                text = ''
+                  make ui_tests
+                '';
+              }
+            );
           };
 
-          unit_tests = let
-            unit_tests = pkgs.writeShellApplication {
-              name = "unit_tests";
-              text = ''
-                Rscript --vanilla ${./tests/testthat.R}
-              '';
-            };
-          in {
+          unit_tests = {
             type = "app";
-            program = "${unit_tests}/bin/unit_tests";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-unit_tests";
+                text = ''
+                  make unit_tests
+                '';
+              }
+            );
           };
 
-          initialise-data = let
-            initialise-data = pkgs.writeShellApplication {
-              name = "initialise-data";
-              text = ''
-                make data
-              '';
-            };
-          in {
+          initialise-data = {
             type = "app";
-            program = "${initialise-data}/bin/initialise-data";
+            program = nixpkgs.lib.getExe (
+              pkgs.writeShellApplication {
+                name = "PlantBreedGame-unit_tests";
+                text = ''
+                  make data
+                '';
+              }
+            );
           };
         };
 
@@ -150,13 +160,21 @@
         };
         packages.default = packages.plantBreedGame;
 
+        packages.plantBreedGame-dev = (
+          packages.plantBreedGame.overrideAttrs (oldAttrs: {
+            doCheck = false;
+          })
+        );
+
         images = {
-          latest = let
-          in (imageBuilder {
-            imageName = "plantBreedGame";
-            plantBreedGame = packages.plantBreedGame;
-            tag = "latest";
-          });
+          latest =
+            let
+            in
+            (imageBuilder {
+              imageName = "plantBreedGame";
+              plantBreedGame = packages.plantBreedGame;
+              tag = "latest";
+            });
         };
       }
     );

@@ -26,7 +26,7 @@ shinyServer(function(input, output, session) {
     ## this variable contain the game time.
     ## it is reevaluated every 250 milliseconds
     ## send a "tic" message to the client to get information about the server status (busy or not)
-    invalidateLater(250)
+    invalidateLater(1000)
     session$sendCustomMessage("serverTic", "tic")
     getGameTime()
   })
@@ -36,18 +36,31 @@ shinyServer(function(input, output, session) {
   )
 
   gameInitialised <- function() {
-    (dir.exists(DATA_TRUTH) &
+    if (!(dir.exists(DATA_TRUTH) &
       dir.exists(DATA_SHARED) &
       dir.exists(DATA_INITIAL_DATA) &
       dir.exists(DATA_REPORTS) &
-      file.exists(DATA_DB))
+      file.exists(DATA_DB))) {
+      return(FALSE)
+    }
+    app_version <- package_version(readLines("VERSION"))
+    db_version <- package_version(getBreedingGameConstants()$version)
+    if (length(db_version) == 0) {
+      return(FALSE)
+    }
+    if (app_version$major > db_version$major) {
+      return(FALSE)
+    }
+    return(TRUE)
   }
 
   observe({
     if (!gameInitialised()) {
       msg <- paste(
-        "The game have not been initialised. It is therefore currently impossible to play.",
-        '\nTo initialise the game, go to the "Admin" menu and in the "Game setup" tab.',
+        "The game have not been initialised or the current game session is ",
+        "incompatible with this application version. ",
+        "It is therefore currently impossible to play.",
+        '\nTo (re)-initialise the game, go to the "Admin" menu and in the "Game setup" tab.',
         "From there you will be able to initialise a new game."
       )
       alert(msg)
@@ -72,12 +85,10 @@ shinyServer(function(input, output, session) {
     session,
     function() {
       if (file.exists(DATA_DB)) {
-        file.info(DATA_DB)$mtime[1]
-      } else {
-        ""
+        return(file.info(DATA_DB)$mtime[1])
       }
+      return("")
     },
     getBreedingGameConstants
   )
-
 })

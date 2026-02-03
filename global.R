@@ -18,6 +18,8 @@
 ## License along with PlantBreedGame.  If not, see
 ## <http://www.gnu.org/licenses/>.
 
+library(logger)
+log_threshold(DEBUG) # TODO: update according to env variable
 
 source("src/dependencies.R", local = TRUE, encoding = "UTF-8")
 
@@ -30,6 +32,8 @@ source("./src/fun/func_dbRequests.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/module_gameInit_params.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_gameInit_validation.R", local = TRUE, encoding = "UTF-8")
 source("./src/fun/func_ui_util.R", local = TRUE, encoding = "UTF-8")
+source("./src/fun/module_data-filtering.R", local = TRUE, encoding = "UTF-8")
+source("./src/fun/module_breeder_info.R", local = TRUE, encoding = "UTF-8")
 
 ## -------------------------------------------------------------------
 ## parameters
@@ -54,8 +58,10 @@ if (identical(DATA_ROOT, "")) {
 }
 
 if (!dir.exists(DATA_ROOT)) {
-  stop(paste("Specified game data folder:", DATA_ROOT, "does not exist.",
-  "Make sure the `PLANTBREEDGAME_DATA_ROOT` environment variable is correctly set."))
+  stop(paste(
+    "Specified game data folder:", DATA_ROOT, "does not exist.",
+    "Make sure the `PLANTBREEDGAME_DATA_ROOT` environment variable is correctly set."
+  ))
 }
 
 DATA_IN_USE_FILE <- file.path(DATA_ROOT, "data_folder_in_use.txt")
@@ -71,13 +77,50 @@ DATA_TRUTH <- file.path(DATA_SESSION, "truth")
 DATA_SHARED <- file.path(DATA_SESSION, "shared")
 DATA_INITIAL_DATA <- file.path(DATA_SHARED, "initial_data")
 DATA_DB <- file.path(DATA_SESSION, "breeding-game.sqlite")
+options(DATA_DB = DATA_DB)
 DATA_REPORTS <- file.path(DATA_SESSION, "reports")
 GAME_INIT_REPORT <- file.path(DATA_REPORTS, "plantBreedGame_initialisation_report.html")
 
 
 if (dir.exists(DATA_SESSION)) {
   addResourcePath("reports", DATA_REPORTS)
+
+  app_version <- package_version(readLines("VERSION"))
+  db_version <- package_version(getBreedingGameConstants()$version)
+  incompatible_db <- FALSE
+  if (length(db_version) == 0) {
+    incompatible_db <- TRUE
+  }
+  if (app_version$major > db_version$major) {
+    incompatible_db <- TRUE
+  }
+  if (incompatible_db) {
+    log_error(
+      "The current game session was initialized with this application at ",
+      "version `{db_version}`. However, it is incompatible with the current ",
+      "version of the application (`{app_version}`). This may cause the ",
+      "application to crash or behave unexpectedly, although the issues may not ",
+      "always be immediate. To prevent any issues, we recommend deleting the ",
+      "application's data and restarting the app."
+    )
+  }
 }
 
 url.repo <- "https://github.com/timflutre/PlantBreedGame"
 code.version <- getCodeVersion(url.repo)
+
+## request worker ----
+REQUEST_WORKER_LOG_FILE <- file.path(DATA_ROOT, "request_worker.log")
+if (!file.exists(REQUEST_WORKER_LOG_FILE)) {
+  file.create(REQUEST_WORKER_LOG_FILE)
+}
+
+WORKER_PROCESS <- NULL
+start_worker()
+
+onStop(function() {
+  if (!is.null(WORKER_PROCESS) && WORKER_PROCESS$is_alive()) {
+    WORKER_PROCESS$kill()
+    cat("Request worker stopped\n")
+  }
+})

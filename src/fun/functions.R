@@ -345,50 +345,20 @@ countRequestedBreedTypes <- function(df) {
 indAvailable <- function(indList, gameTime, breeder) {
   # function to check if individuals are available
   # indList (character vector), list of individuals to check
-  # gameTime ("POSIXlt") (given by getGameTime function)
+  # gameTime ("POSIXct") (given by getGameTime function)
   # breeder (character) breeder name
 
   ## 1. check that the requested individuals exist
-  all_breeder_inds <- getBreedersIndividuals(breeder)
-
-  indExist <- all(indList %in% all_breeder_inds$child)
+  breeder_inds <- db_get_individual(breeder = breeder, name = indList)
+  indExist <- all(indList %in% breeder_inds$name)
 
   ## 2. check available date
-  indSQLlist <- paste0("('", paste(indList, collapse = "','"), "')")
-
-  ## 3. get requested individuals information
-  tbl <- paste0("plant_material_", breeder)
-  query <- paste0("SELECT child, avail_from FROM ", tbl, " WHERE child IN ", indSQLlist)
-  res <- db_get_request(query)
-
   # compare dates
   funApply <- function(x) {
-    difftime(gameTime, strptime(x, format = "%Y-%m-%d %H:%M:%S")) >= 0
+    difftime(gameTime, strptime(x, format = "%Y-%m-%d")) >= 0
   }
-  indGrown <- all(sapply(res$avail_from, FUN = funApply))
-
+  indGrown <- all(sapply(breeder_inds$avail_from, FUN = funApply))
   return(list("indExist" = indExist, "indGrown" = indGrown))
-}
-
-
-## value box modified
-valueBoxServer <- function(value, subtitle, icon = NULL, color = "aqua", width = 4, href = NULL) {
-  shinydashboard:::validateColor(color)
-  if (!is.null(icon)) {
-    shinydashboard:::tagAssert(icon, type = "i")
-  }
-  boxContent <- div(
-    class = paste0("small-box ", "serverIndicator "),
-    div(class = "inner", style = "color: #fff", h3(value), p(subtitle)), if (!is.null(icon)) {
-      div(class = "icon-large", icon)
-    }
-  )
-  if (!is.null(href)) {
-    boxContent <- a(href = href, boxContent)
-  }
-  div(class = if (!is.null(width)) {
-    paste0("col-sm-", width)
-  }, boxContent)
 }
 
 
@@ -416,7 +386,7 @@ writeRequest <- function(df, breeder, fileName = NULL) {
 }
 
 
-create_issue_link <- function(title = "", body = ""){
+create_issue_link <- function(title = "", body = "") {
   repo_base_url <- "https://github.com/timflutre/PlantBreedGame"
   body <- gsub(pattern = "\n", replacement = "%0A", x = body)
   issue_link <- paste0(
@@ -430,3 +400,112 @@ create_issue_link <- function(title = "", body = ""){
 }
 
 
+
+addNewBreeder <- function(breederName,
+                          status,
+                          psw,
+                          progressNewBreeder = NULL,
+                          data_truth = DATA_TRUTH,
+                          data_shared = DATA_SHARED,
+                          shiny_notification = FALSE) {
+  ## this function create a new breeder
+  ## breederName (char) name of the new breeder
+
+
+  if (!grepl("^[a-zA-Z0-9\\_]+$", breederName, perl = TRUE)) {
+    # only alpha numeric and character "_"
+    if (shiny_notification) {
+      showNotification(
+        "Breeder's name should contain only alpha-numeric characters and special character : _ ",
+        type = "error"
+      )
+    }
+    return(NULL)
+  }
+  if (status != "tester" & psw == "") {
+    if (shiny_notification) {
+      showNotification(
+        paste0(
+          "Breeders with another status than \"tester\"",
+          " can't have the empty password"
+        ),
+        type = "error"
+      )
+    }
+    return(NULL)
+  }
+
+  #### test if new breeder already exist
+  if (breederName %in% getBreederList()) {
+    if (shiny_notification) {
+      showNotification(
+        paste("Breeder", breederName, "already exist"),
+        type = "error"
+      )
+    }
+    return(NULL)
+  }
+
+  #### add breeder in the "breeders" table of database:
+  hashed.psw <- digest(psw, "md5", serialize = FALSE)
+  db_add_breeder(breederName, status, hashed.psw)
+
+  #### create folders of the new breeder:
+  newTruthDir <- paste0(data_truth, "/", breederName)
+  newSharedDir <- paste0(data_shared, "/", breederName)
+  dir.create(newTruthDir)
+  dir.create(newSharedDir)
+
+  if (shiny_notification) {
+    showNotification(
+      paste("Breeder", breederName, "created"),
+      type = "message"
+    )
+  }
+  return(NULL)
+}
+
+
+
+get_unique_request_name <- function(breeder, request_base_name) {
+  # from a breeder and a request_name return a request name that is not
+  # already used in the DB (by adding a "- <number>" suffix)
+  request_name <- request_base_name
+  existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
+  suffix <- 1
+  while (nrow(existing_requests) != 0) {
+    suffix <- suffix + 1
+    request_name <- paste(request_base_name, "-", suffix)
+    existing_requests <- db_get_game_requests(breeder = breeder, name = request_name)
+  }
+  return(request_name)
+}
+
+
+start_worker <- function() {
+  WORKER_PROCESS <<- callr::r_bg(
+    func = function() {
+      source(normalizePath("./src/request_worker.R"))
+    },
+    supervise = TRUE,
+    stderr = REQUEST_WORKER_LOG_FILE
+  )
+}
+
+
+
+#' raise an html alert if the WORKER_PROCESS is not running
+alert_if_worker_is_dead <- function(msg = NULL) {
+  if (is.null(msg)) {
+    msg <- paste0(
+      "Your request have been successfully registered. ",
+      "However the system is currently unable to process it. ",
+      "Please notify your game master of this issue. ",
+      "Your request will be processed once the request processor will be available.",
+      "You do not have to upload it again."
+    )
+  }
+  if (!WORKER_PROCESS$is_alive()) {
+    alert(msg)
+  }
+}
