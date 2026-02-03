@@ -56,6 +56,9 @@ dta_viz_pheno_pheno_filters <- phenotype_filtering_server("pheno_data_viz_pheno_
 filtered_pheno_data <- reactive({
   input$refresh_pheno_dta_viz
   breeder <- breeder()
+  if (breeder == "No Identification") {
+    return(data.frame())
+  }
   pheno_data <- db_get_phenotypes(
     breeder = breeder,
     ind_id = dta_viz_pheno_inds_filters$inds_ids(),

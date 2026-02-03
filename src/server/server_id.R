@@ -745,10 +745,13 @@ pheno_inds_filters <- individual_filtering_server("pheno_download_ind_filter", b
 pheno_pheno_filters <- phenotype_filtering_server("pheno_download_pheno_filter", breeder = breeder())
 
 pheno_data_preview <- reactive({
+  breeder <- breeder()
+  if (breeder == "No Identification") {
+    return(data.frame())
+  }
   download_pheno_button_clicks() # dependency on download buttons
   input$refresh_pheno_preview # dependency on refresh buttons
 
-  breeder <- breeder()
   pheno_data <- db_get_phenotypes(
     breeder = breeder,
     # ind_id = inds_ids,
