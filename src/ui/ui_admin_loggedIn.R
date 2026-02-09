@@ -189,14 +189,17 @@ if (gameInitialised()) {
           tags$label("Permissions:"),
           tagList(
             div(
-              class = "permissions-container",
+              id = "permissions-container",
               lapply(names(PERMISSIONS_LIST), function(p) {
                 perm <- PERMISSIONS_LIST[[p]]
-                checkboxInput(
-                  inputId = paste0("perm_", perm$name),
-                  label = tooltip_label(perm$label_name, perm$desc),
-                  value = FALSE,
-                  width = "100%"
+                div(
+                  id = paste0("perm_checkbox_", perm$name),
+                  checkboxInput(
+                    inputId = paste0("perm_", perm$name),
+                    label = tooltip_label(perm$label_name, perm$desc),
+                    value = FALSE,
+                    width = "100%"
+                  )
                 )
               })
             )

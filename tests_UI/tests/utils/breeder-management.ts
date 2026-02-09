@@ -4,7 +4,7 @@ export async function addBreeder(
   page: Page,
   breederName: string,
   password: string,
-  status: string,
+  permissions: string[],
 ) {
   await page.getByRole("link", { name: "gears icon Admin" }).click();
   await expect(
@@ -16,11 +16,19 @@ export async function addBreeder(
   await page.locator("#newBreederName").click();
   await page.locator("#newBreederName").fill(breederName);
 
-  await page.click("#newBreederStatus-selectized");
-  await page.getByRole("option", { name: status }).click();
-
   await page.getByLabel("Password", { exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill(password);
+
+  for (let perm of permissions) {
+    // await page.locator("#perm_" + perm).click();
+    const checkbox = page.locator("#perm_" + perm);
+    const isChecked = await checkbox.isChecked();
+
+    if (!isChecked) {
+      await checkbox.click();
+    }
+  }
+
   await page.getByRole("button", { name: "Add this new breeder" }).click();
 }
 

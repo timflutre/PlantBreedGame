@@ -25,7 +25,10 @@ test.beforeAll(async ({ browser }) => {
   const page = await context.newPage();
   await page.goto(page_root);
   await login(page, admin_user, admin_psw);
-  await addBreeder(page, user, psw, "tester");
+  await addBreeder(page, user, psw, [
+    "no_time_constraint",
+    "no_request_size_constraint",
+  ]);
   await context.close();
 });
 

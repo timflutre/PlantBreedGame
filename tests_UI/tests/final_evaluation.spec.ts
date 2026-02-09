@@ -40,7 +40,11 @@ test.beforeAll(async ({ browser }) => {
   const page = await context.newPage();
   await login(page, admin_user, admin_psw);
   for (const user in inds_to_register) {
-    await addBreeder(page, user, user, "tester");
+    await addBreeder(page, user, user, [
+      "evaluation",
+      "no_time_constraint",
+      "no_request_size_constraint",
+    ]);
   }
   for (const user in inds_to_register) {
     await login(page, user, user);
@@ -61,14 +65,14 @@ test.beforeAll(async ({ browser }) => {
 });
 
 test.afterAll(async ({ browser }) => {
-  test.setTimeout(30000);
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await login(page, admin_user, admin_psw);
-  for (const user in inds_to_register) {
-    await deleteBreeder(page, user);
-  }
-  await context.close();
+  // test.setTimeout(30000);
+  // const context = await browser.newContext();
+  // const page = await context.newPage();
+  // await login(page, admin_user, admin_psw);
+  // for (const user in inds_to_register) {
+  //   await deleteBreeder(page, user);
+  // }
+  // await context.close();
 });
 
 test("run evaluation", async ({ page }) => {

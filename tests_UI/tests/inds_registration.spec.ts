@@ -23,7 +23,11 @@ test.beforeAll(async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
   await login(page, admin_user, admin_psw);
-  await addBreeder(page, user, psw, "tester");
+  await addBreeder(page, user, psw, [
+    "evaluation",
+    "no_time_constraint",
+    "no_request_size_constraint",
+  ]);
   await login(page, user, psw);
   await requestPlantMaterial(page, "pltMat_init_set10.txt");
   await wait_request_execution(page, "pltMat_init_set10");
