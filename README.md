@@ -117,10 +117,10 @@ If the game have already been initialise, it is also possible to re-initialise i
 Once the application is installed and working, please read the game rules (tab `How to play?`) and start by downloading the initial data set as well as example files showing how requests should be formatted (all files listed at the bottom of the tab `How to play?`).
 
 Before making any request, such as phenotyping, you need to log in (tab `Identification`).
-To get a sense of how the interface works, you can use the "test" breeder with the "tester" status which doesn't require any password and isn't subject to time restriction.
+To get a sense of how the interface works, you can use the "test" breeder with which doesn't require any password and isn't subject to time restriction.
 
 All your files, whether they are inputs for a request or outputs of a request, are available for download in the tab `Identification` (once logged in).
-But remember that regular players (not testers nor the game master) have time restrictions.
+But remember that regular players can have time restrictions.
 This means that, even if a plant material request is successful, you will have to wait before using your new genotypes in other crosses or before requesting data on it.
 Similarly, even if a phenotyping/genotyping request is successfull, you will have to wait before downloading the output file.
 

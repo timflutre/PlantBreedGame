@@ -1037,8 +1037,11 @@ gameInit_request_constraints_ui <- function(id) {
         'The amount of "resistance phenotyping" done in greedhouse remains unlimited.'
       ),
       p(
-        'Note: Players with the "tester" or "game-master" status are not',
-        "constrained by this limitation."
+        paste0(
+          'Note: This constraint can be relax with the "',
+          PERMISSIONS_LIST$no_request_size_constraint$label_name,
+          '" permision.'
+        )
       )
     )
   )
@@ -1053,8 +1056,11 @@ gameInit_request_constraints_ui <- function(id) {
           "make several requests one after the other to bypass this limitation."
         ),
         tags$li(
-          'Players with the "tester" or "game-master" status are not',
-          "constrained by this limitation."
+          paste0(
+            'Note: This constraint can be relax with the "',
+            PERMISSIONS_LIST$no_request_size_constraint$label_name,
+            '" permision.'
+          )
         )
       )
     )
@@ -1068,8 +1074,11 @@ gameInit_request_constraints_ui <- function(id) {
       tags$ul(
         tags$li('This number will remains limited by "Maximum number of crosses per request" parameter.'),
         tags$li(
-          'Players with the "tester" or "game-master" status are not',
-          "constrained by this limitation."
+          paste0(
+            'Note: This constraint can be relax with the "',
+            PERMISSIONS_LIST$no_request_size_constraint$label_name,
+            '" permision.'
+          )
         )
       )
     )
