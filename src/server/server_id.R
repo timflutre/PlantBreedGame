@@ -57,9 +57,9 @@ accessGranted <- eventReactive(input$submitPSW,
     # it is not possible to log in.
     #
     # EXCEPTIONS:
-    # * The game master can log in even if the second condition is false,
+    # * user with "admin" permission can log in even if the second condition is false,
     # but the javascript "alert" will explain that the server is full.
-    # * A "tester" is the only status allowed to have an empty password.
+    # * user with "admin" permission can not have an empty password.
 
     if (is.null(input$submitPSW)) { # button not yet available
       return(FALSE)
@@ -68,51 +68,39 @@ accessGranted <- eventReactive(input$submitPSW,
       return(FALSE)
     }
 
-    # 1. get breeder status
+    # 1. get breeder
     breeder <- db_get_breeder(input$breederName)
 
     # 2. check given password
     hashPsw <- breeder$h_psw
-
-    if (hashPsw == digest(input$psw, "md5", serialize = FALSE)) {
-      goodPswd <- TRUE
-    } else {
-      goodPswd <- FALSE
+    goodPswd <- hashPsw == digest(input$psw, "md5", serialize = FALSE)
+    if (!goodPswd) {
       alert("Error: wrong password")
     }
 
     # 3. check disk usage
-    goodDiskUsage <- FALSE
-    if (goodPswd && breeder$status != "game master") {
-      withProgress(
-        {
-          maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
+    withProgress(
+      {
+        maxDiskUsage <- getBreedingGameConstants()$max.disk.usage
+        currentSize <- get_folder_size(DATA_ROOT) / 10^9
 
-          allDataFiles <- list.files(DATA_SESSION, all.files = TRUE, recursive = TRUE, full.names = FALSE)
-          currentSize <- get_folder_size(DATA_ROOT) / 10^9
-
-          if (currentSize < maxDiskUsage) {
-            goodDiskUsage <- TRUE
-          } else if (breeder$status != "game master") {
-            goodDiskUsage <- FALSE
-            alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
-          } else {
-            goodDiskUsage <- TRUE
-            alert(paste0(
-              "Warning! The size of the \"data\" folder exceeds the specified limit\n",
-              paste("of", round(currentSize, 2), "GB (maximum size allowed:", maxDiskUsage, "GB).\n"),
-              "To preserve your server, players can't log in anymore (but connected users can still play).\n",
-              "If you want to resume the game, please raise the maximum disk usage limit.\n",
-              "Go to the Admin tab, then \"Disk usage\", and raise the threshold."
-            ))
-          }
-        },
-        message = "Connecting..."
-      )
-    } else if (goodPswd && breeder$status == "game master") {
-      # the game master can always log in
-      goodDiskUsage <- TRUE
-    }
+        goodDiskUsage <- currentSize < maxDiskUsage
+        if (!goodDiskUsage && ("admin" %in% breeder$permissions)) {
+          goodDiskUsage <- TRUE # the admin can always log in
+          alert(paste0(
+            "Warning! The size of the \"data\" folder exceeds the specified limit\n",
+            paste("of", round(currentSize, 2), "GB (maximum size allowed:", maxDiskUsage, "GB).\n"),
+            "To preserve your server, players can't log in anymore (but connected users can still play).\n",
+            "If you want to resume the game, please raise the maximum disk usage limit.\n",
+            "Go to the Admin tab, then \"Disk usage\", and raise the threshold."
+          ))
+        }
+        if (!goodDiskUsage && (!"admin" %in% breeder$permissions)) {
+          alert("Sorry, the game is currently not available because of disk usage.\nPlease contact your game master to figure out what to do.")
+        }
+      },
+      message = "Connecting..."
+    )
 
     # 5. output
     if (goodPswd && goodDiskUsage) {

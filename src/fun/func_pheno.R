@@ -294,7 +294,7 @@ plotAvailable <- function(breeder, inds.todo, gameTime) {
   # gameTime ("POSIXlt") of the request (given by getGameTime function)
 
   breeder_info <- db_get_breeder(breeder.name = breeder)
-  if (breeder_info$status %in% c("game master", "tester")) {
+  if (PERMISSIONS_LIST$no_request_size_constraint$name %in% breeder_info$permissions) {
     return(TRUE)
   }
 
