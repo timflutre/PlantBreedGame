@@ -57,9 +57,10 @@ process_plantmat_request <- function(request_id, progressPltMat = NULL) {
     by.x = "parent1_id", by.y = "id"
   )
   colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] <- "parent1" # new name respecting `drawLocCrossovers` convention
+
   pltmat_request_dta <- merge(pltmat_request_dta,
     requested_parents[, c("id", "name")],
-    by.x = "parent2_id", by.y = "id"
+    by.x = "parent2_id", by.y = "id", all.x = TRUE
   )
   colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "name"] <- "parent2" # new name respecting `drawLocCrossovers` convention
   colnames(pltmat_request_dta)[colnames(pltmat_request_dta) == "child_name"] <- "child" # new name respecting `drawLocCrossovers` convention
