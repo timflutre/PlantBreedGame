@@ -53,7 +53,7 @@ if (Sys.info()["sysname"] == "Windows") {
 
 ## -------------------------------------------------------------------
 
-DATA_ROOT <- Sys.getenv("PLANTBREEDGAME_DATA_ROOT")
+DATA_ROOT <- Sys.getenv("PLANTBREEDGAME_DATA_ROOT", "./data")
 if (identical(DATA_ROOT, "")) {
   DATA_ROOT <- "./data"
 }

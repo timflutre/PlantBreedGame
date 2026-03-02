@@ -217,7 +217,7 @@ progressBar$inc(
   amount = 1,
   detail = progress_detail
 )
-data_root <- normalizePath(Sys.getenv("PLANTBREEDGAME_DATA_ROOT"))
+data_root <- normalizePath(Sys.getenv("PLANTBREEDGAME_DATA_ROOT", "./data"))
 
 root.dir <- file.path(data_root, session_id)
 truth.dir <- file.path(root.dir, "truth")
