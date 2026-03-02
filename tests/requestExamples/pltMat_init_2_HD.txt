@@ -1,0 +1,3 @@
+"parent1"	"parent2"	"child"	"explanations"
+"Coll0710"		"G1_HD1"	"haplodiploidization"
+"Coll0349"		"G1_HD2"	"haplodiploidization"

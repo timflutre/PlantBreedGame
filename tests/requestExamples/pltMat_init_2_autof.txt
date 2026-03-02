@@ -1,0 +1,3 @@
+"parent1"	"parent2"	"child"	"explanations"
+"Coll0710"	"Coll0710"	"G1_autof_1"	"autofecundation"
+"Coll0001"	"Coll0001"	"G1_autof_2"	"autofecundation"

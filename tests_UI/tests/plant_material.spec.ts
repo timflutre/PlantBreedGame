@@ -32,9 +32,30 @@ test.beforeEach(async ({ page }) => {
   await page.goto(page_root);
 });
 
-test("plant_material_request", async ({ page }) => {
+test("plant_material_request allof", async ({ page }) => {
   test.setTimeout(60000);
   await login(page, user, psw);
-  await requestPlantMaterial(page, "pltMat_init_set1.txt");
-  await wait_request_execution(page, "pltMat_init_set1");
+  await requestPlantMaterial(page, "pltMat_init_2_allof.txt");
+  await wait_request_execution(page, "pltMat_init_2_allof");
+});
+
+test("plant_material_request autof", async ({ page }) => {
+  test.setTimeout(60000);
+  await login(page, user, psw);
+  await requestPlantMaterial(page, "pltMat_init_2_autof.txt");
+  await wait_request_execution(page, "pltMat_init_2_autof");
+});
+
+test("plant_material_request HD", async ({ page }) => {
+  test.setTimeout(60000);
+  await login(page, user, psw);
+  await requestPlantMaterial(page, "pltMat_init_2_HD.txt");
+  await wait_request_execution(page, "pltMat_init_2_HD");
+});
+
+test("plant_material_request all Methods", async ({ page }) => {
+  test.setTimeout(60000);
+  await login(page, user, psw);
+  await requestPlantMaterial(page, "pltMat_init_allMethods.txt");
+  await wait_request_execution(page, "pltMat_init_allMethods");
 });

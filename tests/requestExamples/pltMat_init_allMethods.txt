@@ -1,0 +1,7 @@
+"parent1"	"parent2"	"child"	"explanations"
+"Coll0710"		"G1_HD1_allMethods"	"haplodiploidization"
+"Coll0349"		"G1_HD2_allMethods"	"haplodiploidization"
+"Coll0710"	"Coll0349"	"G1_allof_1_allMethods"	"allofecundation"
+"Coll0001"	"Coll0002"	"G1_allof_2_allMethods"	"allofecundation"
+"Coll0710"	"Coll0710"	"G1_autof_1_allMethods"	"autofecundation"
+"Coll0001"	"Coll0001"	"G1_autof_2_allMethods"	"autofecundation"
